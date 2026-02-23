@@ -122,7 +122,8 @@ class AvailableJobsPage extends StatelessWidget {
       itemCount: requests.length,
       itemBuilder: (context, index) {
         final req = requests[index];
-        final isDisabled = req.status == RequestStatus.booked ||
+        final isDisabled =
+            req.status == RequestStatus.booked ||
             req.status == RequestStatus.inProgress ||
             req.status == RequestStatus.completed;
 
@@ -146,7 +147,10 @@ class AvailableJobsPage extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(req.status),
                     borderRadius: BorderRadius.circular(8),
