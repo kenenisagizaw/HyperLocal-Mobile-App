@@ -1,4 +1,4 @@
-# my_first_app
+# HyperLocal-Flutter-App
 
 A new Flutter project.
 
