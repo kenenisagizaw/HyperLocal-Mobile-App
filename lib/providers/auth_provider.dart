@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../data/models/user_model.dart';
+
 ///import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class AuthProvider extends ChangeNotifier {
