@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+
 import '../../data/models/user_model.dart';
+import '../../providers/auth_provider.dart';
 import '../customer/customer_dashboard.dart';
 import '../provider/provider_dashboard.dart';
 
@@ -15,6 +16,7 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
   UserRole? selectedRole;
 
@@ -34,15 +36,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(labelText: 'Phone'),
+              keyboardType: TextInputType.phone,
+            ),
             const SizedBox(height: 20),
             DropdownButton<UserRole>(
               value: selectedRole,
               hint: const Text('Select Role'),
               items: UserRole.values.map((role) {
-                return DropdownMenuItem(
-                  value: role,
-                  child: Text(role.name),
-                );
+                return DropdownMenuItem(value: role, child: Text(role.name));
               }).toList(),
               onChanged: (role) => setState(() => selectedRole = role),
             ),
@@ -52,9 +56,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onPressed: () {
                 if (nameController.text.isEmpty ||
                     emailController.text.isEmpty ||
+                    phoneController.text.isEmpty ||
                     selectedRole == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please fill all fields')));
+                    const SnackBar(content: Text('Please fill all fields')),
+                  );
                   return;
                 }
 
@@ -62,6 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   id: DateTime.now().millisecondsSinceEpoch.toString(),
                   name: nameController.text,
                   email: emailController.text,
+                  phone: phoneController.text,
                   role: selectedRole!,
                 );
 
