@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/models/service_request_model.dart';
+import '../core/constants/enums.dart';
 
 class RequestProvider extends ChangeNotifier {
   List<ServiceRequest> requests = [
@@ -23,10 +24,13 @@ class RequestProvider extends ChangeNotifier {
     requests.add(request);
     notifyListeners();
   }
-
-  void updateStatus(String requestId, String status) {
-    final req = requests.firstWhere((r) => r.id == requestId);
-    req.status = status;
-    notifyListeners();
-  }
+void updateStatus(String requestId, RequestStatus status) {
+  final req = requests.firstWhere((r) => r.id == requestId);
+  req.status = status;
+  notifyListeners();
 }
+
+
+}
+
+
