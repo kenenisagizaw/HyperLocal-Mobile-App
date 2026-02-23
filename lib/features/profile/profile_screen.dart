@@ -1,9 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
@@ -78,9 +79,11 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enable location services')),
       );
+      await Geolocator.openLocationSettings();
       return;
     }
 
@@ -88,6 +91,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Location permission denied')),
         );
@@ -96,15 +100,18 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     }
 
     if (permission == LocationPermission.deniedForever) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Location permissions are permanently denied'),
         ),
       );
+      await Geolocator.openAppSettings();
       return;
     }
 
     final position = await Geolocator.getCurrentPosition(
+      // ignore: deprecated_member_use
       desiredAccuracy: LocationAccuracy.high,
     );
 
@@ -112,6 +119,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       _providerLocation = LatLng(position.latitude, position.longitude);
     });
 
+    // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Location fetched successfully')),
     );
@@ -324,17 +332,35 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.grey.shade300),
                     ),
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: _providerLocation!,
-                        zoom: 15,
-                      ),
-                      markers: {
-                        Marker(
-                          markerId: const MarkerId('provider-location'),
-                          position: _providerLocation!,
+                    child: FlutterMap(
+                      options: MapOptions(
+                        initialCenter: _providerLocation!,
+                        initialZoom: 15,
+                        interactionOptions: const InteractionOptions(
+                          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
                         ),
-                      },
+                      ),
+                      children: [
+                        TileLayer(
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          userAgentPackageName: 'com.example.my_first_app',
+                        ),
+                        MarkerLayer(
+                          markers: [
+                            Marker(
+                              point: _providerLocation!,
+                              width: 40,
+                              height: 40,
+                              child: const Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 40,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
               ],
