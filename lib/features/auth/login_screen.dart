@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+
 import '../../data/models/user_model.dart';
+import '../../providers/auth_provider.dart';
 import '../customer/customer_dashboard.dart';
 import '../provider/provider_dashboard.dart';
 
@@ -43,6 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   id: '1',
                   name: isCustomer ? 'Kenenisa' : 'Abebe',
                   email: emailController.text,
+                  phone:
+                      '0000000000', // Add a mock phone number or get from input
                   role: isCustomer ? UserRole.customer : UserRole.provider,
                 );
                 Provider.of<AuthProvider>(context, listen: false).login(user);
