@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 
@@ -105,7 +105,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     }
 
     final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
+      desiredAccuracy: LocationAccuracy.high,
+    );
 
     setState(() {
       _providerLocation = LatLng(position.latitude, position.longitude);
@@ -156,8 +157,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   Widget _buildFileButton(String label, XFile? file, String type) {
     return ElevatedButton.icon(
       onPressed: () => _pickFile(ImageSource.gallery, type),
-      icon: Icon(file == null ? Icons.upload_file : Icons.check_circle,
-          color: Colors.white),
+      icon: Icon(
+        file == null ? Icons.upload_file : Icons.check_circle,
+        color: Colors.white,
+      ),
       label: Text(file == null ? label : 'Uploaded'),
       style: ElevatedButton.styleFrom(
         backgroundColor: file == null ? Colors.blue : Colors.green,
@@ -166,9 +169,12 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      IconData icon,
-      {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
@@ -204,16 +210,18 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
               children: [
                 ElevatedButton(
                   onPressed: details.onStepContinue,
-                  style:
-                      ElevatedButton.styleFrom(minimumSize: const Size(120, 48)),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(120, 48),
+                  ),
                   child: Text(_currentStep == 1 ? 'Submit' : 'Next'),
                 ),
                 const SizedBox(width: 12),
                 if (_currentStep > 0)
                   OutlinedButton(
                     onPressed: details.onStepCancel,
-                    style:
-                        OutlinedButton.styleFrom(minimumSize: const Size(120, 48)),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(120, 48),
+                    ),
                     child: const Text('Back'),
                   ),
               ],
@@ -241,10 +249,18 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                 ),
                 const SizedBox(height: 12),
                 _buildTextField(_nameController, 'Full Name', Icons.person),
-                _buildTextField(_phoneController, 'Phone Number', Icons.phone,
-                    keyboardType: TextInputType.phone),
-                _buildTextField(_emailController, 'Email (optional)', Icons.email,
-                    keyboardType: TextInputType.emailAddress),
+                _buildTextField(
+                  _phoneController,
+                  'Phone Number',
+                  Icons.phone,
+                  keyboardType: TextInputType.phone,
+                ),
+                _buildTextField(
+                  _emailController,
+                  'Email (optional)',
+                  Icons.email,
+                  keyboardType: TextInputType.emailAddress,
+                ),
               ],
             ),
           ),
@@ -254,31 +270,48 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             content: Column(
               children: [
                 _buildTextField(
-                    _nationalIdController, 'National ID Number', Icons.badge),
+                  _nationalIdController,
+                  'National ID Number',
+                  Icons.badge,
+                ),
                 _buildFileButton('Upload National ID', _nationalIdFile, 'nid'),
-                _buildTextField(_businessLicenseController,
-                    'Business License Number', Icons.business),
-                _buildFileButton(
-                    'Upload License', _businessLicenseFile, 'business'),
                 _buildTextField(
-                    _educationController, 'Educational Qualification', Icons.school),
+                  _businessLicenseController,
+                  'Business License Number',
+                  Icons.business,
+                ),
                 _buildFileButton(
-                    'Upload Education Document', _educationFile, 'education'),
+                  'Upload License',
+                  _businessLicenseFile,
+                  'business',
+                ),
+                _buildTextField(
+                  _educationController,
+                  'Educational Qualification',
+                  Icons.school,
+                ),
+                _buildFileButton(
+                  'Upload Education Document',
+                  _educationFile,
+                  'education',
+                ),
                 const SizedBox(height: 12),
                 // -------- GPS Location Button --------
                 ElevatedButton.icon(
                   onPressed: _getCurrentLocation,
                   icon: Icon(
-                      _providerLocation == null
-                          ? Icons.location_on
-                          : Icons.check,
-                      color: Colors.white),
-                  label: Text(_providerLocation == null
-                      ? 'Use Current Location'
-                      : 'Location Selected'),
+                    _providerLocation == null ? Icons.location_on : Icons.check,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    _providerLocation == null
+                        ? 'Use Current Location'
+                        : 'Location Selected',
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _providerLocation == null ? Colors.blue : Colors.green,
+                    backgroundColor: _providerLocation == null
+                        ? Colors.blue
+                        : Colors.green,
                     minimumSize: const Size(double.infinity, 48),
                   ),
                 ),
