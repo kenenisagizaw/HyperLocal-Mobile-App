@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
+
 import '../../data/models/user_model.dart';
+import '../../providers/auth_provider.dart';
 import '../customer/customer_dashboard.dart';
 import '../provider/provider_dashboard.dart';
 
@@ -24,6 +25,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   name: 'Kenenisa',
                   email: 'customer@example.com',
                   role: UserRole.customer,
+                  phone: '1234567890',
                 );
                 Provider.of<AuthProvider>(context, listen: false).login(user);
                 Navigator.pushReplacement(
@@ -41,6 +43,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   name: 'Abebe',
                   email: 'provider@example.com',
                   role: UserRole.provider,
+                  phone: '0987654321',
                 );
                 Provider.of<AuthProvider>(context, listen: false).login(user);
                 Navigator.pushReplacement(
