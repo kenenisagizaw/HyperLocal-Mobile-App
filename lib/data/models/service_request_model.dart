@@ -1,10 +1,12 @@
+import '../../core/constants/enums.dart'; 
+
 class ServiceRequest {
   final String id;
   final String description;
   final String category;
   final String location;
   final double budget;
-  String status; // pending, quoted, booked, inProgress, completed, disputed
+  RequestStatus status; 
 
   ServiceRequest({
     required this.id,
@@ -12,6 +14,6 @@ class ServiceRequest {
     required this.category,
     required this.location,
     required this.budget,
-    this.status = 'pending',
+    this.status = RequestStatus.pending,
   });
 }
