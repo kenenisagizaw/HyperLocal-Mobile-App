@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import '../data/models/user_model.dart';
+///import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class AuthProvider extends ChangeNotifier {
   UserModel? currentUser;
 
+  AuthProvider({this.currentUser});
+
+  // Example: login/mock initialization
   void login(UserModel user) {
     currentUser = user;
     notifyListeners();
@@ -14,6 +18,29 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isCustomer => currentUser?.role == UserRole.customer;
-  bool get isProvider => currentUser?.role == UserRole.provider;
+  // ✅ Update provider profile
+  void updateProviderProfile({
+    required String name,
+    required String phone,
+    String? email,
+    String? profileImage,
+    String? nationalId,
+    String? businessLicense,
+    String? educationDoc,
+    String? location,
+  }) {
+    if (currentUser != null) {
+      currentUser = currentUser!.copyWith(
+        name: name,
+        phone: phone,
+        email: email,
+        profilePicture: profileImage,
+        nationalId: nationalId,
+        businessLicense: businessLicense,
+        educationDocument: educationDoc,
+        location: location,
+      );
+      notifyListeners();
+    }
+  }
 }
