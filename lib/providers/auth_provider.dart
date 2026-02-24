@@ -30,6 +30,8 @@ class AuthProvider extends ChangeNotifier {
     String? businessLicense,
     String? educationDoc,
     String? location,
+    double? latitude,
+    double? longitude,
   }) {
     if (currentUser != null) {
       currentUser = currentUser!.copyWith(
@@ -41,6 +43,8 @@ class AuthProvider extends ChangeNotifier {
         businessLicense: businessLicense,
         educationDocument: educationDoc,
         location: location,
+        latitude: latitude,
+        longitude: longitude,
       );
       notifyListeners();
     }
@@ -52,6 +56,8 @@ class AuthProvider extends ChangeNotifier {
     required String phone,
     String? address,
     String? profileImage,
+    double? latitude,
+    double? longitude,
   }) {
     if (currentUser != null) {
       currentUser = currentUser!.copyWith(
@@ -59,6 +65,8 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
         address: address,
         profilePicture: profileImage,
+        latitude: latitude,
+        longitude: longitude,
       );
       notifyListeners();
     }
