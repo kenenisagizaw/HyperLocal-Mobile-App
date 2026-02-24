@@ -3,8 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'data/datasources/remote/request_api.dart';
+import 'data/repositories/customer_repository.dart';
+import 'data/repositories/provider_repository.dart';
 import 'data/repositories/request_repository.dart';
 import 'providers/auth_provider.dart';
+import 'providers/customer_directory_provider.dart';
+import 'providers/message_provider.dart';
+import 'providers/provider_directory_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
 
@@ -13,6 +18,8 @@ void main() {
     MultiProvider(
       providers: [
         Provider(create: (_) => RequestApi()),
+        Provider(create: (_) => CustomerRepository()),
+        Provider(create: (_) => ProviderRepository()),
         Provider(
           create: (context) => RequestRepository(context.read<RequestApi>()),
         ),
@@ -24,6 +31,25 @@ void main() {
             return previous ?? RequestProvider(repository: repository);
           },
         ),
+        ChangeNotifierProxyProvider<ProviderRepository,
+            ProviderDirectoryProvider>(
+          create: (context) => ProviderDirectoryProvider(
+            repository: context.read<ProviderRepository>(),
+          ),
+          update: (context, repository, previous) {
+            return previous ?? ProviderDirectoryProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProxyProvider<CustomerRepository,
+            CustomerDirectoryProvider>(
+          create: (context) => CustomerDirectoryProvider(
+            repository: context.read<CustomerRepository>(),
+          ),
+          update: (context, repository, previous) {
+            return previous ?? CustomerDirectoryProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => QuoteProvider()),
       ],
       child: const MyApp(),
