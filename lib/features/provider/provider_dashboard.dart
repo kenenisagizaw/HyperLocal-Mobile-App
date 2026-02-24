@@ -120,10 +120,10 @@ class AvailableJobsPage extends StatelessWidget {
       itemCount: requests.length,
       itemBuilder: (context, index) {
         final req = requests[index];
-            final isDisabled =
-                req.status == RequestStatus.accepted ||
-                req.status == RequestStatus.completed ||
-                req.status == RequestStatus.cancelled;
+        final isDisabled =
+            req.status == RequestStatus.accepted ||
+            req.status == RequestStatus.completed ||
+            req.status == RequestStatus.cancelled;
 
         return Card(
           margin: const EdgeInsets.all(12),
