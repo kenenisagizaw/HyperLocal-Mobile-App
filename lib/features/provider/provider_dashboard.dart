@@ -89,10 +89,8 @@ class AvailableJobsPage extends StatelessWidget {
         return Colors.orange;
       case RequestStatus.quoted:
         return Colors.purple;
-      case RequestStatus.booked:
+      case RequestStatus.accepted:
         return Colors.blue;
-      case RequestStatus.inProgress:
-        return Colors.teal;
       case RequestStatus.completed:
         return Colors.green;
       case RequestStatus.cancelled:
@@ -122,10 +120,10 @@ class AvailableJobsPage extends StatelessWidget {
       itemCount: requests.length,
       itemBuilder: (context, index) {
         final req = requests[index];
-        final isDisabled =
-            req.status == RequestStatus.booked ||
-            req.status == RequestStatus.inProgress ||
-            req.status == RequestStatus.completed;
+            final isDisabled =
+                req.status == RequestStatus.accepted ||
+                req.status == RequestStatus.completed ||
+                req.status == RequestStatus.cancelled;
 
         return Card(
           margin: const EdgeInsets.all(12),
