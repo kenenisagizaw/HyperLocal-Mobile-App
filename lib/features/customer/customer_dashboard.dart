@@ -689,6 +689,14 @@ class ProviderDetailScreen extends StatelessWidget {
               label: 'Quote',
               value: '\$${quote.price.toStringAsFixed(2)}',
             ),
+            if ((provider?.bio ?? '').trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _DetailRow(
+                icon: Icons.info_outline,
+                label: 'Bio',
+                value: provider!.bio!,
+              ),
+            ],
             const SizedBox(height: 16),
             const Text(
               'Message',
