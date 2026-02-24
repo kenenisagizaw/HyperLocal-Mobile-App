@@ -41,11 +41,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Mock login based on email
                 final isCustomer = emailController.text.contains('customer');
                 final user = UserModel(
-                  id: '1',
-                  name: isCustomer ? 'Kenenisa' : 'Abebe',
+                  id: isCustomer ? 'customer-1' : 'provider-1',
+                  name: isCustomer ? 'Michael Abate' : 'Abebe Bekele',
                   email: emailController.text,
                   phone:
-                      '0000000000', // Add a mock phone number or get from input
+                      isCustomer ? '0922 445 566' : '0911 223 344',
                   role: isCustomer ? UserRole.customer : UserRole.provider,
                 );
                 Provider.of<AuthProvider>(context, listen: false).login(user);
