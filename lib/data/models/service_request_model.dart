@@ -1,4 +1,4 @@
-import '../../core/constants/enums.dart'; 
+import '../../core/constants/enums.dart';
 
 class ServiceRequest {
   final String id;
@@ -11,7 +11,7 @@ class ServiceRequest {
   final double budget;
   final List<String> photoPaths;
   final DateTime createdAt;
-  RequestStatus status; 
+  RequestStatus status;
 
   ServiceRequest({
     required this.id,
