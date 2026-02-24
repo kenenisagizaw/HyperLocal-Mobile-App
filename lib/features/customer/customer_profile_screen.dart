@@ -59,9 +59,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     if (_nameController.text.trim().isEmpty ||
         _phoneController.text.trim().isEmpty ||
         _addressController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields.')));
       return;
     }
 
@@ -82,9 +82,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     final user = context.watch<AuthProvider>().currentUser;
 
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: Text('No user logged in')),
-      );
+      return const Scaffold(body: Center(child: Text('No user logged in')));
     }
 
     final profileImagePath = _selectedImage?.path ?? user.profilePicture;
@@ -112,15 +110,9 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            CustomTextField(
-              controller: _nameController,
-              label: 'Full Name',
-            ),
+            CustomTextField(controller: _nameController, label: 'Full Name'),
             const SizedBox(height: 12),
-            CustomTextField(
-              controller: _addressController,
-              label: 'Address',
-            ),
+            CustomTextField(controller: _addressController, label: 'Address'),
             const SizedBox(height: 12),
             CustomTextField(
               controller: _phoneController,
@@ -128,10 +120,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 20),
-            CustomButton(
-              text: 'Save Profile',
-              onPressed: _saveProfile,
-            ),
+            CustomButton(text: 'Save Profile', onPressed: _saveProfile),
           ],
         ),
       ),
