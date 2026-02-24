@@ -1,8 +1,7 @@
 enum RequestStatus {
   pending,
   quoted,
-  booked,
-  inProgress,
+  accepted,
   completed,
   cancelled,
 }
