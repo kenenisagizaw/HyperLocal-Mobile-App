@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/quote_provider.dart';
 import '../../providers/request_provider.dart';
 import '../profile/profile_screen.dart';
+import '../../shared/messages/messages_screen.dart';
 
 class ProviderDashboard extends StatefulWidget {
   const ProviderDashboard({super.key});
@@ -849,9 +850,5 @@ class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Messages', style: TextStyle(fontSize: 18)),
-    );
-  }
+  Widget build(BuildContext context) => const MessagesScreen();
 }
