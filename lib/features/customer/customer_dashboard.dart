@@ -5,6 +5,8 @@ import '../../providers/auth_provider.dart';
 import '../../providers/quote_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../core/constants/enums.dart';
+import 'create_request_screen.dart';
+import 'customer_profile_screen.dart';
 
 class CustomerDashboard extends StatefulWidget {
   const CustomerDashboard({super.key});
@@ -20,7 +22,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
     HomePage(),
     RequestsPage(),
     MessagesPage(),
-    ProfilePage(),
+    CustomerProfileScreen(),
   ];
 
   @override
@@ -81,23 +83,22 @@ class MessagesPage extends StatelessWidget {
   Widget build(BuildContext context) => const Center(child: Text('Messages'));
 }
 
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+// ----------------- FULL FEATURE RequestsPage -----------------
+class RequestsPage extends StatefulWidget {
+  const RequestsPage({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    final user = Provider.of<AuthProvider>(context).currentUser;
-    return Center(
-      child: Text(
-        'Profile\n${user?.name ?? 'Guest'}\n${user?.email ?? ''}',
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
+  State<RequestsPage> createState() => _RequestsPageState();
 }
 
-// ----------------- FULL FEATURE RequestsPage -----------------
-class RequestsPage extends StatelessWidget {
-  const RequestsPage({super.key});
+class _RequestsPageState extends State<RequestsPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+      () => context.read<RequestProvider>().loadRequests(),
+    );
+  }
 
   Color _getStatusColor(RequestStatus status) {
     switch (status) {
@@ -105,10 +106,8 @@ class RequestsPage extends StatelessWidget {
         return Colors.orange;
       case RequestStatus.quoted:
         return Colors.purple;
-      case RequestStatus.booked:
+      case RequestStatus.accepted:
         return Colors.blue;
-      case RequestStatus.inProgress:
-        return Colors.teal;
       case RequestStatus.completed:
         return Colors.green;
       case RequestStatus.cancelled:
@@ -127,74 +126,113 @@ class RequestsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final requests = Provider.of<RequestProvider>(context).requests;
-    final quoteProvider = Provider.of<QuoteProvider>(context);
+    final authProvider = context.watch<AuthProvider>();
+    final requestProvider = context.watch<RequestProvider>();
+    final quoteProvider = context.watch<QuoteProvider>();
 
-    if (requests.isEmpty) {
-      return const Center(child: Text('No requests yet'));
+    final currentUser = authProvider.currentUser;
+    if (currentUser == null) {
+      return const Center(child: Text('No user logged in'));
     }
 
-    return ListView.builder(
-      itemCount: requests.length,
-      itemBuilder: (context, index) {
-        final req = requests[index];
-        final List<Quote> quotes = quoteProvider.getQuotesForRequest(req.id);
-        final bool canAccept = req.status == RequestStatus.pending;
+    final requests = requestProvider.getCustomerRequests(currentUser.id);
 
-        return Card(
-          margin: const EdgeInsets.all(8),
-          child: ExpansionTile(
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('${req.category} - ${req.location}'),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(req.status),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _getStatusText(req.status),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(req.description),
-            ),
-            children: [
-              const SizedBox(height: 8),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text('Quotes:', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              ...quotes.map(
-                (q) => ListTile(
-                  title: Text('${q.providerName} - \$${q.price.toStringAsFixed(2)}'),
-                  subtitle: Text(q.notes),
-                  trailing: canAccept
-                      ? ElevatedButton(
-                          child: const Text('Accept'),
-                          onPressed: () {
-                            // Update request status
-                            Provider.of<RequestProvider>(context, listen: false)
-                                .updateStatus(req.id, RequestStatus.booked);
+    return Scaffold(
+      body: requestProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : requests.isEmpty
+              ? const Center(child: Text('No requests yet'))
+              : ListView.builder(
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final req = requests[index];
+                    final List<Quote> quotes =
+                        quoteProvider.getQuotesForRequest(req.id);
+                    final bool canAccept =
+                        req.status == RequestStatus.pending;
 
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Request accepted!')),
-                            );
-                          },
-                        )
-                      : null,
+                    return Card(
+                      margin: const EdgeInsets.all(8),
+                      child: ExpansionTile(
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('${req.category} - ${req.location}'),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(req.status),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _getStatusText(req.status),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(req.description),
+                        ),
+                        children: [
+                          const SizedBox(height: 8),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Text(
+                              'Quotes:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          ...quotes.map(
+                            (q) => ListTile(
+                              title: Text(
+                                '${q.providerName} - \$${q.price.toStringAsFixed(2)}',
+                              ),
+                              subtitle: Text(q.notes),
+                              trailing: canAccept
+                                  ? ElevatedButton(
+                                      child: const Text('Accept'),
+                                      onPressed: () {
+                                        Provider.of<RequestProvider>(
+                                          context,
+                                          listen: false,
+                                        ).updateStatus(
+                                          req.id,
+                                          RequestStatus.accepted,
+                                        );
+
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Request accepted!'),
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CreateRequestScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Create Request'),
+      ),
     );
   }
 }
