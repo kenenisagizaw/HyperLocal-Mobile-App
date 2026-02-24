@@ -21,11 +21,11 @@ class RoleSelectionScreen extends StatelessWidget {
               child: const Text('Login as Customer'),
               onPressed: () {
                 final user = UserModel(
-                  id: '1',
-                  name: 'Kenenisa',
+                  id: 'customer-1',
+                  name: 'Michael Abate',
                   email: 'customer@example.com',
                   role: UserRole.customer,
-                  phone: '1234567890',
+                  phone: '0922 445 566',
                 );
                 Provider.of<AuthProvider>(context, listen: false).login(user);
                 Navigator.pushReplacement(
@@ -39,11 +39,11 @@ class RoleSelectionScreen extends StatelessWidget {
               child: const Text('Login as Provider'),
               onPressed: () {
                 final user = UserModel(
-                  id: '2',
-                  name: 'Abebe',
+                  id: 'provider-1',
+                  name: 'Abebe Bekele',
                   email: 'provider@example.com',
                   role: UserRole.provider,
-                  phone: '0987654321',
+                  phone: '0911 223 344',
                 );
                 Provider.of<AuthProvider>(context, listen: false).login(user);
                 Navigator.pushReplacement(
