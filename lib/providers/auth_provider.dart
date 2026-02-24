@@ -45,4 +45,22 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // ✅ Update customer profile
+  void updateCustomerProfile({
+    required String name,
+    required String phone,
+    String? address,
+    String? profileImage,
+  }) {
+    if (currentUser != null) {
+      currentUser = currentUser!.copyWith(
+        name: name,
+        phone: phone,
+        address: address,
+        profilePicture: profileImage,
+      );
+      notifyListeners();
+    }
+  }
 }
