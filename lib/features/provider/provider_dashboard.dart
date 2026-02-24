@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -669,6 +670,15 @@ String _formatNotificationTime(DateTime dateTime) {
   return '${difference.inDays}d ago';
 }
 
+String _formatRequestStatus(RequestStatus status) {
+  return status
+      .toString()
+      .split('.')
+      .last
+      .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
+      .trim();
+}
+
 String _getInitials(String name) {
   final parts = name.trim().split(RegExp(r'\s+'));
   if (parts.isEmpty || parts.first.isEmpty) {
@@ -690,6 +700,9 @@ class AvailableJobsPage extends StatefulWidget {
 }
 
 class _AvailableJobsPageState extends State<AvailableJobsPage> {
+  String _selectedCategory = 'All';
+  double _maxDistanceKm = 25;
+
   @override
   void initState() {
     super.initState();
@@ -731,14 +744,93 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
     final customerDirectory = Provider.of<CustomerDirectoryProvider>(context);
     final providerUser = authProvider.currentUser;
 
+    final categories = <String>{'All'};
+    for (final request in requests) {
+      categories.add(request.category);
+    }
+
+    final filteredRequests = requests.where((request) {
+      final matchesCategory =
+          _selectedCategory == 'All' || request.category == _selectedCategory;
+      if (!matchesCategory) {
+        return false;
+      }
+
+      final distanceKm = _calculateDistanceKm(
+        providerUser,
+        request.locationLat,
+        request.locationLng,
+      );
+
+      if (distanceKm == null) {
+        return true;
+      }
+
+      return distanceKm <= _maxDistanceKm;
+    }).toList();
+
     if (requests.isEmpty) {
       return const Center(child: Text('No available jobs'));
     }
 
-    return ListView.builder(
-      itemCount: requests.length,
-      itemBuilder: (context, index) {
-        final req = requests[index];
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  items: categories
+                      .map(
+                        (category) => DropdownMenuItem(
+                          value: category,
+                          child: Text(category),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value == null) {
+                      return;
+                    }
+                    setState(() => _selectedCategory = value);
+                  },
+                  decoration: const InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Distance: ${_maxDistanceKm.toStringAsFixed(0)} km'),
+                    Slider(
+                      value: _maxDistanceKm,
+                      min: 5,
+                      max: 50,
+                      divisions: 9,
+                      label: '${_maxDistanceKm.toStringAsFixed(0)} km',
+                      onChanged: (value) =>
+                          setState(() => _maxDistanceKm = value),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: filteredRequests.isEmpty
+              ? const Center(child: Text('No jobs match your filters'))
+              : ListView.builder(
+                  itemCount: filteredRequests.length,
+                  itemBuilder: (context, index) {
+                    final req = filteredRequests[index];
         final customer = customerDirectory.getCustomerById(req.customerId);
         final isDisabled =
             req.status == RequestStatus.accepted ||
@@ -839,10 +931,41 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
             },
           ),
         );
-      },
+                  },
+                ),
+        ),
+      ],
     );
   }
 }
+
+double? _calculateDistanceKm(
+  UserModel? from,
+  double? toLat,
+  double? toLng,
+) {
+  if (from?.latitude == null ||
+      from?.longitude == null ||
+      toLat == null ||
+      toLng == null) {
+    return null;
+  }
+
+  const earthRadiusKm = 6371.0;
+  final lat1 = _toRadians(from!.latitude!);
+  final lon1 = _toRadians(from.longitude!);
+  final lat2 = _toRadians(toLat);
+  final lon2 = _toRadians(toLng);
+  final dLat = lat2 - lat1;
+  final dLon = lon2 - lon1;
+
+  final a = pow(sin(dLat / 2), 2) +
+      cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
+  final c = 2 * atan2(sqrt(a), sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+double _toRadians(double degree) => degree * (pi / 180.0);
 
 class JobDetailScreen extends StatefulWidget {
   const JobDetailScreen({
@@ -1232,14 +1355,66 @@ class _UserAvatar extends StatelessWidget {
   }
 }
 
-// ------------------- My Quotes -------------------
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
-class MyQuotesPage extends StatelessWidget {
-  const MyQuotesPage({super.key});
+  final IconData icon;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final quotes = Provider.of<QuoteProvider>(context).quotes;
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.blueGrey),
+        const SizedBox(width: 8),
+        Text(
+          '$label:',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(width: 6),
+        Expanded(child: Text(value)),
+      ],
+    );
+  }
+}
+
+// ------------------- My Quotes -------------------
+
+class MyQuotesPage extends StatefulWidget {
+  const MyQuotesPage({super.key});
+
+  @override
+  State<MyQuotesPage> createState() => _MyQuotesPageState();
+}
+
+class _MyQuotesPageState extends State<MyQuotesPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => context.read<RequestProvider>().loadRequests());
+    Future.microtask(
+      () => context.read<CustomerDirectoryProvider>().loadCustomers(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final quoteProvider = context.watch<QuoteProvider>();
+    final requestProvider = context.watch<RequestProvider>();
+    final customerDirectory = context.watch<CustomerDirectoryProvider>();
+
+    final currentUser = authProvider.currentUser;
+    final quotes = currentUser == null
+        ? <Quote>[]
+        : quoteProvider.quotes
+            .where((q) => q.providerId == currentUser.id)
+            .toList();
 
     if (quotes.isEmpty) {
       return const Center(child: Text('No quotes yet'));
@@ -1249,6 +1424,16 @@ class MyQuotesPage extends StatelessWidget {
       itemCount: quotes.length,
       itemBuilder: (context, index) {
         final q = quotes[index];
+        final request = requestProvider.requests
+            .where((r) => r.id == q.requestId)
+            .cast<ServiceRequest?>()
+            .firstWhere(
+              (r) => r != null,
+              orElse: () => null,
+            );
+        final customer = request == null
+            ? null
+            : customerDirectory.getCustomerById(request.customerId);
 
         return Card(
           margin: const EdgeInsets.all(12),
@@ -1257,17 +1442,177 @@ class MyQuotesPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: ListTile(
+            leading: _UserAvatar(
+              name: customer?.name ?? 'Customer',
+              imagePath: customer?.profilePicture,
+            ),
             title: Text(
-              '\$${q.price}',
+              '\$${q.price.toStringAsFixed(0)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
               ),
             ),
-            subtitle: Text(q.notes),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(q.notes),
+                const SizedBox(height: 4),
+                Text(
+                  request == null
+                      ? 'Request info unavailable'
+                      : '${request.category} • ${request.location}',
+                  style: const TextStyle(color: Colors.black54),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Customer: ${customer?.name ?? request?.customerId ?? 'Unknown'}',
+                  style: const TextStyle(color: Colors.black54),
+                ),
+                if (request != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'Status: ${_formatRequestStatus(request.status)}',
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ],
+              ],
+            ),
+            trailing: Text(
+              _formatNotificationTime(q.createdAt),
+              style: const TextStyle(color: Colors.black54),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => QuoteDetailScreen(
+                    quote: q,
+                    request: request,
+                    customer: customer,
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
+    );
+  }
+}
+
+class QuoteDetailScreen extends StatelessWidget {
+  const QuoteDetailScreen({
+    super.key,
+    required this.quote,
+    required this.request,
+    required this.customer,
+  });
+
+  final Quote quote;
+  final ServiceRequest? request;
+  final UserModel? customer;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLocation =
+        request?.locationLat != null && request?.locationLng != null;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Quote Details')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '\$${quote.price.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(quote.notes),
+            const SizedBox(height: 16),
+            if (request != null) ...[
+              _DetailRow(
+                icon: Icons.work_outline,
+                label: 'Request',
+                value: request!.category,
+              ),
+              const SizedBox(height: 8),
+              _DetailRow(
+                icon: Icons.info_outline,
+                label: 'Status',
+                value: _formatRequestStatus(request!.status),
+              ),
+              const SizedBox(height: 8),
+              _DetailRow(
+                icon: Icons.place,
+                label: 'Location',
+                value: request!.location,
+              ),
+              const SizedBox(height: 8),
+              _DetailRow(
+                icon: Icons.description_outlined,
+                label: 'Details',
+                value: request!.description,
+              ),
+            ],
+            if (hasLocation) ...[
+              const SizedBox(height: 12),
+              Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter:
+                        LatLng(request!.locationLat!, request!.locationLng!),
+                    initialZoom: 14,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
+                    ),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.my_first_app',
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point:
+                              LatLng(request!.locationLat!, request!.locationLng!),
+                          width: 40,
+                          height: 40,
+                          child: const Icon(
+                            Icons.location_on,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            const Text(
+              'Customer',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            _CustomerProfileCard(customer: customer),
+          ],
+        ),
+      ),
     );
   }
 }
