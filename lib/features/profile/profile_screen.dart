@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/provider_directory_provider.dart';
 
 class ProviderProfilePage extends StatefulWidget {
   const ProviderProfilePage({super.key});
@@ -143,6 +144,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final providerDirectory =
+      Provider.of<ProviderDirectoryProvider>(context, listen: false);
 
     authProvider.updateProviderProfile(
       name: _nameController.text,
@@ -154,7 +157,14 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       educationDoc: _educationController.text,
       location:
           '${_providerLocation!.latitude},${_providerLocation!.longitude}',
+      latitude: _providerLocation!.latitude,
+      longitude: _providerLocation!.longitude,
     );
+
+    final updatedProvider = authProvider.currentUser;
+    if (updatedProvider != null) {
+      providerDirectory.upsertProvider(updatedProvider);
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile updated successfully!')),
