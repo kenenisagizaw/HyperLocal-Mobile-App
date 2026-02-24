@@ -10,6 +10,7 @@ class UserModel {
   final String? email;
   final String? profilePicture; // Can be URL or local path
   final String? address;
+  final String? bio;
 
   // Provider verification fields
   final String? nationalId;
@@ -28,6 +29,7 @@ class UserModel {
     this.email,
     this.profilePicture,
     this.address,
+    this.bio,
     this.nationalId,
     this.businessLicense,
     this.educationDocument,
@@ -44,6 +46,7 @@ class UserModel {
     String? email,
     String? profilePicture,
     String? address,
+    String? bio,
     String? nationalId,
     String? businessLicense,
     String? educationDocument,
@@ -60,6 +63,7 @@ class UserModel {
       email: email ?? this.email,
       profilePicture: profilePicture ?? this.profilePicture,
       address: address ?? this.address,
+      bio: bio ?? this.bio,
       nationalId: nationalId ?? this.nationalId,
       businessLicense: businessLicense ?? this.businessLicense,
       educationDocument: educationDocument ?? this.educationDocument,
