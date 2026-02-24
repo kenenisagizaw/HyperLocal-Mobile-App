@@ -24,6 +24,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _bioController = TextEditingController();
   final _nationalIdController = TextEditingController();
   final _businessLicenseController = TextEditingController();
   final _educationController = TextEditingController();
@@ -44,10 +45,26 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _bioController.dispose();
     _nationalIdController.dispose();
     _businessLicenseController.dispose();
     _educationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().currentUser;
+      if (user == null) {
+        return;
+      }
+      _nameController.text = user.name;
+      _phoneController.text = user.phone;
+      _emailController.text = user.email ?? '';
+      _bioController.text = user.bio ?? '';
+    });
   }
 
   // ---------------- File picker ----------------
@@ -151,6 +168,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       name: _nameController.text,
       phone: _phoneController.text,
       email: _emailController.text,
+      bio: _bioController.text,
       profileImage: _profileImage?.path,
       nationalId: _nationalIdController.text,
       businessLicense: _businessLicenseController.text,
@@ -278,6 +296,11 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                   'Email (optional)',
                   Icons.email,
                   keyboardType: TextInputType.emailAddress,
+                ),
+                _buildTextField(
+                  _bioController,
+                  'Bio / Profession',
+                  Icons.badge,
                 ),
               ],
             ),
