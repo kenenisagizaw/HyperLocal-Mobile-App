@@ -9,6 +9,7 @@ class UserModel {
   final String phone;
   final String? email;
   final String? profilePicture; // Can be URL or local path
+  final String? address;
 
   // Provider verification fields
   final String? nationalId;
@@ -26,6 +27,7 @@ class UserModel {
     required this.phone,
     this.email,
     this.profilePicture,
+    this.address,
     this.nationalId,
     this.businessLicense,
     this.educationDocument,
@@ -41,6 +43,7 @@ class UserModel {
     String? phone,
     String? email,
     String? profilePicture,
+    String? address,
     String? nationalId,
     String? businessLicense,
     String? educationDocument,
@@ -56,6 +59,7 @@ class UserModel {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       profilePicture: profilePicture ?? this.profilePicture,
+      address: address ?? this.address,
       nationalId: nationalId ?? this.nationalId,
       businessLicense: businessLicense ?? this.businessLicense,
       educationDocument: educationDocument ?? this.educationDocument,
