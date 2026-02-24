@@ -3,16 +3,16 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:provider/provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
+import '../../data/models/message_model.dart';
+import '../../data/models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_directory_provider.dart';
 import '../../providers/message_provider.dart';
 import '../../providers/provider_directory_provider.dart';
 import '../../providers/quote_provider.dart';
-import '../../data/models/message_model.dart';
-import '../../data/models/user_model.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -100,8 +100,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
               if (convo.unreadCount > 0)
                 Container(
                   margin: const EdgeInsets.only(top: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.redAccent,
                     borderRadius: BorderRadius.circular(10),
@@ -203,21 +205,20 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     final currentUser = authProvider.currentUser;
 
     if (currentUser == null) {
-      return const Scaffold(
-        body: Center(child: Text('No user logged in')),
-      );
+      return const Scaffold(body: Center(child: Text('No user logged in')));
     }
 
-    final threadMessages = messageProvider.messages
-        .where(
-          (m) =>
-              (m.senderId == currentUser.id &&
-                  m.receiverId == widget.otherUserId) ||
-              (m.senderId == widget.otherUserId &&
-                  m.receiverId == currentUser.id),
-        )
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final threadMessages =
+        messageProvider.messages
+            .where(
+              (m) =>
+                  (m.senderId == currentUser.id &&
+                      m.receiverId == widget.otherUserId) ||
+                  (m.senderId == widget.otherUserId &&
+                      m.receiverId == currentUser.id),
+            )
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     return Scaffold(
       appBar: AppBar(
@@ -255,8 +256,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                 final isMine = message.senderId == currentUser.id;
 
                 return Align(
-                  alignment:
-                      isMine ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: isMine
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(
@@ -283,9 +285,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                         Text(
                           _formatMessageTime(message.createdAt),
                           style: TextStyle(
-                            color: isMine
-                                ? Colors.white70
-                                : Colors.black54,
+                            color: isMine ? Colors.white70 : Colors.black54,
                             fontSize: 10,
                           ),
                         ),
@@ -301,10 +301,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                ),
+                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
               ],
             ),
             child: Row(
@@ -317,8 +314,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                     ),
                   ),
                 ),
@@ -401,7 +400,11 @@ class UserProfileDetailScreen extends StatelessWidget {
                           ),
                           if (rating != null) ...[
                             const SizedBox(width: 10),
-                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
                             const SizedBox(width: 4),
                             Text(rating.toStringAsFixed(1)),
                           ],
@@ -413,11 +416,7 @@ class UserProfileDetailScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _DetailRow(
-              icon: Icons.phone,
-              label: 'Phone',
-              value: user.phone,
-            ),
+            _DetailRow(icon: Icons.phone, label: 'Phone', value: user.phone),
             const SizedBox(height: 8),
             _DetailRow(
               icon: Icons.email,
@@ -518,10 +517,7 @@ class _DetailRow extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: Colors.blueGrey),
         const SizedBox(width: 8),
-        Text(
-          '$label:',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        Text('$label:', style: const TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(width: 6),
         Expanded(child: Text(value)),
       ],
@@ -604,8 +600,9 @@ List<_ConversationSummary> _buildConversations(
     );
   });
 
-  summaries.sort((a, b) =>
-      b.lastMessage.createdAt.compareTo(a.lastMessage.createdAt));
+  summaries.sort(
+    (a, b) => b.lastMessage.createdAt.compareTo(a.lastMessage.createdAt),
+  );
   return summaries;
 }
 
@@ -668,14 +665,17 @@ String _getInitials(String name) {
   return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
 }
 
-double? _calculateProviderRating(QuoteProvider quoteProvider, String providerId) {
-  final providerQuotes =
-      quoteProvider.quotes.where((q) => q.providerId == providerId).toList();
+double? _calculateProviderRating(
+  QuoteProvider quoteProvider,
+  String providerId,
+) {
+  final providerQuotes = quoteProvider.quotes
+      .where((q) => q.providerId == providerId)
+      .toList();
   if (providerQuotes.isEmpty) {
     return null;
   }
-  final total =
-      providerQuotes.fold<double>(0, (sum, q) => sum + q.rating);
+  final total = providerQuotes.fold<double>(0, (sum, q) => sum + q.rating);
   return total / providerQuotes.length;
 }
 
@@ -695,8 +695,8 @@ double? _calculateDistanceKm(UserModel? from, UserModel to) {
   final dLat = lat2 - lat1;
   final dLon = lon2 - lon1;
 
-  final a = pow(sin(dLat / 2), 2) +
-      cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
+  final a =
+      pow(sin(dLat / 2), 2) + cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
   final c = 2 * atan2(sqrt(a), sqrt(1 - a));
   return earthRadiusKm * c;
 }
