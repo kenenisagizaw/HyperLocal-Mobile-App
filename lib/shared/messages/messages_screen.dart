@@ -446,6 +446,14 @@ class UserProfileDetailScreen extends StatelessWidget {
                 label: 'Verified',
                 value: user.isVerified ? 'Yes' : 'No',
               ),
+              if ((user.bio ?? '').trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _DetailRow(
+                  icon: Icons.info_outline,
+                  label: 'Bio',
+                  value: user.bio!,
+                ),
+              ],
             ],
             if (hasLocation) ...[
               const SizedBox(height: 16),
