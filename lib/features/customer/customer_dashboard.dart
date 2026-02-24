@@ -12,6 +12,7 @@ import '../../providers/message_provider.dart';
 import '../../providers/provider_directory_provider.dart';
 import '../../providers/quote_provider.dart';
 import '../../providers/request_provider.dart';
+import '../../shared/messages/messages_screen.dart';
 import 'create_request_screen.dart';
 import 'customer_profile_screen.dart';
 
@@ -874,7 +875,7 @@ String _formatNotificationTime(DateTime dateTime) {
 class MessagesPage extends StatelessWidget {
   const MessagesPage({super.key});
   @override
-  Widget build(BuildContext context) => const Center(child: Text('Messages'));
+  Widget build(BuildContext context) => const MessagesScreen();
 }
 
 // ----------------- FULL FEATURE RequestsPage -----------------
