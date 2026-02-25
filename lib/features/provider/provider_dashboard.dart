@@ -8,14 +8,17 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../data/models/quote_model.dart';
+import '../../data/models/review_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../../data/models/user_model.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/customer_directory_provider.dart';
-import '../../providers/quote_provider.dart';
-import '../../providers/request_provider.dart';
+import '../auth/providers/auth_provider.dart';
+import '../customer/providers/customer_directory_provider.dart';
+import '../customer/providers/quote_provider.dart';
+import '../customer/providers/request_provider.dart';
+import '../messages/messages_screen.dart';
+import '../reviews/providers/review_provider.dart';
 import '../profile/profile_screen.dart';
-import '../../shared/messages/messages_screen.dart';
+import 'quote_sent_screen.dart';
 
 class ProviderDashboard extends StatefulWidget {
   const ProviderDashboard({super.key});
@@ -137,7 +140,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<RequestProvider>().loadRequests());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<RequestProvider>().loadRequests();
+    });
   }
 
   @override
@@ -145,22 +151,32 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final authProvider = context.watch<AuthProvider>();
     final requestProvider = context.watch<RequestProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
+    final reviewProvider = context.watch<ReviewProvider>();
 
     final currentUser = authProvider.currentUser;
     final providerName = currentUser?.name ?? 'Provider';
     final providerQuotes = currentUser?.id == null
-      ? <Quote>[]
-      : quoteProvider.quotes
-        .where((q) => q.providerId == currentUser!.id)
-        .toList();
-    final rating = providerQuotes.isEmpty
-        ? 4.7
-      : providerQuotes
-          .map((q) => q.rating)
+        ? <Quote>[]
+        : quoteProvider.quotes
+              .where((q) => q.providerId == currentUser!.id)
+              .toList();
+    final providerReviews = currentUser?.id == null
+      ? <Review>[]
+      : reviewProvider.getReviewsForProvider(currentUser!.id);
+    final rating = providerReviews.isNotEmpty
+      ? providerReviews
+          .map((r) => r.rating)
           .fold<double>(0, (sum, value) => sum + value) /
-        providerQuotes.length;
-    final unreadNotificationsCount =
-        _notifications.where((n) => !n.isRead).length;
+        providerReviews.length
+      : (providerQuotes.isEmpty
+        ? 4.7
+        : providerQuotes
+            .map((q) => q.rating)
+            .fold<double>(0, (sum, value) => sum + value) /
+          providerQuotes.length);
+    final unreadNotificationsCount = _notifications
+        .where((n) => !n.isRead)
+        .length;
 
     final activeJobs = requestProvider.requests
         .where((r) => r.status == RequestStatus.accepted)
@@ -234,17 +250,16 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                   _NotificationBell(
                     count: unreadNotificationsCount,
                     onTap: () async {
-                      await Navigator.push(
-                        context,
+                      final navigator = Navigator.of(context);
+                      await navigator.push(
                         MaterialPageRoute(
                           builder: (_) => _NotificationListScreen(
                             notifications: _notifications,
                           ),
                         ),
                       );
-                      if (mounted) {
-                        setState(() {});
-                      }
+                      if (!mounted) return;
+                      setState(() {});
                     },
                   ),
                 ],
@@ -266,7 +281,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                       Switch(
                         value: _isOnline,
                         onChanged: (value) => setState(() => _isOnline = value),
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                       ),
                     ],
                   ),
@@ -323,18 +338,18 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                             ),
                           ]
                         : activeJobsPreview
-                            .map(
-                              (job) => ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(job.category),
-                                subtitle: Text('Customer: ${job.customerId}'),
-                                trailing: const Text(
-                                  'In Progress',
-                                  style: TextStyle(color: Colors.black54),
+                              .map(
+                                (job) => ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(job.category),
+                                  subtitle: Text('Customer: ${job.customerId}'),
+                                  trailing: const Text(
+                                    'In Progress',
+                                    style: TextStyle(color: Colors.black54),
+                                  ),
                                 ),
-                              ),
-                            )
-                            .toList(),
+                              )
+                              .toList(),
                   ),
                 ),
               ),
@@ -420,9 +435,7 @@ class _SummaryCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6),
-        ],
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,16 +444,10 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.black54),
-          ),
+          Text(label, style: const TextStyle(color: Colors.black54)),
         ],
       ),
     );
@@ -467,16 +474,10 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           if (actionLabel != null && onActionTap != null)
-            TextButton(
-              onPressed: onActionTap,
-              child: Text(actionLabel!),
-            ),
+            TextButton(onPressed: onActionTap, child: Text(actionLabel!)),
         ],
       ),
     );
@@ -574,24 +575,20 @@ class _NotificationListScreenState extends State<_NotificationListScreen> {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
       body: notifications.isEmpty
           ? const Center(child: Text('No notifications yet'))
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: notifications.length,
-              separatorBuilder: (_, __) => const Divider(height: 16),
+              separatorBuilder: (context, index) => const Divider(height: 16),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
 
                 return ListTile(
                   leading: Icon(
                     Icons.notifications_outlined,
-                    color: notification.isRead
-                        ? Colors.blueGrey
-                        : Colors.blue,
+                    color: notification.isRead ? Colors.blueGrey : Colors.blue,
                   ),
                   title: Text(notification.title),
                   subtitle: Text(notification.message),
@@ -625,9 +622,7 @@ class _NotificationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notification Details'),
-      ),
+      appBar: AppBar(title: const Text('Notification Details')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -635,10 +630,7 @@ class _NotificationDetailScreen extends StatelessWidget {
           children: [
             Text(
               notification.title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -706,10 +698,11 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<RequestProvider>().loadRequests());
-    Future.microtask(
-      () => context.read<CustomerDirectoryProvider>().loadCustomers(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<RequestProvider>().loadRequests();
+      context.read<CustomerDirectoryProvider>().loadCustomers();
+    });
   }
 
   Color _getStatusColor(RequestStatus status) {
@@ -739,7 +732,6 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
   @override
   Widget build(BuildContext context) {
     final requests = Provider.of<RequestProvider>(context).requests;
-    final quoteProvider = Provider.of<QuoteProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final customerDirectory = Provider.of<CustomerDirectoryProvider>(context);
     final providerUser = authProvider.currentUser;
@@ -781,7 +773,7 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   items: categories
                       .map(
                         (category) => DropdownMenuItem(
@@ -831,106 +823,112 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                   itemCount: filteredRequests.length,
                   itemBuilder: (context, index) {
                     final req = filteredRequests[index];
-        final customer = customerDirectory.getCustomerById(req.customerId);
-        final isDisabled =
-            req.status == RequestStatus.accepted ||
-            req.status == RequestStatus.completed ||
-            req.status == RequestStatus.cancelled;
+                    final customer = customerDirectory.getCustomerById(
+                      req.customerId,
+                    );
+                    final isDisabled =
+                        req.status == RequestStatus.accepted ||
+                        req.status == RequestStatus.completed ||
+                        req.status == RequestStatus.cancelled;
 
-        return Card(
-          margin: const EdgeInsets.all(12),
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 10,
-            ),
-            leading: _UserAvatar(
-              name: customer?.name ?? 'Customer',
-              imagePath: customer?.profilePicture,
-            ),
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${req.category} • ${req.location}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(req.status),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _getStatusText(req.status),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(req.description),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Customer: ${customer?.name ?? req.customerId}',
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            trailing: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isDisabled ? Colors.grey : Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              // ignore: sort_child_properties_last
-              child: const Text('Quote'),
-              onPressed: isDisabled
-                  ? null
-                  : () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => JobDetailScreen(
-                            request: req,
-                            customer: customer,
-                            providerUser: providerUser,
+                    return Card(
+                      margin: const EdgeInsets.all(12),
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        leading: _UserAvatar(
+                          name: customer?.name ?? 'Customer',
+                          imagePath: customer?.profilePicture,
+                        ),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${req.category} • ${req.location}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(req.status),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                _getStatusText(req.status),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(req.description),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Customer: ${customer?.name ?? req.customerId}',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => JobDetailScreen(
-                    request: req,
-                    customer: customer,
-                    providerUser: providerUser,
-                  ),
-                ),
-              );
-            },
-          ),
-        );
+                        trailing: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDisabled
+                                ? Colors.grey
+                                : Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          // ignore: sort_child_properties_last
+                          child: const Text('Quote'),
+                          onPressed: isDisabled
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => JobDetailScreen(
+                                        request: req,
+                                        customer: customer,
+                                        providerUser: providerUser,
+                                      ),
+                                    ),
+                                  );
+                                },
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => JobDetailScreen(
+                                request: req,
+                                customer: customer,
+                                providerUser: providerUser,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
                   },
                 ),
         ),
@@ -939,11 +937,7 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
   }
 }
 
-double? _calculateDistanceKm(
-  UserModel? from,
-  double? toLat,
-  double? toLng,
-) {
+double? _calculateDistanceKm(UserModel? from, double? toLat, double? toLng) {
   if (from?.latitude == null ||
       from?.longitude == null ||
       toLat == null ||
@@ -959,8 +953,8 @@ double? _calculateDistanceKm(
   final dLat = lat2 - lat1;
   final dLon = lon2 - lon1;
 
-  final a = pow(sin(dLat / 2), 2) +
-      cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
+  final a =
+      pow(sin(dLat / 2), 2) + cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
   final c = 2 * atan2(sqrt(a), sqrt(1 - a));
   return earthRadiusKm * c;
 }
@@ -996,6 +990,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   void _submitQuote() {
     final quoteProvider = context.read<QuoteProvider>();
+    final requestProvider = context.read<RequestProvider>();
     final priceText = _priceController.text.trim();
     final notes = _notesController.text.trim();
 
@@ -1008,41 +1003,46 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
     final price = double.tryParse(priceText);
     if (price == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid price.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter a valid price.')));
       return;
     }
 
     final providerUser = widget.providerUser;
 
-    quoteProvider.addQuote(
-      Quote(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        requestId: widget.request.id,
-        providerName: providerUser?.name ?? 'Provider',
-        price: price,
-        notes: notes,
-        providerId: providerUser?.id,
-        providerPhone: providerUser?.phone,
-        providerLocation: providerUser?.location,
-        providerImage: providerUser?.profilePicture,
-        rating: 4.9,
-        createdAt: DateTime.now(),
-      ),
+    final quote = Quote(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      requestId: widget.request.id,
+      providerName: providerUser?.name ?? 'Provider',
+      price: price,
+      notes: notes,
+      providerId: providerUser?.id,
+      providerPhone: providerUser?.phone,
+      providerLocation: providerUser?.location,
+      providerImage: providerUser?.profilePicture,
+      rating: 4.9,
+      createdAt: DateTime.now(),
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Quote submitted')),
+    quoteProvider.addQuote(quote);
+    requestProvider.updateStatus(widget.request.id, RequestStatus.quoted);
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Quote submitted')));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => QuoteSentScreen(quote: quote)),
     );
-    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final request = widget.request;
     final customer = widget.customer;
-    final hasLocation = request.locationLat != null && request.locationLng != null;
+    final hasLocation =
+        request.locationLat != null && request.locationLng != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Job Details')),
@@ -1083,8 +1083,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 clipBehavior: Clip.hardEdge,
                 child: FlutterMap(
                   options: MapOptions(
-                    initialCenter:
-                        LatLng(request.locationLat!, request.locationLng!),
+                    initialCenter: LatLng(
+                      request.locationLat!,
+                      request.locationLng!,
+                    ),
                     initialZoom: 14,
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
@@ -1099,8 +1101,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point:
-                              LatLng(request.locationLat!, request.locationLng!),
+                          point: LatLng(
+                            request.locationLat!,
+                            request.locationLng!,
+                          ),
                           width: 40,
                           height: 40,
                           child: const Icon(
@@ -1183,7 +1187,10 @@ class _CustomerProfileCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            _UserAvatar(name: customer!.name, imagePath: customer!.profilePicture),
+            _UserAvatar(
+              name: customer!.name,
+              imagePath: customer!.profilePicture,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1205,9 +1212,8 @@ class _CustomerProfileCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => _CustomerProfileDetailScreen(
-                      customer: customer!,
-                    ),
+                    builder: (_) =>
+                        _CustomerProfileDetailScreen(customer: customer!),
                   ),
                 );
               },
@@ -1284,8 +1290,10 @@ class _CustomerProfileDetailScreen extends StatelessWidget {
                 clipBehavior: Clip.hardEdge,
                 child: FlutterMap(
                   options: MapOptions(
-                    initialCenter:
-                        LatLng(customer.latitude!, customer.longitude!),
+                    initialCenter: LatLng(
+                      customer.latitude!,
+                      customer.longitude!,
+                    ),
                     initialZoom: 14,
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
@@ -1300,7 +1308,10 @@ class _CustomerProfileDetailScreen extends StatelessWidget {
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point: LatLng(customer.latitude!, customer.longitude!),
+                          point: LatLng(
+                            customer.latitude!,
+                            customer.longitude!,
+                          ),
                           width: 40,
                           height: 40,
                           child: const Icon(
@@ -1323,11 +1334,7 @@ class _CustomerProfileDetailScreen extends StatelessWidget {
 }
 
 class _UserAvatar extends StatelessWidget {
-  const _UserAvatar({
-    required this.name,
-    this.imagePath,
-    this.radius = 20,
-  });
+  const _UserAvatar({required this.name, this.imagePath, this.radius = 20});
 
   final String name;
   final String? imagePath;
@@ -1372,10 +1379,7 @@ class _DetailRow extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: Colors.blueGrey),
         const SizedBox(width: 8),
-        Text(
-          '$label:',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        Text('$label:', style: const TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(width: 6),
         Expanded(child: Text(value)),
       ],
@@ -1396,10 +1400,11 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<RequestProvider>().loadRequests());
-    Future.microtask(
-      () => context.read<CustomerDirectoryProvider>().loadCustomers(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<RequestProvider>().loadRequests();
+      context.read<CustomerDirectoryProvider>().loadCustomers();
+    });
   }
 
   @override
@@ -1413,8 +1418,8 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     final quotes = currentUser == null
         ? <Quote>[]
         : quoteProvider.quotes
-            .where((q) => q.providerId == currentUser.id)
-            .toList();
+              .where((q) => q.providerId == currentUser.id)
+              .toList();
 
     if (quotes.isEmpty) {
       return const Center(child: Text('No quotes yet'));
@@ -1427,10 +1432,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
         final request = requestProvider.requests
             .where((r) => r.id == q.requestId)
             .cast<ServiceRequest?>()
-            .firstWhere(
-              (r) => r != null,
-              orElse: () => null,
-            );
+            .firstWhere((r) => r != null, orElse: () => null);
         final customer = request == null
             ? null
             : customerDirectory.getCustomerById(request.customerId);
@@ -1527,10 +1529,7 @@ class QuoteDetailScreen extends StatelessWidget {
           children: [
             Text(
               '\$${quote.price.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(quote.notes),
@@ -1571,8 +1570,10 @@ class QuoteDetailScreen extends StatelessWidget {
                 clipBehavior: Clip.hardEdge,
                 child: FlutterMap(
                   options: MapOptions(
-                    initialCenter:
-                        LatLng(request!.locationLat!, request!.locationLng!),
+                    initialCenter: LatLng(
+                      request!.locationLat!,
+                      request!.locationLng!,
+                    ),
                     initialZoom: 14,
                     interactionOptions: const InteractionOptions(
                       flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
@@ -1587,8 +1588,10 @@ class QuoteDetailScreen extends StatelessWidget {
                     MarkerLayer(
                       markers: [
                         Marker(
-                          point:
-                              LatLng(request!.locationLat!, request!.locationLng!),
+                          point: LatLng(
+                            request!.locationLat!,
+                            request!.locationLng!,
+                          ),
                           width: 40,
                           height: 40,
                           child: const Icon(
