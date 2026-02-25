@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import '../../core/constants/enums.dart';
 import '../../data/models/service_request_model.dart';
 import '../../data/models/user_model.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/request_provider.dart';
+import '../auth/providers/auth_provider.dart';
+import 'providers/request_provider.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_textfield.dart';
 import 'my_requests_screen.dart';
@@ -75,7 +75,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // ignore: use_build_context_synchronously
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Location permission denied')),
         );
@@ -84,7 +84,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // ignore: use_build_context_synchronously
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Location permissions are permanently denied'),
@@ -95,9 +95,12 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
 
     final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+      ),
     );
 
+    if (!mounted) return;
     setState(() {
       _locationLat = position.latitude;
       _locationLng = position.longitude;
@@ -105,7 +108,6 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           '${position.latitude.toStringAsFixed(6)},${position.longitude.toStringAsFixed(6)}';
     });
 
-    // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Location captured')));
@@ -114,6 +116,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   Future<void> _submit(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
     final requestProvider = context.read<RequestProvider>();
+    final navigator = Navigator.of(context);
 
     final user = authProvider.currentUser;
     if (user == null) {
@@ -165,8 +168,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     await requestProvider.createRequest(request);
 
     if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
+    navigator.pushReplacement(
       MaterialPageRoute(builder: (_) => const MyRequestsScreen()),
     );
   }
@@ -183,7 +185,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               items: _categories
                   .map(
                     (category) => DropdownMenuItem(
