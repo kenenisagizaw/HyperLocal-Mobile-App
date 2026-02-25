@@ -6,12 +6,14 @@ import 'data/datasources/remote/request_api.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/request_repository.dart';
-import 'providers/auth_provider.dart';
-import 'providers/customer_directory_provider.dart';
-import 'providers/message_provider.dart';
-import 'providers/provider_directory_provider.dart';
-import 'providers/quote_provider.dart';
-import 'providers/request_provider.dart';
+import 'features/auth/providers/auth_provider.dart';
+import 'features/customer/providers/customer_directory_provider.dart';
+import 'features/customer/providers/provider_directory_provider.dart';
+import 'features/customer/providers/quote_provider.dart';
+import 'features/customer/providers/request_provider.dart';
+import 'features/messages/providers/message_provider.dart';
+import 'features/payments/providers/payment_provider.dart';
+import 'features/reviews/providers/review_provider.dart';
 
 void main() {
   runApp(
@@ -50,6 +52,8 @@ void main() {
           },
         ),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()),
         ChangeNotifierProvider(create: (_) => QuoteProvider()),
       ],
       child: const MyApp(),
