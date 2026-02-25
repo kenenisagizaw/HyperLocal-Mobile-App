@@ -111,10 +111,7 @@ class _DetailRow extends StatelessWidget {
       children: [
         Expanded(
           flex: 2,
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.black54),
-          ),
+          child: Text(label, style: const TextStyle(color: Colors.black54)),
         ),
         Expanded(
           flex: 3,
