@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/auth_provider.dart';
+import '../auth/providers/auth_provider.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_textfield.dart';
 
