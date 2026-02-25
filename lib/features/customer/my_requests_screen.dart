@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/request_provider.dart';
-import 'request_details_screen.dart';
+import '../auth/providers/auth_provider.dart';
+import 'providers/quote_provider.dart';
+import 'providers/request_provider.dart';
+import 'request_detail_screen.dart';
 
 class MyRequestsScreen extends StatefulWidget {
   const MyRequestsScreen({super.key});
@@ -17,7 +18,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<RequestProvider>().loadRequests());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<RequestProvider>().loadRequests();
+    });
   }
 
   Color _getStatusColor(RequestStatus status) {
@@ -48,6 +52,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final requestProvider = context.watch<RequestProvider>();
+    final quoteProvider = context.watch<QuoteProvider>();
 
     final currentUser = auth.currentUser;
     if (currentUser == null) {
@@ -104,7 +109,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                           decoration: BoxDecoration(
                             color: _getStatusColor(
                               request.status,
-                            ).withOpacity(0.2),
+                            ).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -118,11 +123,15 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       ],
                     ),
                     onTap: () {
+                      final quotes =
+                          quoteProvider.getQuotesForRequest(request.id);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) =>
-                              RequestDetailsScreen(request: request),
+                          builder: (_) => RequestDetailScreen(
+                            request: request,
+                            quotes: quotes,
+                          ),
                         ),
                       );
                     },
