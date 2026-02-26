@@ -8,11 +8,10 @@ import 'package:provider/provider.dart';
 import '../../core/constants/enums.dart';
 import '../../data/models/service_request_model.dart';
 import '../../data/models/user_model.dart';
-import '../auth/providers/auth_provider.dart';
-import 'providers/request_provider.dart';
 import '../../shared/widgets/custom_button.dart';
-import '../../shared/widgets/custom_textfield.dart';
+import '../auth/providers/auth_provider.dart';
 import 'my_requests_screen.dart';
+import 'providers/request_provider.dart';
 
 class CreateRequestScreen extends StatefulWidget {
   const CreateRequestScreen({super.key});
@@ -65,7 +64,13 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     if (!serviceEnabled) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enable location services')),
+        SnackBar(
+          content: const Text('Please enable location services'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
       await Geolocator.openLocationSettings();
       return;
@@ -77,7 +82,13 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       if (permission == LocationPermission.denied) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied')),
+          SnackBar(
+            content: const Text('Location permission denied'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
         );
         return;
       }
@@ -86,8 +97,12 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     if (permission == LocationPermission.deniedForever) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permissions are permanently denied'),
+        SnackBar(
+          content: const Text('Location permissions are permanently denied'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
       await Geolocator.openAppSettings();
@@ -95,9 +110,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
 
     final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
 
     if (!mounted) return;
@@ -105,12 +118,23 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       _locationLat = position.latitude;
       _locationLng = position.longitude;
       _locationController.text =
-          '${position.latitude.toStringAsFixed(6)},${position.longitude.toStringAsFixed(6)}';
+          '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
     });
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Location captured')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green.shade400),
+            const SizedBox(width: 8),
+            const Text('Location captured successfully'),
+          ],
+        ),
+        backgroundColor: Colors.green.shade50,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   Future<void> _submit(BuildContext context) async {
@@ -120,15 +144,27 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
 
     final user = authProvider.currentUser;
     if (user == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please login first.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please login first.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
       return;
     }
 
     if (user.role != UserRole.customer) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Only customers can create requests.')),
+        SnackBar(
+          content: const Text('Only customers can create requests.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
       return;
     }
@@ -137,16 +173,28 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
         _descriptionController.text.trim().isEmpty ||
         _locationController.text.trim().isEmpty ||
         _budgetController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please fill all fields.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please fill all fields.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
       return;
     }
 
     final budget = double.tryParse(_budgetController.text.trim());
     if (budget == null || budget <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid budget.')),
+        SnackBar(
+          content: const Text('Please enter a valid budget.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
       return;
     }
@@ -178,92 +226,444 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     final isLoading = context.watch<RequestProvider>().isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Request')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCategory,
-              items: _categories
-                  .map(
-                    (category) => DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (value) => setState(() => _selectedCategory = value),
-              decoration: InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+      appBar: AppBar(
+        title: const Text(
+          'Create New Request',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade600, Colors.green.shade600],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              controller: _descriptionController,
-              label: 'Description',
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(controller: _locationController, label: 'Location'),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: _getCurrentLocation,
-              icon: const Icon(Icons.my_location),
-              label: const Text('Use Current Location'),
-            ),
-            const SizedBox(height: 12),
-            CustomTextField(
-              controller: _budgetController,
-              label: 'Budget',
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            Row(
+          ),
+        ),
+        elevation: 0,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue.shade50, Colors.green.shade50],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _pickPhotos,
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Add Photos'),
+                // Header Icon
+                Container(
+                  width: 80,
+                  height: 80,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.blue.shade400, Colors.green.shade400],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blue.shade200,
+                        blurRadius: 15,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.add_task,
+                    size: 40,
+                    color: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text('${_photos.length} selected'),
-              ],
-            ),
-            if (_photos.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _photos
-                    .map(
-                      (file) => ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(file.path),
-                          width: 72,
-                          height: 72,
-                          fit: BoxFit.cover,
+
+                // Category Dropdown
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    items: _categories
+                        .map(
+                          (category) => DropdownMenuItem(
+                            value: category,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _getCategoryIcon(category),
+                                  size: 20,
+                                  color: _getCategoryColor(category),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(category),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => _selectedCategory = value),
+                    decoration: InputDecoration(
+                      labelText: 'Service Category',
+                      labelStyle: TextStyle(color: Colors.blue.shade700),
+                      prefixIcon: Icon(
+                        Icons.category,
+                        color: Colors.blue.shade400,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Description Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _descriptionController,
+                    maxLines: 4,
+                    decoration: InputDecoration(
+                      labelText: 'Describe your problem',
+                      labelStyle: TextStyle(color: Colors.blue.shade700),
+                      prefixIcon: Icon(
+                        Icons.description,
+                        color: Colors.blue.shade400,
+                      ),
+                      alignLabelWithHint: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Location Field with Button
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _locationController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Location',
+                          labelStyle: TextStyle(color: Colors.blue.shade700),
+                          prefixIcon: Icon(
+                            Icons.location_on,
+                            color: Colors.blue.shade400,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(15),
+                            ),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
                         ),
                       ),
-                    )
-                    .toList(),
-              ),
-            ],
-            const SizedBox(height: 20),
-            CustomButton(
-              text: isLoading ? 'Submitting...' : 'Submit Request',
-              onPressed: isLoading ? () {} : () => _submit(context),
+                      Container(height: 1, color: Colors.grey.shade200),
+                      Material(
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(15),
+                        ),
+                        color: Colors.white,
+                        child: InkWell(
+                          onTap: _getCurrentLocation,
+                          borderRadius: const BorderRadius.vertical(
+                            bottom: Radius.circular(15),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.my_location,
+                                  color: Colors.green.shade600,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Use Current Location',
+                                  style: TextStyle(
+                                    color: Colors.green.shade600,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Budget Field
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _budgetController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Budget (ETB)',
+                      labelStyle: TextStyle(color: Colors.blue.shade700),
+                      prefixIcon: Icon(
+                        Icons.attach_money,
+                        color: Colors.blue.shade400,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Photo Section
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Material(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(15),
+                        ),
+                        child: InkWell(
+                          onTap: _pickPhotos,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(15),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.blue.shade400,
+                                        Colors.green.shade400,
+                                      ],
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_photo_alternate,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Add Photos',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Show the problem visually',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Text(
+                                    '${_photos.length}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_photos.isNotEmpty) ...[
+                        Container(height: 1, color: Colors.grey.shade200),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _photos
+                                .map(
+                                  (file) => Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.file(
+                                          File(file.path),
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              _photos.remove(file);
+                                            });
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Submit Button
+                CustomButton(
+                  text: isLoading ? 'Submitting...' : 'Submit Request',
+                  onPressed: isLoading ? () {} : () => _submit(context),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Plumbing':
+        return Icons.plumbing;
+      case 'Electrical':
+        return Icons.electrical_services;
+      case 'Painting':
+        return Icons.format_paint;
+      case 'Carpentry':
+        return Icons.handyman;
+      case 'Cleaning':
+        return Icons.cleaning_services;
+      default:
+        return Icons.category;
+    }
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Plumbing':
+        return Colors.blue;
+      case 'Electrical':
+        return Colors.amber;
+      case 'Painting':
+        return Colors.purple;
+      case 'Carpentry':
+        return Colors.brown;
+      case 'Cleaning':
+        return Colors.teal;
+      default:
+        return Colors.grey;
+    }
   }
 }
