@@ -42,7 +42,13 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 12)],
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A3366FF), // Blue tint shadow
+              blurRadius: 12,
+              offset: Offset(0, -4),
+            )
+          ],
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -51,8 +57,8 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
-            selectedItemColor: Colors.blueAccent,
-            unselectedItemColor: Colors.grey.shade500,
+            selectedItemColor: const Color(0xFF3366FF), // Primary blue
+            unselectedItemColor: Colors.grey.shade400,
             selectedFontSize: 14,
             unselectedFontSize: 12,
             items: const [
@@ -141,9 +147,10 @@ class _HomePageState extends State<HomePage> {
     final unreadNotificationsCount = _notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFF), // Light blue background
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -153,9 +160,29 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.waving_hand_outlined, color: Colors.blueAccent),
-                      const SizedBox(width: 8),
-                      Text('Hello, $customerName', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3366FF).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.waving_hand_outlined, 
+                          color: Color(0xFF3366FF), size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Hello,', 
+                            style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                          Text(customerName, 
+                            style: const TextStyle(
+                              fontSize: 24, 
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1F36),
+                            )),
+                        ],
+                      ),
                     ],
                   ),
                   _NotificationBell(
@@ -175,88 +202,276 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              const Text("Here's your activity overview", style: TextStyle(color: Colors.black54)),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF3366FF).withOpacity(0.08),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: const Color(0xFF3366FF), size: 20),
+                    const SizedBox(width: 8),
+                    const Text("Here's your activity overview", 
+                      style: TextStyle(color: Color(0xFF4A4E69), fontSize: 15)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
               /// Summary Cards
               Wrap(
                 spacing: 12,
                 runSpacing: 12,
                 children: [
-                  _SummaryCard(icon: Icons.assignment_outlined, label: 'Active Requests', value: activeRequests.length.toString()),
-                  _SummaryCard(icon: Icons.mark_email_unread_outlined, label: 'Unread Messages', value: unreadMessagesCount.toString()),
-                  _SummaryCard(icon: Icons.receipt_long_outlined, label: 'New Quotes', value: allQuotes.length.toString()),
-                  _SummaryCard(icon: Icons.star_border, label: 'Ongoing Jobs', value: ongoingJobs.length.toString()),
+                  _SummaryCard(
+                    icon: Icons.assignment_outlined, 
+                    label: 'Active Requests', 
+                    value: activeRequests.length.toString(),
+                    color: const Color(0xFF3366FF),
+                  ),
+                  _SummaryCard(
+                    icon: Icons.mark_email_unread_outlined, 
+                    label: 'Unread Messages', 
+                    value: unreadMessagesCount.toString(),
+                    color: const Color(0xFF00C48C), // Green accent
+                  ),
+                  _SummaryCard(
+                    icon: Icons.receipt_long_outlined, 
+                    label: 'New Quotes', 
+                    value: allQuotes.length.toString(),
+                    color: const Color(0xFF3366FF),
+                  ),
+                  _SummaryCard(
+                    icon: Icons.star_border, 
+                    label: 'Ongoing Jobs', 
+                    value: ongoingJobs.length.toString(),
+                    color: const Color(0xFF00C48C), // Green accent
+                  ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
               /// Active Requests Section
-              _SectionHeader(title: 'Active Requests', actionLabel: 'View All', onActionTap: () => widget.onNavigateToTab(1)),
+              _SectionHeader(
+                title: 'Active Requests', 
+                actionLabel: 'View All', 
+                onActionTap: () => widget.onNavigateToTab(1),
+              ),
+              const SizedBox(height: 8),
               ...recentActiveRequests.isEmpty
-                  ? [const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('No active requests yet'))]
+                  ? [Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          Icon(Icons.inbox, size: 48, color: Colors.grey.shade300),
+                          const SizedBox(height: 8),
+                          Text('No active requests yet',
+                            style: TextStyle(color: Colors.grey.shade500)),
+                        ],
+                      ),
+                    )]
                   : recentActiveRequests.map((req) {
                       final quoteCount = quoteProvider.getQuotesForRequest(req.id).length;
-                      final statusLabel = req.status == RequestStatus.pending ? 'Pending' : '\u2022 $quoteCount Quotes';
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(req.category),
-                        subtitle: Text(req.location),
-                        trailing: Text(statusLabel, style: const TextStyle(color: Colors.black54)),
+                      final statusLabel = req.status == RequestStatus.pending 
+                          ? 'Pending' 
+                          : '\u2022 $quoteCount Quotes';
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade100),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3366FF).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(Icons.build_circle_outlined, 
+                              color: const Color(0xFF3366FF), size: 20),
+                          ),
+                          title: Text(req.category, 
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(req.location, 
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: req.status == RequestStatus.pending 
+                                  ? const Color(0xFFFFB800).withOpacity(0.1)
+                                  : const Color(0xFF00C48C).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(statusLabel, 
+                              style: TextStyle(
+                                color: req.status == RequestStatus.pending 
+                                    ? const Color(0xFFFFB800)
+                                    : const Color(0xFF00C48C),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              )),
+                          ),
+                        ),
                       );
                     }).toList(),
 
               const SizedBox(height: 24),
 
               /// Recent Quotes Section
-              _SectionHeader(title: 'Recent Quotes', actionLabel: 'View All Quotes', onActionTap: () => widget.onNavigateToTab(1)),
+              _SectionHeader(
+                title: 'Recent Quotes', 
+                actionLabel: 'View All Quotes', 
+                onActionTap: () => widget.onNavigateToTab(1),
+              ),
+              const SizedBox(height: 8),
               ...recentQuotes.isEmpty
-                  ? [const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('No quotes yet'))]
-                  : recentQuotes.map((quote) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(quote.providerName),
-                        subtitle: Text('\$${quote.price.toStringAsFixed(0)}'),
-                        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 18),
-                          const SizedBox(width: 4),
-                          Text(quote.rating.toStringAsFixed(1)),
-                        ]),
+                  ? [Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          Icon(Icons.receipt, size: 48, color: Colors.grey.shade300),
+                          const SizedBox(height: 8),
+                          Text('No quotes yet',
+                            style: TextStyle(color: Colors.grey.shade500)),
+                        ],
+                      ),
+                    )]
+                  : recentQuotes.map((quote) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade100),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          leading: CircleAvatar(
+                            backgroundColor: const Color(0xFF00C48C).withOpacity(0.1),
+                            radius: 20,
+                            child: Text(
+                              quote.providerName[0].toUpperCase(),
+                              style: const TextStyle(
+                                color: Color(0xFF00C48C),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          title: Text(quote.providerName, 
+                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text('\$${quote.price.toStringAsFixed(0)}',
+                            style: TextStyle(color: const Color(0xFF3366FF), fontWeight: FontWeight.w500)),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(mainAxisSize: MainAxisSize.min, children: [
+                              const Icon(Icons.star, color: Colors.amber, size: 16),
+                              const SizedBox(width: 4),
+                              Text(quote.rating.toStringAsFixed(1),
+                                style: const TextStyle(fontWeight: FontWeight.w600)),
+                            ]),
+                          ),
+                        ),
                       )).toList(),
 
               const SizedBox(height: 24),
 
               /// Ongoing Jobs Section
               const _SectionHeader(title: 'Current Job'),
+              const SizedBox(height: 8),
               ongoingJobs.isEmpty
-                  ? const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Text('No ongoing jobs'))
-                  : ListTile(
-                      title: Text(ongoingJobs.first.category, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text('Provider: ${recentQuotes.isEmpty ? 'Assigned' : recentQuotes.first.providerName}'),
-                      trailing: const Text('In Progress'),
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      alignment: Alignment.center,
+                      child: Column(
+                        children: [
+                          Icon(Icons.work_outline, size: 48, color: Colors.grey.shade300),
+                          const SizedBox(height: 8),
+                          Text('No ongoing jobs',
+                            style: TextStyle(color: Colors.grey.shade500)),
+                        ],
+                      ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF3366FF), Color(0xFF00C48C)],
+                        ),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(ongoingJobs.first.category, 
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 18,
+                          )),
+                        subtitle: Text('Provider: ${recentQuotes.isEmpty ? 'Assigned' : recentQuotes.first.providerName}',
+                          style: const TextStyle(color: Colors.white70)),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text('In Progress',
+                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                        ),
+                      ),
                     ),
 
               const SizedBox(height: 24),
 
               /// Notifications Section
               const _SectionHeader(title: 'Notifications'),
-              ..._notifications.take(3).map((n) => _NotificationTile(
-                    icon: Icons.notifications_outlined,
-                    text: n.title,
-                    isUnread: !n.isRead,
-                          onTap: () async {
-                            n.isRead = true;
-                            final navigator = Navigator.of(context);
-                            await navigator.push(
-                              MaterialPageRoute(
-                                builder: (_) => NotificationDetailScreen(
-                                  notification: n,
-                                ),
-                              ),
-                            );
-                            if (!mounted) return;
-                            setState(() {});
-                          },
+              const SizedBox(height: 8),
+              ..._notifications.take(3).map((n) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: n.isRead ? Colors.white : const Color(0xFF3366FF).withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: n.isRead ? Colors.grey.shade200 : const Color(0xFF3366FF).withOpacity(0.2),
+                      ),
+                    ),
+                    child: _NotificationTile(
+                      icon: Icons.notifications_outlined,
+                      text: n.title,
+                      isUnread: !n.isRead,
+                      onTap: () async {
+                        n.isRead = true;
+                        final navigator = Navigator.of(context);
+                        await navigator.push(
+                          MaterialPageRoute(
+                            builder: (_) => NotificationDetailScreen(
+                              notification: n,
+                            ),
+                          ),
+                        );
+                        if (!mounted) return;
+                        setState(() {});
+                      },
+                    ),
                   )),
             ],
           ),
@@ -268,28 +483,63 @@ class _HomePageState extends State<HomePage> {
 
 /// ----------------- REUSABLE WIDGETS -----------------
 class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.icon, required this.label, required this.value});
+  const _SummaryCard({
+    required this.icon, 
+    required this.label, 
+    required this.value,
+    required this.color,
+  });
   final IconData icon;
   final String label;
   final String value;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: (MediaQuery.of(context).size.width - 44) / 2,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            color.withOpacity(0.05),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Icon(icon, color: Colors.blueAccent),
-        const SizedBox(height: 8),
-        Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(height: 12),
+        Text(value, 
+          style: TextStyle(
+            fontSize: 24, 
+            fontWeight: FontWeight.bold,
+            color: color,
+          )),
         const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.black54)),
+        Text(label, 
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 13,
+          )),
       ]),
     );
   }
@@ -308,8 +558,20 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          if (actionLabel != null && onActionTap != null) TextButton(onPressed: onActionTap, child: Text(actionLabel!)),
+          Text(title, 
+            style: const TextStyle(
+              fontSize: 20, 
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1F36),
+            )),
+          if (actionLabel != null && onActionTap != null)
+            TextButton(
+              onPressed: onActionTap, 
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF3366FF),
+              ),
+              child: Text(actionLabel!),
+            ),
         ],
       ),
     );
@@ -326,11 +588,39 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: Colors.blueAccent),
-      title: Text(text, style: TextStyle(fontWeight: isUnread ? FontWeight.bold : FontWeight.normal)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isUnread 
+              ? const Color(0xFF3366FF).withOpacity(0.1)
+              : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, 
+          color: isUnread ? const Color(0xFF3366FF) : Colors.grey.shade600,
+          size: 20,
+        ),
+      ),
+      title: Text(text, 
+        style: TextStyle(
+          fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
+          color: isUnread ? const Color(0xFF1A1F36) : Colors.grey.shade700,
+        )),
       trailing: isUnread
-          ? Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle))
+          ? Container(
+              width: 10, 
+              height: 10, 
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C48C),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00C48C).withOpacity(0.4),
+                    blurRadius: 4,
+                  ),
+                ],
+              ))
           : null,
       onTap: onTap,
     );
@@ -345,17 +635,40 @@ class _NotificationBell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(clipBehavior: Clip.none, children: [
-      IconButton(onPressed: onTap, icon: const Icon(Icons.notifications_none, color: Colors.black87)),
+      IconButton(
+        onPressed: onTap, 
+        icon: Icon(Icons.notifications_none, 
+          color: count > 0 ? const Color(0xFF3366FF) : Colors.grey.shade600,
+          size: 28,
+        ),
+      ),
       if (count > 0)
         Positioned(
           right: 6,
           top: 6,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(12)),
-            constraints: const BoxConstraints(minWidth: 18),
-            child: Text(count > 99 ? '99+' : count.toString(),
-                textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF00C48C),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00C48C).withOpacity(0.4),
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+            child: Text(
+              count > 99 ? '99+' : count.toString(),
+              textAlign: TextAlign.center, 
+              style: const TextStyle(
+                color: Colors.white, 
+                fontSize: 10, 
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
     ]);
@@ -386,31 +699,73 @@ class PaymentsPage extends StatelessWidget {
     final payments = paymentProvider.payments.where((p) => p.payerId == currentUser.id).toList();
     if (payments.isEmpty) return const Center(child: Text('No payments yet'));
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: payments.length,
-      itemBuilder: (context, index) {
-        final payment = payments[index];
-        ServiceRequest? request;
-        Quote? quote;
-        try { request = requestProvider.requests.firstWhere((r) => r.id == payment.requestId); } catch (_) { request = null; }
-        try { quote = quoteProvider.quotes.firstWhere((q) => q.id == payment.quoteId); } catch (_) { quote = null; }
+    return Container(
+      color: const Color(0xFFF8FAFF),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: payments.length,
+        itemBuilder: (context, index) {
+          final payment = payments[index];
+          ServiceRequest? request;
+          Quote? quote;
+          try { request = requestProvider.requests.firstWhere((r) => r.id == payment.requestId); } catch (_) { request = null; }
+          try { quote = quoteProvider.quotes.firstWhere((q) => q.id == payment.quoteId); } catch (_) { quote = null; }
 
-        return Card(
-          elevation: 0,
-          color: Colors.grey.shade50,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
-          child: ListTile(
-            title: Text('\$${payment.amount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(request?.category ?? 'Service request'),
-              const SizedBox(height: 4),
-              Text('Provider: ${quote?.providerName ?? 'Unknown'}', style: const TextStyle(color: Colors.black54)),
-            ]),
-            trailing: Text(payment.createdAt.toLocal().toString().split(' ').first, style: const TextStyle(color: Colors.black54, fontSize: 12)),
-          ),
-        );
-      },
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3366FF).withOpacity(0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.all(16),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF3366FF).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.payment, color: const Color(0xFF3366FF), size: 24),
+              ),
+              title: Text('\$${payment.amount.toStringAsFixed(2)}', 
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF1A1F36),
+                )),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start, 
+                children: [
+                  const SizedBox(height: 4),
+                  Text(request?.category ?? 'Service request',
+                    style: TextStyle(color: Colors.grey.shade600)),
+                  const SizedBox(height: 2),
+                  Text('Provider: ${quote?.providerName ?? 'Unknown'}', 
+                    style: TextStyle(color: const Color(0xFF00C48C), fontSize: 12)),
+                ],
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  payment.createdAt.toLocal().toString().split(' ').first, 
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -437,13 +792,13 @@ class _RequestsPageState extends State<RequestsPage> {
   Color _getStatusColor(RequestStatus status) {
     switch (status) {
       case RequestStatus.pending:
-        return Colors.orange;
+        return const Color(0xFFFFB800);
       case RequestStatus.quoted:
-        return Colors.purple;
+        return const Color(0xFF3366FF);
       case RequestStatus.accepted:
-        return Colors.blue;
+        return const Color(0xFF00C48C);
       case RequestStatus.completed:
-        return Colors.green;
+        return const Color(0xFF00C48C);
       case RequestStatus.cancelled:
         return Colors.red;
     }
@@ -465,27 +820,88 @@ class _RequestsPageState extends State<RequestsPage> {
     final requests = requestProvider.getCustomerRequests(currentUser.id);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFF),
       body: requestProvider.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF3366FF)))
           : requests.isEmpty
-              ? const Center(child: Text('No requests yet'))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.assignment_outlined, size: 64, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      Text('No requests yet',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                    ],
+                  ),
+                )
               : ListView.builder(
+                  padding: const EdgeInsets.all(12),
                   itemCount: requests.length,
                   itemBuilder: (context, index) {
                     final req = requests[index];
                     final List<Quote> quotes = quoteProvider.getQuotesForRequest(req.id);
 
-                    return Card(
-                      margin: const EdgeInsets.all(8),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3366FF).withOpacity(0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: ListTile(
-                        title: Text('${req.category} - ${req.location}'),
-                        subtitle: Text(req.description),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: _getStatusColor(req.status), borderRadius: BorderRadius.circular(8)),
-                          child: Text(_getStatusText(req.status), style: const TextStyle(color: Colors.white)),
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(req.status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            req.status == RequestStatus.pending ? Icons.hourglass_empty :
+                            req.status == RequestStatus.quoted ? Icons.receipt :
+                            req.status == RequestStatus.accepted ? Icons.check_circle :
+                            req.status == RequestStatus.completed ? Icons.done_all :
+                            Icons.cancel,
+                            color: _getStatusColor(req.status),
+                            size: 24,
+                          ),
                         ),
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RequestDetailScreen(request: req, quotes: quotes))),
+                        title: Text('${req.category} - ${req.location}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1F36),
+                          )),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(req.description,
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                        ),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(req.status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(_getStatusText(req.status),
+                            style: TextStyle(
+                              color: _getStatusColor(req.status),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            )),
+                        ),
+                        onTap: () => Navigator.push(
+                          context, 
+                          MaterialPageRoute(
+                            builder: (_) => RequestDetailScreen(request: req, quotes: quotes)
+                          )
+                        ),
                       ),
                     );
                   },
@@ -494,6 +910,9 @@ class _RequestsPageState extends State<RequestsPage> {
         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateRequestScreen())),
         icon: const Icon(Icons.add),
         label: const Text('Create Request'),
+        backgroundColor: const Color(0xFF3366FF),
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -516,18 +935,71 @@ class NotificationListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
-      body: ListView.builder(
-        itemCount: notifications.length,
-        itemBuilder: (context, index) {
-          final n = notifications[index];
-          return ListTile(
-            title: Text(n.title),
-            subtitle: Text(n.message),
-            trailing: n.isRead ? null : const Icon(Icons.circle, color: Colors.red, size: 10),
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => NotificationDetailScreen(notification: n))),
-          );
-        },
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1F36),
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: Colors.grey.shade200, height: 1),
+        ),
+      ),
+      body: Container(
+        color: const Color(0xFFF8FAFF),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: notifications.length,
+          itemBuilder: (context, index) {
+            final n = notifications[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: n.isRead ? Colors.grey.shade200 : const Color(0xFF3366FF).withOpacity(0.3),
+                ),
+              ),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: n.isRead 
+                        ? Colors.grey.shade100 
+                        : const Color(0xFF3366FF).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    n.isRead ? Icons.notifications_none : Icons.notifications_active,
+                    color: n.isRead ? Colors.grey.shade600 : const Color(0xFF3366FF),
+                  ),
+                ),
+                title: Text(n.title,
+                  style: TextStyle(
+                    fontWeight: n.isRead ? FontWeight.normal : FontWeight.w600,
+                  )),
+                subtitle: Text(n.message),
+                trailing: n.isRead 
+                    ? null 
+                    : Container(
+                        width: 8, 
+                        height: 8, 
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00C48C),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                onTap: () => Navigator.push(
+                  context, 
+                  MaterialPageRoute(
+                    builder: (_) => NotificationDetailScreen(notification: n)
+                  )
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -540,11 +1012,90 @@ class NotificationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(notification.title)),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(notification.message, style: const TextStyle(fontSize: 16)),
+      appBar: AppBar(
+        title: Text(notification.title),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1F36),
+        elevation: 0,
+      ),
+      body: Container(
+        color: const Color(0xFFF8FAFF),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF3366FF).withOpacity(0.08),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3366FF).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.notifications, 
+                            color: Color(0xFF3366FF), size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            notification.title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1F36),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      notification.message,
+                      style: const TextStyle(fontSize: 16, color: Color(0xFF4A4E69)),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Received: ${_formatDate(notification.createdAt)}',
+                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''} ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
