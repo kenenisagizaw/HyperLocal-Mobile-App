@@ -21,6 +21,9 @@ class UserModel {
   final double? longitude; // <-- new field
   final bool isVerified;
 
+  // Meta
+  final DateTime? createdAt;
+
   UserModel({
     required this.id,
     required this.role,
@@ -37,6 +40,7 @@ class UserModel {
     this.latitude,
     this.longitude,
     this.isVerified = false,
+    this.createdAt,
   });
 
   /// Creates a copy of the user with updated fields
@@ -54,6 +58,7 @@ class UserModel {
     double? latitude,
     double? longitude,
     bool? isVerified,
+    DateTime? createdAt,
   }) {
     return UserModel(
       id: id,
@@ -71,6 +76,7 @@ class UserModel {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       isVerified: isVerified ?? this.isVerified,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }
