@@ -30,6 +30,9 @@ class ProviderDashboard extends StatefulWidget {
 class _ProviderDashboardState extends State<ProviderDashboard> {
   int _currentIndex = 0;
 
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+
   List<Widget> _buildPages() {
     return [
       ProviderHomePage(
@@ -54,43 +57,49 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
         child: pages[_currentIndex],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12)],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
           child: BottomNavigationBar(
             currentIndex: _currentIndex,
             onTap: (index) => setState(() => _currentIndex = index),
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
-            selectedItemColor: Colors.blue,
-            unselectedItemColor: Colors.blueGrey,
-            selectedFontSize: 14,
+            selectedItemColor: _primaryBlue,
+            unselectedItemColor: Colors.grey.shade400,
+            selectedFontSize: 12,
             unselectedFontSize: 12,
-            selectedIconTheme: const IconThemeData(size: 28),
-            unselectedIconTheme: const IconThemeData(size: 22),
-            elevation: 10,
+            selectedIconTheme: const IconThemeData(size: 26),
+            unselectedIconTheme: const IconThemeData(size: 24),
+            elevation: 0,
             items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Jobs'),
+              BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: 'Home'),
+              BottomNavigationBarItem(icon: Icon(Icons.work_rounded), label: 'Jobs'),
               BottomNavigationBarItem(
-                icon: Icon(Icons.attach_money),
+                icon: Icon(Icons.attach_money_rounded),
                 label: 'Quotes',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.message),
+                icon: Icon(Icons.message_rounded),
                 label: 'Messages',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person),
+                icon: Icon(Icons.person_rounded),
                 label: 'Profile',
               ),
             ],
@@ -136,6 +145,11 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   ];
 
   bool _isOnline = true;
+
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+  static const _gradientStart = Color(0xFF2563EB);
+  static const _gradientEnd = Color(0xFF059669);
 
   @override
   void initState() {
@@ -205,211 +219,407 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final activeJobsPreview = activeJobs.take(2).toList();
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: Colors.blue.shade100,
-                        child: Text(
-                          _getInitials(providerName),
-                          style: const TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.bold,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.grey.shade50, Colors.white],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [_gradientStart, _gradientEnd],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                          child: CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Colors.transparent,
+                            child: Text(
+                              _getInitials(providerName),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hello, $providerName 👋',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Here's your business overview",
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    _NotificationBell(
+                      count: unreadNotificationsCount,
+                      onTap: () async {
+                        final navigator = Navigator.of(context);
+                        await navigator.push(
+                          MaterialPageRoute(
+                            builder: (_) => _NotificationListScreen(
+                              notifications: _notifications,
+                            ),
+                          ),
+                        );
+                        if (!mounted) return;
+                        setState(() {});
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.star_rounded, color: _primaryBlue, size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              rating.toStringAsFixed(1),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _primaryBlue,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hello, $providerName',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _isOnline ? 'You\'re online' : 'You\'re offline',
+                              style: TextStyle(
+                                color: _isOnline ? _primaryGreen : Colors.grey.shade600,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            "Here's your business overview",
-                            style: TextStyle(color: Colors.black54),
+                            Switch(
+                              value: _isOnline,
+                              onChanged: (value) => setState(() => _isOnline = value),
+                              activeColor: _primaryGreen,
+                              activeTrackColor: _primaryGreen.withOpacity(0.3),
+                              inactiveThumbColor: Colors.grey.shade400,
+                              inactiveTrackColor: Colors.grey.shade200,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _SummaryCard(
+                      icon: Icons.work_outline_rounded,
+                      label: 'Active Jobs',
+                      value: activeJobs.length.toString(),
+                      gradientColors: const [_gradientStart, _gradientEnd],
+                    ),
+                    _SummaryCard(
+                      icon: Icons.notifications_active_outlined,
+                      label: 'New Requests',
+                      value: newOpportunities.length.toString(),
+                      gradientColors: const [_gradientEnd, _gradientStart],
+                    ),
+                    _SummaryCard(
+                      icon: Icons.star_border_rounded,
+                      label: 'Rating',
+                      value: '${rating.toStringAsFixed(1)} ⭐',
+                      gradientColors: const [_gradientStart, _gradientEnd],
+                    ),
+                    _SummaryCard(
+                      icon: Icons.attach_money_rounded,
+                      label: 'Today\'s Earnings',
+                      value: '\$${earningsToday.toStringAsFixed(0)}',
+                      gradientColors: const [_gradientEnd, _gradientStart],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                _SectionHeader(
+                  title: 'Active Jobs',
+                  actionLabel: 'View All',
+                  onActionTap: () => widget.onNavigateToTab(1),
+                ),
+                const SizedBox(height: 12),
+                if (activeJobsPreview.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: _cardDecoration(),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.work_outline_rounded, size: 48, color: Colors.grey.shade300),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No active jobs yet',
+                            style: TextStyle(color: Colors.grey.shade500),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  _NotificationBell(
-                    count: unreadNotificationsCount,
-                    onTap: () async {
-                      final navigator = Navigator.of(context);
-                      await navigator.push(
-                        MaterialPageRoute(
-                          builder: (_) => _NotificationListScreen(
-                            notifications: _notifications,
+                    ),
+                  )
+                else
+                  ...activeJobsPreview.map(
+                    (job) => Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: _cardDecoration(),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [_gradientStart, _gradientEnd],
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.build_rounded, color: Colors.white, size: 24),
+                        ),
+                        title: Text(
+                          job.category,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
-                      );
-                      if (!mounted) return;
-                      setState(() {});
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      Text(rating.toStringAsFixed(1)),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  Row(
-                    children: [
-                      const Text('Online'),
-                      Switch(
-                        value: _isOnline,
-                        onChanged: (value) => setState(() => _isOnline = value),
-                        activeThumbColor: Colors.green,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  _SummaryCard(
-                    icon: Icons.work_outline,
-                    label: 'Active Jobs',
-                    value: activeJobs.length.toString(),
-                  ),
-                  _SummaryCard(
-                    icon: Icons.notifications_active_outlined,
-                    label: 'New Requests',
-                    value: newOpportunities.length.toString(),
-                  ),
-                  _SummaryCard(
-                    icon: Icons.star_border,
-                    label: 'Rating',
-                    value: '${rating.toStringAsFixed(1)}⭐',
-                  ),
-                  _SummaryCard(
-                    icon: Icons.attach_money,
-                    label: 'Earnings Today',
-                    value: '\$${earningsToday.toStringAsFixed(0)}',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              _SectionHeader(
-                title: 'Active Jobs',
-                actionLabel: 'View All',
-                onActionTap: () => widget.onNavigateToTab(1),
-              ),
-              Card(
-                elevation: 0,
-                color: Colors.grey.shade50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: activeJobsPreview.isEmpty
-                        ? const [
-                            Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text('No active jobs yet'),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Customer: ${job.customerId}',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                        ),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _primaryGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'In Progress',
+                            style: TextStyle(
+                              color: _primaryGreen,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ]
-                        : activeJobsPreview
-                              .map(
-                                (job) => ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(job.category),
-                                  subtitle: Text('Customer: ${job.customerId}'),
-                                  trailing: const Text(
-                                    'In Progress',
-                                    style: TextStyle(color: Colors.black54),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const _SectionHeader(title: 'Recent Activity'),
-              Card(
-                elevation: 0,
-                color: Colors.grey.shade50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
+                const SizedBox(height: 20),
+                const _SectionHeader(title: 'Recent Activity'),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: _cardDecoration(),
                   child: Column(
-                    children: const [
-                      _NotificationTile(
+                    children: [
+                      _ActivityTile(
                         icon: Icons.notifications_outlined,
                         text: 'You received a new request',
+                        time: '5 min ago',
                       ),
-                      _NotificationTile(
+                      const Divider(height: 1, indent: 70),
+                      _ActivityTile(
                         icon: Icons.check_circle_outline,
                         text: 'John accepted your quote',
+                        time: '2 hours ago',
                       ),
-                      _NotificationTile(
-                        icon: Icons.star_border,
-                        text: 'New review added',
+                      const Divider(height: 1, indent: 70),
+                      _ActivityTile(
+                        icon: Icons.star_border_rounded,
+                        text: 'New 5-star review added',
+                        time: '1 day ago',
                       ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              const _SectionHeader(title: 'This Week'),
-              Card(
-                elevation: 0,
-                color: Colors.grey.shade50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Jobs Completed: ${activeJobs.length + 2}'),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Total Earnings: \$${(earningsToday + 200).toStringAsFixed(0)}',
-                      ),
-                      const SizedBox(height: 6),
-                      Text('Average Rating: ${rating.toStringAsFixed(1)}⭐'),
-                    ],
+                const SizedBox(height: 20),
+                const _SectionHeader(title: 'This Week'),
+                const SizedBox(height: 12),
+                Container(
+                  decoration: _cardDecoration(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _WeeklyStat(
+                          label: 'Jobs',
+                          value: '${activeJobs.length + 2}',
+                          icon: Icons.work_rounded,
+                        ),
+                        Container(width: 1, height: 40, color: Colors.grey.shade200),
+                        _WeeklyStat(
+                          label: 'Earnings',
+                          value: '\$${(earningsToday + 200).toStringAsFixed(0)}',
+                          icon: Icons.attach_money_rounded,
+                        ),
+                        Container(width: 1, height: 40, color: Colors.grey.shade200),
+                        _WeeklyStat(
+                          label: 'Rating',
+                          value: rating.toStringAsFixed(1),
+                          icon: Icons.star_rounded,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeeklyStat extends StatelessWidget {
+  const _WeeklyStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: const Color(0xFF2563EB), size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityTile extends StatelessWidget {
+  const _ActivityTile({
+    required this.icon,
+    required this.text,
+    required this.time,
+  });
+
+  final IconData icon;
+  final String text;
+  final String time;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFF2563EB), size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  text,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                Text(time, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+        ],
       ),
     );
   }
@@ -420,34 +630,63 @@ class _SummaryCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    required this.gradientColors,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final List<Color> gradientColors;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: (MediaQuery.of(context).size.width - 44) / 2,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blue),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
           ),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.black54)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -468,34 +707,28 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.3,
+            ),
           ),
           if (actionLabel != null && onActionTap != null)
-            TextButton(onPressed: onActionTap, child: Text(actionLabel!)),
+            TextButton(
+              onPressed: onActionTap,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2563EB),
+              ),
+              child: Text(actionLabel!),
+            ),
         ],
       ),
-    );
-  }
-}
-
-class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: Colors.blue),
-      title: Text(text),
     );
   }
 }
@@ -513,19 +746,27 @@ class _NotificationBell extends StatelessWidget {
       children: [
         IconButton(
           onPressed: onTap,
-          icon: const Icon(Icons.notifications_none, color: Colors.black87),
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.notifications_none_rounded, color: Colors.black87),
+          ),
         ),
         if (count > 0)
           Positioned(
-            right: 6,
-            top: 6,
+            right: 8,
+            top: 8,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white, width: 2),
               ),
-              constraints: const BoxConstraints(minWidth: 18),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               child: Text(
                 count > 99 ? '99+' : count.toString(),
                 textAlign: TextAlign.center,
@@ -569,44 +810,94 @@ class _NotificationListScreen extends StatefulWidget {
 }
 
 class _NotificationListScreenState extends State<_NotificationListScreen> {
+  static const _primaryBlue = Color(0xFF2563EB);
+
   @override
   Widget build(BuildContext context) {
     final notifications = widget.notifications.toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
       body: notifications.isEmpty
-          ? const Center(child: Text('No notifications yet'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_none_rounded, size: 80, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No notifications yet',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: notifications.length,
-              separatorBuilder: (context, index) => const Divider(height: 16),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final notification = notifications[index];
 
-                return ListTile(
-                  leading: Icon(
-                    Icons.notifications_outlined,
-                    color: notification.isRead ? Colors.blueGrey : Colors.blue,
+                return Container(
+                  decoration: BoxDecoration(
+                    color: notification.isRead ? Colors.white : _primaryBlue.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: notification.isRead ? Colors.grey.shade200 : _primaryBlue.withOpacity(0.2),
+                    ),
                   ),
-                  title: Text(notification.title),
-                  subtitle: Text(notification.message),
-                  trailing: Text(
-                    _formatNotificationTime(notification.createdAt),
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                  onTap: () async {
-                    setState(() => notification.isRead = true);
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => _NotificationDetailScreen(
-                          notification: notification,
-                        ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: notification.isRead ? Colors.grey.shade100 : _primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    );
-                  },
+                      child: Icon(
+                        Icons.notifications_rounded,
+                        color: notification.isRead ? Colors.grey.shade600 : _primaryBlue,
+                        size: 24,
+                      ),
+                    ),
+                    title: Text(
+                      notification.title,
+                      style: TextStyle(
+                        fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(notification.message),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatNotificationTime(notification.createdAt),
+                          style: const TextStyle(color: Colors.black54, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    trailing: Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                    onTap: () async {
+                      setState(() => notification.isRead = true);
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => _NotificationDetailScreen(
+                            notification: notification,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -622,23 +913,41 @@ class _NotificationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Notification Details')),
+      appBar: AppBar(
+        title: const Text('Notification Details'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              notification.title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    notification.title,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _formatNotificationTime(notification.createdAt),
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(notification.message, style: const TextStyle(fontSize: 16)),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _formatNotificationTime(notification.createdAt),
-              style: const TextStyle(color: Colors.black54),
-            ),
-            const SizedBox(height: 16),
-            Text(notification.message, style: const TextStyle(fontSize: 16)),
           ],
         ),
       ),
@@ -659,7 +968,10 @@ String _formatNotificationTime(DateTime dateTime) {
   if (difference.inHours < 24) {
     return '${difference.inHours}h ago';
   }
-  return '${difference.inDays}d ago';
+  if (difference.inDays < 7) {
+    return '${difference.inDays}d ago';
+  }
+  return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
 }
 
 String _formatRequestStatus(RequestStatus status) {
@@ -695,6 +1007,9 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
   String _selectedCategory = 'All';
   double _maxDistanceKm = 25;
 
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+
   @override
   void initState() {
     super.initState();
@@ -712,9 +1027,9 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
       case RequestStatus.quoted:
         return Colors.purple;
       case RequestStatus.accepted:
-        return Colors.blue;
+        return _primaryBlue;
       case RequestStatus.completed:
-        return Colors.green;
+        return _primaryGreen;
       case RequestStatus.cancelled:
         return Colors.red;
     }
@@ -762,64 +1077,127 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
     }).toList();
 
     if (requests.isEmpty) {
-      return const Center(child: Text('No available jobs'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.work_outline_rounded, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'No available jobs',
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            ),
+          ],
+        ),
+      );
     }
 
     return Column(
       children: [
-        Padding(
+        Container(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Row(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
             children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
-                  items: categories
-                      .map(
-                        (category) => DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value == null) {
-                      return;
-                    }
-                    setState(() => _selectedCategory = value);
-                  },
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: categories
+                    .map(
+                      (category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() => _selectedCategory = value);
+                },
+                decoration: InputDecoration(
+                  labelText: 'Category',
+                  labelStyle: TextStyle(color: Colors.grey.shade600),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: _primaryBlue, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.category_rounded, color: _primaryBlue),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Distance: ${_maxDistanceKm.toStringAsFixed(0)} km'),
-                    Slider(
-                      value: _maxDistanceKm,
-                      min: 5,
-                      max: 50,
-                      divisions: 9,
-                      label: '${_maxDistanceKm.toStringAsFixed(0)} km',
-                      onChanged: (value) =>
-                          setState(() => _maxDistanceKm = value),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Distance: ${_maxDistanceKm.toStringAsFixed(0)} km',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        SliderTheme(
+                          data: SliderThemeData(
+                            activeTrackColor: _primaryBlue,
+                            inactiveTrackColor: _primaryBlue.withOpacity(0.2),
+                            thumbColor: _primaryBlue,
+                            overlayColor: _primaryBlue.withOpacity(0.1),
+                            valueIndicatorColor: _primaryBlue,
+                          ),
+                          child: Slider(
+                            value: _maxDistanceKm,
+                            min: 5,
+                            max: 50,
+                            divisions: 9,
+                            label: '${_maxDistanceKm.toStringAsFixed(0)} km',
+                            onChanged: (value) => setState(() => _maxDistanceKm = value),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
         Expanded(
           child: filteredRequests.isEmpty
-              ? const Center(child: Text('No jobs match your filters'))
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.filter_alt_off_rounded, size: 80, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No jobs match your filters',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                )
               : ListView.builder(
+                  padding: const EdgeInsets.all(16),
                   itemCount: filteredRequests.length,
                   itemBuilder: (context, index) {
                     final req = filteredRequests[index];
@@ -831,90 +1209,20 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                         req.status == RequestStatus.completed ||
                         req.status == RequestStatus.cancelled;
 
-                    return Card(
-                      margin: const EdgeInsets.all(12),
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        leading: _UserAvatar(
-                          name: customer?.name ?? 'Customer',
-                          imagePath: customer?.profilePicture,
-                        ),
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${req.category} • ${req.location}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getStatusColor(req.status),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                _getStatusText(req.status),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(req.description),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Customer: ${customer?.name ?? req.customerId}',
-                                style: const TextStyle(color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ),
-                        trailing: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isDisabled
-                                ? Colors.grey
-                                : Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          // ignore: sort_child_properties_last
-                          child: const Text('Quote'),
-                          onPressed: isDisabled
-                              ? null
-                              : () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => JobDetailScreen(
-                                        request: req,
-                                        customer: customer,
-                                        providerUser: providerUser,
-                                      ),
-                                    ),
-                                  );
-                                },
-                        ),
+                      child: InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
@@ -927,6 +1235,118 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                             ),
                           );
                         },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  _UserAvatar(
+                                    name: customer?.name ?? 'Customer',
+                                    imagePath: customer?.profilePicture,
+                                    radius: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          req.category,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          req.location,
+                                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(req.status).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      _getStatusText(req.status),
+                                      style: TextStyle(
+                                        color: _getStatusColor(req.status),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                req.description,
+                                style: TextStyle(color: Colors.grey.shade700),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(Icons.person_outline_rounded, size: 16, color: Colors.grey.shade500),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        customer?.name ?? req.customerId,
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Icon(Icons.attach_money_rounded, size: 16, color: Colors.grey.shade500),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '\$${req.budget.toStringAsFixed(0)}',
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isDisabled ? Colors.grey.shade400 : _primaryBlue,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    ),
+                                    onPressed: isDisabled
+                                        ? null
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => JobDetailScreen(
+                                                  request: req,
+                                                  customer: customer,
+                                                  providerUser: providerUser,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                    child: const Text('Quote'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     );
                   },
@@ -981,6 +1401,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+
   @override
   void dispose() {
     _priceController.dispose();
@@ -996,16 +1419,24 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
     if (priceText.isEmpty || notes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter price and notes to send a quote.')),
+        SnackBar(
+          content: const Text('Enter price and notes to send a quote.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       );
       return;
     }
 
     final price = double.tryParse(priceText);
     if (price == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Enter a valid price.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Enter a valid price.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
       return;
     }
 
@@ -1028,9 +1459,15 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     quoteProvider.addQuote(quote);
     requestProvider.updateStatus(widget.request.id, RequestStatus.quoted);
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Quote submitted')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Quote submitted successfully!'),
+        backgroundColor: _primaryGreen,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+    
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => QuoteSentScreen(quote: quote)),
@@ -1045,40 +1482,79 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         request.locationLat != null && request.locationLng != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Job Details')),
+      appBar: AppBar(
+        title: const Text('Job Details'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              request.category,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_primaryBlue.withOpacity(0.1), _primaryGreen.withOpacity(0.1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    request.category,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    request.description,
+                    style: const TextStyle(fontSize: 16, height: 1.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _InfoChip(
+                        icon: Icons.place_rounded,
+                        label: request.location,
+                      ),
+                      const SizedBox(width: 8),
+                      _InfoChip(
+                        icon: Icons.attach_money_rounded,
+                        label: '\$${request.budget.toStringAsFixed(0)}',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              request.description,
-              style: const TextStyle(color: Colors.black87),
-            ),
-            const SizedBox(height: 12),
-            _DetailRow(
-              icon: Icons.place,
-              label: 'Location',
-              value: request.location,
-            ),
-            const SizedBox(height: 8),
-            _DetailRow(
-              icon: Icons.attach_money,
-              label: 'Budget',
-              value: '\$${request.budget.toStringAsFixed(0)}',
-            ),
+            const SizedBox(height: 20),
             if (hasLocation) ...[
+              const Text(
+                'Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               Container(
-                height: 180,
+                height: 200,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 clipBehavior: Clip.hardEdge,
                 child: FlutterMap(
@@ -1108,7 +1584,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           width: 40,
                           height: 40,
                           child: const Icon(
-                            Icons.location_on,
+                            Icons.location_on_rounded,
                             color: Colors.red,
                             size: 40,
                           ),
@@ -1118,48 +1594,137 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
             ],
-            const SizedBox(height: 20),
             const Text(
               'Customer Profile',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _CustomerProfileCard(customer: customer),
             const SizedBox(height: 20),
             const Text(
               'Send Quote',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Price',
-                prefixText: '\$',
-                border: OutlineInputBorder(),
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _notesController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: 'Notes',
-                border: OutlineInputBorder(),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
               ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _submitQuote,
-                child: const Text('Send Quote'),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Your Price',
+                      prefixText: '\$ ',
+                      labelStyle: TextStyle(color: Colors.grey.shade600),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _primaryBlue, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _notesController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      labelText: 'Notes / Details',
+                      alignLabelWithHint: true,
+                      labelStyle: TextStyle(color: Colors.grey.shade600),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: _primaryBlue, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _submitQuote,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryBlue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        'Send Quote',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFF2563EB)),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
       ),
     );
   }
@@ -1170,56 +1735,99 @@ class _CustomerProfileCard extends StatelessWidget {
 
   final UserModel? customer;
 
+  static const _primaryBlue = Color(0xFF2563EB);
+
   @override
   Widget build(BuildContext context) {
     if (customer == null) {
-      return const Text('Customer profile not available.');
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: const Text('Customer profile not available.'),
+      );
     }
 
-    return Card(
-      elevation: 0,
-      color: Colors.grey.shade50,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            _UserAvatar(
-              name: customer!.name,
-              imagePath: customer!.profilePicture,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  _CustomerProfileDetailScreen(customer: customer!),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    customer!.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(customer!.phone),
-                  const SizedBox(height: 4),
-                  Text(customer!.address ?? 'Address not set'),
-                ],
+          );
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              _UserAvatar(
+                name: customer!.name,
+                imagePath: customer!.profilePicture,
+                radius: 30,
               ),
-            ),
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        _CustomerProfileDetailScreen(customer: customer!),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      customer!.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.phone_rounded, size: 14, color: Colors.grey.shade500),
+                        const SizedBox(width: 4),
+                        Text(
+                          customer!.phone,
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_rounded, size: 14, color: Colors.grey.shade500),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            customer!.address ?? 'Address not set',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+            ],
+          ),
         ),
       ),
     );
@@ -1231,61 +1839,93 @@ class _CustomerProfileDetailScreen extends StatelessWidget {
 
   final UserModel customer;
 
+  static const _primaryBlue = Color(0xFF2563EB);
+
   @override
   Widget build(BuildContext context) {
     final hasLocation = customer.latitude != null && customer.longitude != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Customer Profile')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      appBar: AppBar(
+        title: const Text('Customer Profile'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                _UserAvatar(
-                  name: customer.name,
-                  imagePath: customer.profilePicture,
-                  radius: 28,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_primaryBlue.withOpacity(0.1), Colors.white],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    customer.name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                children: [
+                  _UserAvatar(
+                    name: customer.name,
+                    imagePath: customer.profilePicture,
+                    radius: 40,
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          customer.name,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Customer since ${_formatJoinDate(customer.createdAt)}',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      ],
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            _InfoSection(
+              title: 'Contact Information',
+              children: [
+                _InfoRow(icon: Icons.phone_rounded, label: 'Phone', value: customer.phone),
+                _InfoRow(icon: Icons.email_rounded, label: 'Email', value: customer.email ?? 'Not shared'),
+                _InfoRow(icon: Icons.location_on_rounded, label: 'Address', value: customer.address ?? 'Not shared'),
               ],
             ),
-            const SizedBox(height: 16),
-            _DetailRow(
-              icon: Icons.phone,
-              label: 'Phone',
-              value: customer.phone,
-            ),
-            const SizedBox(height: 8),
-            _DetailRow(
-              icon: Icons.email,
-              label: 'Email',
-              value: customer.email ?? 'Not shared yet',
-            ),
-            const SizedBox(height: 8),
-            _DetailRow(
-              icon: Icons.location_on,
-              label: 'Address',
-              value: customer.address ?? 'Not shared yet',
-            ),
             if (hasLocation) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
+              const Text(
+                'Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
               Container(
-                height: 180,
+                height: 200,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 clipBehavior: Clip.hardEdge,
                 child: FlutterMap(
@@ -1315,7 +1955,7 @@ class _CustomerProfileDetailScreen extends StatelessWidget {
                           width: 40,
                           height: 40,
                           child: const Icon(
-                            Icons.location_on,
+                            Icons.location_on_rounded,
                             color: Colors.red,
                             size: 40,
                           ),
@@ -1328,6 +1968,93 @@ class _CustomerProfileDetailScreen extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  String _formatJoinDate(DateTime? date) {
+    if (date == null) return 'Recently';
+    return '${date.month}/${date.year}';
+  }
+}
+
+class _InfoSection extends StatelessWidget {
+  const _InfoSection({
+    required this.title,
+    required this.children,
+  });
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            children: children,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: const Color(0xFF2563EB)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1347,42 +2074,18 @@ class _UserAvatar extends StatelessWidget {
 
     return CircleAvatar(
       radius: radius,
-      backgroundColor: Colors.blue.shade100,
+      backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
       backgroundImage: hasImage ? FileImage(File(imagePath!)) : null,
       child: hasImage
           ? null
           : Text(
               initials,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.blue,
+                color: const Color(0xFF2563EB),
+                fontSize: radius * 0.5,
               ),
             ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.blueGrey),
-        const SizedBox(width: 8),
-        Text('$label:', style: const TextStyle(fontWeight: FontWeight.w600)),
-        const SizedBox(width: 6),
-        Expanded(child: Text(value)),
-      ],
     );
   }
 }
@@ -1397,6 +2100,9 @@ class MyQuotesPage extends StatefulWidget {
 }
 
 class _MyQuotesPageState extends State<MyQuotesPage> {
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+
   @override
   void initState() {
     super.initState();
@@ -1419,13 +2125,32 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
         ? <Quote>[]
         : quoteProvider.quotes
               .where((q) => q.providerId == currentUser.id)
-              .toList();
+              .toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     if (quotes.isEmpty) {
-      return const Center(child: Text('No quotes yet'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.attach_money_rounded, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'No quotes yet',
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your sent quotes will appear here',
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            ),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: quotes.length,
       itemBuilder: (context, index) {
         final q = quotes[index];
@@ -1437,53 +2162,20 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
             ? null
             : customerDirectory.getCustomerById(request.customerId);
 
-        return Card(
-          margin: const EdgeInsets.all(12),
-          elevation: 3,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListTile(
-            leading: _UserAvatar(
-              name: customer?.name ?? 'Customer',
-              imagePath: customer?.profilePicture,
-            ),
-            title: Text(
-              '\$${q.price.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue,
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(q.notes),
-                const SizedBox(height: 4),
-                Text(
-                  request == null
-                      ? 'Request info unavailable'
-                      : '${request.category} • ${request.location}',
-                  style: const TextStyle(color: Colors.black54),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Customer: ${customer?.name ?? request?.customerId ?? 'Unknown'}',
-                  style: const TextStyle(color: Colors.black54),
-                ),
-                if (request != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    'Status: ${_formatRequestStatus(request.status)}',
-                    style: const TextStyle(color: Colors.black54),
-                  ),
-                ],
-              ],
-            ),
-            trailing: Text(
-              _formatNotificationTime(q.createdAt),
-              style: const TextStyle(color: Colors.black54),
-            ),
+            ],
+          ),
+          child: InkWell(
             onTap: () {
               Navigator.push(
                 context,
@@ -1496,10 +2188,105 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                 ),
               );
             },
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  _UserAvatar(
+                    name: customer?.name ?? 'Customer',
+                    imagePath: customer?.profilePicture,
+                    radius: 28,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '\$${q.price.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: _primaryBlue,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: request?.status == RequestStatus.accepted
+                                    ? _primaryGreen.withOpacity(0.1)
+                                    : Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                request == null
+                                    ? 'Unknown'
+                                    : _getQuoteStatus(request.status),
+                                style: TextStyle(
+                                  color: request?.status == RequestStatus.accepted
+                                      ? _primaryGreen
+                                      : Colors.orange,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          q.notes,
+                          style: TextStyle(color: Colors.grey.shade600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.category_rounded, size: 14, color: Colors.grey.shade500),
+                            const SizedBox(width: 4),
+                            Text(
+                              request?.category ?? 'Unknown',
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(Icons.access_time_rounded, size: 14, color: Colors.grey.shade500),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatNotificationTime(q.createdAt),
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                ],
+              ),
+            ),
           ),
         );
       },
     );
+  }
+
+  String _getQuoteStatus(RequestStatus status) {
+    switch (status) {
+      case RequestStatus.pending:
+      case RequestStatus.quoted:
+        return 'Pending';
+      case RequestStatus.accepted:
+        return 'Accepted';
+      case RequestStatus.completed:
+        return 'Completed';
+      case RequestStatus.cancelled:
+        return 'Cancelled';
+    }
   }
 }
 
@@ -1515,57 +2302,156 @@ class QuoteDetailScreen extends StatelessWidget {
   final ServiceRequest? request;
   final UserModel? customer;
 
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+
   @override
   Widget build(BuildContext context) {
     final hasLocation =
         request?.locationLat != null && request?.locationLng != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Quote Details')),
+      appBar: AppBar(
+        title: const Text('Quote Details'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '\$${quote.price.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [_primaryBlue.withOpacity(0.1), _primaryGreen.withOpacity(0.1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Quote Amount',
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                      Text(
+                        '\$${quote.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: _primaryBlue,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      _formatNotificationTime(quote.createdAt),
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(quote.notes),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Notes',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(quote.notes, style: const TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
             if (request != null) ...[
-              _DetailRow(
-                icon: Icons.work_outline,
-                label: 'Request',
-                value: request!.category,
+              const Text(
+                'Request Details',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
-              _DetailRow(
-                icon: Icons.info_outline,
-                label: 'Status',
-                value: _formatRequestStatus(request!.status),
-              ),
-              const SizedBox(height: 8),
-              _DetailRow(
-                icon: Icons.place,
-                label: 'Location',
-                value: request!.location,
-              ),
-              const SizedBox(height: 8),
-              _DetailRow(
-                icon: Icons.description_outlined,
-                label: 'Details',
-                value: request!.description,
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    _DetailRow(
+                      icon: Icons.work_outline_rounded,
+                      label: 'Category',
+                      value: request!.category,
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      icon: Icons.info_outline_rounded,
+                      label: 'Status',
+                      value: _formatRequestStatus(request!.status),
+                      valueColor: request!.status == RequestStatus.accepted
+                          ? _primaryGreen
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      icon: Icons.place_rounded,
+                      label: 'Location',
+                      value: request!.location,
+                    ),
+                    const SizedBox(height: 12),
+                    _DetailRow(
+                      icon: Icons.description_outlined,
+                      label: 'Description',
+                      value: request!.description,
+                    ),
+                  ],
+                ),
               ),
             ],
             if (hasLocation) ...[
+              const SizedBox(height: 20),
+              const Text(
+                'Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 12),
               Container(
-                height: 180,
+                height: 200,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 clipBehavior: Clip.hardEdge,
                 child: FlutterMap(
@@ -1595,7 +2481,7 @@ class QuoteDetailScreen extends StatelessWidget {
                           width: 40,
                           height: 40,
                           child: const Icon(
-                            Icons.location_on,
+                            Icons.location_on_rounded,
                             color: Colors.red,
                             size: 40,
                           ),
@@ -1606,16 +2492,66 @@ class QuoteDetailScreen extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             const Text(
               'Customer',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             _CustomerProfileCard(customer: customer),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2563EB).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: const Color(0xFF2563EB)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Row(
+            children: [
+              Text(
+                '$label:',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    color: valueColor ?? Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
