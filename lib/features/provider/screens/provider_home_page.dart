@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../data/models/app_notification_model.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -116,6 +117,12 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final activeJobsPreview = activeJobs.take(2).toList();
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -718,22 +725,6 @@ class NotificationBell extends StatelessWidget {
       ],
     );
   }
-}
-
-class AppNotification {
-  AppNotification({
-    required this.id,
-    required this.title,
-    required this.message,
-    required this.createdAt,
-    this.isRead = false,
-  });
-
-  final String id;
-  final String title;
-  final String message;
-  final DateTime createdAt;
-  bool isRead;
 }
 
 class NotificationListScreen extends StatefulWidget {
