@@ -23,8 +23,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ProviderDirectoryProvider>().loadProviders();
-    context.read<CustomerDirectoryProvider>().loadCustomers();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<ProviderDirectoryProvider>().loadProviders();
+      context.read<CustomerDirectoryProvider>().loadCustomers();
+    });
   }
 
   @override
