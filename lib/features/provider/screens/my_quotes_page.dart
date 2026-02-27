@@ -55,8 +55,9 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                     .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
+    Widget body;
     if (quotes.isEmpty) {
-      return Center(
+      body = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -89,12 +90,11 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
           ],
         ),
       );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: quotes.length,
-      itemBuilder: (context, index) {
+    } else {
+      body = ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: quotes.length,
+        itemBuilder: (context, index) {
         final q = quotes[index];
         final request = requestProvider.requests
             .where((r) => r.id == q.requestId)
@@ -224,7 +224,19 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
             ),
           ),
         );
-      },
+        },
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Quotes'),
+        backgroundColor: Colors.white,
+        foregroundColor: _textPrimary,
+        elevation: 0,
+      ),
+      backgroundColor: _surfaceColor,
+      body: body,
     );
   }
 
