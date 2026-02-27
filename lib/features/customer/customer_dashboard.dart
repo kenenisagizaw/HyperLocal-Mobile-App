@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
+import '../../data/models/app_notification_model.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../auth/providers/auth_provider.dart';
@@ -147,6 +148,12 @@ class _HomePageState extends State<HomePage> {
     final unreadNotificationsCount = _notifications.where((n) => !n.isRead).length;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1F36),
+        elevation: 0,
+      ),
       backgroundColor: const Color(0xFFF8FAFF), // Light blue background
       body: SafeArea(
         child: SingleChildScrollView(
@@ -820,18 +827,35 @@ class _RequestsPageState extends State<RequestsPage> {
     final requests = requestProvider.getCustomerRequests(currentUser.id);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Requests'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1F36),
+        elevation: 0,
+      ),
       backgroundColor: const Color(0xFFF8FAFF),
       body: requestProvider.isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF3366FF)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF3366FF)),
+            )
           : requests.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.assignment_outlined, size: 64, color: Colors.grey.shade300),
+                      Icon(
+                        Icons.assignment_outlined,
+                        size: 64,
+                        color: Colors.grey.shade300,
+                      ),
                       const SizedBox(height: 16),
-                      Text('No requests yet',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 16)),
+                      Text(
+                        'No requests yet',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -840,7 +864,8 @@ class _RequestsPageState extends State<RequestsPage> {
                   itemCount: requests.length,
                   itemBuilder: (context, index) {
                     final req = requests[index];
-                    final List<Quote> quotes = quoteProvider.getQuotesForRequest(req.id);
+                    final List<Quote> quotes =
+                        quoteProvider.getQuotesForRequest(req.id);
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -864,73 +889,76 @@ class _RequestsPageState extends State<RequestsPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            req.status == RequestStatus.pending ? Icons.hourglass_empty :
-                            req.status == RequestStatus.quoted ? Icons.receipt :
-                            req.status == RequestStatus.accepted ? Icons.check_circle :
-                            req.status == RequestStatus.completed ? Icons.done_all :
-                            Icons.cancel,
+                            req.status == RequestStatus.pending
+                                ? Icons.hourglass_empty
+                                : req.status == RequestStatus.quoted
+                                    ? Icons.receipt
+                                    : req.status == RequestStatus.accepted
+                                        ? Icons.check_circle
+                                        : req.status == RequestStatus.completed
+                                            ? Icons.done_all
+                                            : Icons.cancel,
                             color: _getStatusColor(req.status),
                             size: 24,
                           ),
                         ),
-                        title: Text('${req.category} - ${req.location}',
+                        title: Text(
+                          '${req.category} - ${req.location}',
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF1A1F36),
-                          )),
+                          ),
+                        ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4),
-                          child: Text(req.description,
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                          child: Text(
+                            req.description,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                         trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: _getStatusColor(req.status).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: Text(_getStatusText(req.status),
+                          child: Text(
+                            _getStatusText(req.status),
                             style: TextStyle(
                               color: _getStatusColor(req.status),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                            )),
+                            ),
+                          ),
                         ),
-                        onTap: () => Navigator.push(
-                          context, 
-                          MaterialPageRoute(
-                            builder: (_) => RequestDetailScreen(request: req, quotes: quotes)
-                          )
-                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => RequestDetailScreen(
+                                request: req,
+                                quotes: quotes,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
                 ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateRequestScreen())),
-        icon: const Icon(Icons.add),
-        label: const Text('Create Request'),
-        backgroundColor: const Color(0xFF3366FF),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
     );
   }
 }
 
-/// ----------------- NOTIFICATIONS -----------------
-class AppNotification {
-  AppNotification({required this.id, required this.title, required this.message, required this.createdAt, this.isRead = false});
-  final String id;
-  final String title;
-  final String message;
-  final DateTime createdAt;
-  bool isRead;
-}
-
 class NotificationListScreen extends StatelessWidget {
-  const NotificationListScreen({required this.notifications, super.key});
   final List<AppNotification> notifications;
+  const NotificationListScreen({super.key, required this.notifications});
 
   @override
   Widget build(BuildContext context) {
@@ -940,66 +968,64 @@ class NotificationListScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF1A1F36),
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: Colors.grey.shade200, height: 1),
-        ),
       ),
-      body: Container(
-        color: const Color(0xFFF8FAFF),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(12),
-          itemCount: notifications.length,
-          itemBuilder: (context, index) {
-            final n = notifications[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: n.isRead ? Colors.grey.shade200 : const Color(0xFF3366FF).withOpacity(0.3),
+      backgroundColor: const Color(0xFFF8FAFF),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: notifications.length,
+        itemBuilder: (context, index) {
+          final n = notifications[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: n.isRead ? Colors.white : const Color(0xFF3366FF).withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: n.isRead ? Colors.grey.shade200 : const Color(0xFF3366FF).withOpacity(0.2),
+              ),
+            ),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: n.isRead
+                      ? Colors.grey.shade100
+                      : const Color(0xFF3366FF).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  n.isRead ? Icons.notifications_none : Icons.notifications_active,
+                  color: n.isRead ? Colors.grey.shade600 : const Color(0xFF3366FF),
                 ),
               ),
-              child: ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: n.isRead 
-                        ? Colors.grey.shade100 
-                        : const Color(0xFF3366FF).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    n.isRead ? Icons.notifications_none : Icons.notifications_active,
-                    color: n.isRead ? Colors.grey.shade600 : const Color(0xFF3366FF),
-                  ),
+              title: Text(
+                n.title,
+                style: TextStyle(
+                  fontWeight: n.isRead ? FontWeight.normal : FontWeight.w600,
                 ),
-                title: Text(n.title,
-                  style: TextStyle(
-                    fontWeight: n.isRead ? FontWeight.normal : FontWeight.w600,
-                  )),
-                subtitle: Text(n.message),
-                trailing: n.isRead 
-                    ? null 
-                    : Container(
-                        width: 8, 
-                        height: 8, 
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00C48C),
-                          shape: BoxShape.circle,
-                        ),
+              ),
+              subtitle: Text(n.message),
+              trailing: n.isRead
+                  ? null
+                  : Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF00C48C),
+                        shape: BoxShape.circle,
                       ),
-                onTap: () => Navigator.push(
-                  context, 
+                    ),
+              onTap: () {
+                Navigator.push(
+                  context,
                   MaterialPageRoute(
-                    builder: (_) => NotificationDetailScreen(notification: n)
-                  )
-                ),
-              ),
-            );
-          },
-        ),
+                    builder: (_) => NotificationDetailScreen(notification: n),
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
