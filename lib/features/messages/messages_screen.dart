@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -39,7 +40,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     final currentUser = authProvider.currentUser;
     if (currentUser == null) {
-      return const Center(child: Text('No user logged in'));
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Messages'),
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1A1F36),
+          elevation: 0,
+        ),
+        body: const Center(child: Text('No user logged in')),
+      );
     }
 
     final conversations = _buildConversations(
@@ -48,164 +57,180 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
 
     if (conversations.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 80,
-              color: Colors.green.shade200,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No messages yet',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Messages'),
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1A1F36),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 80,
+                color: Colors.green.shade200,
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                'No messages yet',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.white,
-            Colors.green.shade50,
-          ],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Messages'),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A1F36),
+        elevation: 0,
       ),
-      child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: conversations.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final convo = conversations[index];
-          final otherId = convo.otherUserId;
-          final displayName = _resolveDisplayName(
-            otherId,
-            providerDirectory,
-            customerDirectory,
-          );
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Colors.green.shade50],
+          ),
+        ),
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: conversations.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final convo = conversations[index];
+            final otherId = convo.otherUserId;
+            final displayName = _resolveDisplayName(
+              otherId,
+              providerDirectory,
+              customerDirectory,
+            );
 
-          final otherUser = _resolveUser(
-            otherId,
-            providerDirectory,
-            customerDirectory,
-          );
+            final otherUser = _resolveUser(
+              otherId,
+              providerDirectory,
+              customerDirectory,
+            );
 
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(16),
+                leading: GestureDetector(
+                  onTap: () {
+                    if (otherUser == null) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            UserProfileDetailScreen(user: otherUser),
+                      ),
+                    );
+                  },
+                  child: _UserAvatar(
+                    user: otherUser,
+                    nameFallback: displayName,
+                  ),
                 ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: GestureDetector(
+                title: Text(
+                  displayName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    convo.lastMessage.content,
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _formatMessageTime(convo.lastMessage.createdAt),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (convo.unreadCount > 0) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1E3A8A).withOpacity(0.3),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          convo.unreadCount > 99
+                              ? '99+'
+                              : convo.unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
                 onTap: () {
-                  if (otherUser == null) return;
+                  messageProvider.markThreadAsRead(currentUser.id, otherId);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => UserProfileDetailScreen(user: otherUser),
+                      builder: (_) => MessageThreadScreen(
+                        otherUserId: otherId,
+                        otherUserName: displayName,
+                        otherUser: otherUser,
+                      ),
                     ),
                   );
                 },
-                child: _UserAvatar(user: otherUser, nameFallback: displayName),
               ),
-              title: Text(
-                displayName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Color(0xFF1E3A8A),
-                ),
-              ),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(
-                  convo.lastMessage.content,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    _formatMessageTime(convo.lastMessage.createdAt),
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 12,
-                    ),
-                  ),
-                  if (convo.unreadCount > 0) ...[
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF1E3A8A).withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        convo.unreadCount > 99 ? '99+' : convo.unreadCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              onTap: () {
-                messageProvider.markThreadAsRead(currentUser.id, otherId);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MessageThreadScreen(
-                      otherUserId: otherId,
-                      otherUserName: displayName,
-                      otherUser: otherUser,
-                    ),
-                  ),
-                );
-              },
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -277,14 +302,17 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       return const Scaffold(body: Center(child: Text('No user logged in')));
     }
 
-    final threadMessages = messageProvider.messages
-        .where(
-          (m) =>
-              (m.senderId == currentUser.id && m.receiverId == widget.otherUserId) ||
-              (m.senderId == widget.otherUserId && m.receiverId == currentUser.id),
-        )
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final threadMessages =
+        messageProvider.messages
+            .where(
+              (m) =>
+                  (m.senderId == currentUser.id &&
+                      m.receiverId == widget.otherUserId) ||
+                  (m.senderId == widget.otherUserId &&
+                      m.receiverId == currentUser.id),
+            )
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -294,10 +322,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
         foregroundColor: const Color(0xFF1E3A8A),
         title: Text(
           widget.otherUserName,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
         ),
         centerTitle: true,
         leading: widget.otherUser == null
@@ -307,7 +332,8 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => UserProfileDetailScreen(user: widget.otherUser!),
+                      builder: (_) =>
+                          UserProfileDetailScreen(user: widget.otherUser!),
                     ),
                   );
                 },
@@ -320,9 +346,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                 ),
               ),
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: Container(
@@ -330,10 +354,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Colors.green.shade50,
-            ],
+            colors: [Colors.white, Colors.green.shade50],
           ),
         ),
         child: Column(
@@ -348,7 +369,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                   final isMine = message.senderId == currentUser.id;
 
                   return Align(
-                    alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: isMine
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.symmetric(
@@ -385,7 +408,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                           Text(
                             message.content,
                             style: TextStyle(
-                              color: isMine ? Colors.white : const Color(0xFF1E3A8A),
+                              color: isMine
+                                  ? Colors.white
+                                  : const Color(0xFF1E3A8A),
                               fontSize: 15,
                               height: 1.3,
                             ),
@@ -394,7 +419,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                           Text(
                             _formatMessageTime(message.createdAt),
                             style: TextStyle(
-                              color: isMine ? Colors.white70 : Colors.grey.shade500,
+                              color: isMine
+                                  ? Colors.white70
+                                  : Colors.grey.shade500,
                               fontSize: 10,
                             ),
                           ),
@@ -501,7 +528,9 @@ class UserProfileDetailScreen extends StatelessWidget {
     final authProvider = context.watch<AuthProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
     final currentUser = authProvider.currentUser;
-    final rating = isProvider ? _calculateProviderRating(quoteProvider, user.id) : null;
+    final rating = isProvider
+        ? _calculateProviderRating(quoteProvider, user.id)
+        : null;
     final distanceKm = _calculateDistanceKm(currentUser, user);
     final hasLocation = user.latitude != null && user.longitude != null;
 
@@ -513,16 +542,11 @@ class UserProfileDetailScreen extends StatelessWidget {
         foregroundColor: const Color(0xFF1E3A8A),
         title: Text(
           isProvider ? 'Provider Profile' : 'Customer Profile',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: Container(
@@ -530,10 +554,7 @@ class UserProfileDetailScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Colors.green.shade50,
-            ],
+            colors: [Colors.white, Colors.green.shade50],
           ),
         ),
         child: SingleChildScrollView(
@@ -562,7 +583,11 @@ class UserProfileDetailScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    _UserAvatar(user: user, nameFallback: user.name, radius: 32),
+                    _UserAvatar(
+                      user: user,
+                      nameFallback: user.name,
+                      radius: 32,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -600,7 +625,11 @@ class UserProfileDetailScreen extends StatelessWidget {
                               ),
                               if (rating != null) ...[
                                 const SizedBox(width: 8),
-                                const Icon(Icons.star, color: Colors.amber, size: 16),
+                                const Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 2),
                                 Text(
                                   rating.toStringAsFixed(1),
@@ -641,7 +670,11 @@ class UserProfileDetailScreen extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.green.shade600, size: 20),
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.green.shade600,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           const Text(
                             'About',
@@ -742,7 +775,8 @@ class UserProfileDetailScreen extends StatelessWidget {
                       ),
                       children: [
                         TileLayer(
-                          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                          urlTemplate:
+                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                           userAgentPackageName: 'com.example.my_first_app',
                         ),
                         MarkerLayer(
@@ -817,10 +851,7 @@ class _InfoRow extends StatelessWidget {
           flex: 2,
           child: Text(
             label,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 15,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
           ),
         ),
         Expanded(
@@ -852,8 +883,8 @@ class _UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = user?.profilePicture != null &&
-        user!.profilePicture!.trim().isNotEmpty;
+    final hasImage =
+        user?.profilePicture != null && user!.profilePicture!.trim().isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
@@ -874,7 +905,9 @@ class _UserAvatar extends StatelessWidget {
       child: CircleAvatar(
         radius: radius,
         backgroundColor: Colors.transparent,
-        backgroundImage: hasImage ? FileImage(File(user!.profilePicture!)) : null,
+        backgroundImage: hasImage
+            ? FileImage(File(user!.profilePicture!))
+            : null,
         child: hasImage
             ? null
             : Text(
@@ -904,12 +937,15 @@ List<_ConversationSummary> _buildConversations(
   final Map<String, List<Message>> grouped = {};
 
   for (final msg in messages) {
-    final otherUserId = msg.senderId == currentUserId ? msg.receiverId : msg.senderId;
+    final otherUserId = msg.senderId == currentUserId
+        ? msg.receiverId
+        : msg.senderId;
     grouped.putIfAbsent(otherUserId, () => []).add(msg);
   }
 
   final summaries = grouped.entries.map((entry) {
-    final sorted = entry.value..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sorted = entry.value
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final unread = sorted
         .where((m) => m.receiverId == currentUserId && !m.isRead)
         .length;
@@ -921,7 +957,9 @@ List<_ConversationSummary> _buildConversations(
     );
   }).toList();
 
-  summaries.sort((a, b) => b.lastMessage.createdAt.compareTo(a.lastMessage.createdAt));
+  summaries.sort(
+    (a, b) => b.lastMessage.createdAt.compareTo(a.lastMessage.createdAt),
+  );
   return summaries;
 }
 
@@ -957,7 +995,9 @@ UserModel? _resolveUser(
 }
 
 num? _calculateProviderRating(QuoteProvider quoteProvider, String providerId) {
-  final providerQuotes = quoteProvider.quotes.where((q) => q.providerId == providerId).toList();
+  final providerQuotes = quoteProvider.quotes
+      .where((q) => q.providerId == providerId)
+      .toList();
   if (providerQuotes.isEmpty) return null;
   final total = providerQuotes.fold<double>(0, (sum, q) => sum + q.rating);
   return total / providerQuotes.length;
