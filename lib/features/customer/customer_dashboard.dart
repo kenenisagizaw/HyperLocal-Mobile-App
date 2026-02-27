@@ -9,12 +9,11 @@ import '../auth/providers/auth_provider.dart';
 import '../messages/messages_screen.dart';
 import '../messages/providers/message_provider.dart';
 import '../payments/providers/payment_provider.dart';
+import 'customer_profile_screen.dart';
 import 'providers/provider_directory_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
 import 'request_detail_screen.dart';
-import 'create_request_screen.dart';
-import 'customer_profile_screen.dart';
 
 /// ----------------- CUSTOMER DASHBOARD -----------------
 class CustomerDashboard extends StatefulWidget {
@@ -48,7 +47,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
               color: Color(0x1A3366FF), // Blue tint shadow
               blurRadius: 12,
               offset: Offset(0, -4),
-            )
+            ),
           ],
         ),
         child: ClipRRect(
@@ -63,11 +62,26 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
             selectedFontSize: 14,
             unselectedFontSize: 12,
             items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Home'),
-              BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Requests'),
-              BottomNavigationBarItem(icon: Icon(Icons.message_outlined), label: 'Messages'),
-              BottomNavigationBarItem(icon: Icon(Icons.payment_outlined), label: 'Payments'),
-              BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_filled),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.list_alt),
+                label: 'Requests',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.message_outlined),
+                label: 'Messages',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.payment_outlined),
+                label: 'Payments',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                label: 'Profile',
+              ),
             ],
           ),
         ),
@@ -132,20 +146,33 @@ class _HomePageState extends State<HomePage> {
         : requestProvider.getCustomerRequests(currentUser.id);
 
     final activeRequests = customerRequests
-        .where((r) => r.status == RequestStatus.pending || r.status == RequestStatus.quoted)
+        .where(
+          (r) =>
+              r.status == RequestStatus.pending ||
+              r.status == RequestStatus.quoted,
+        )
         .toList();
-    final ongoingJobs = customerRequests.where((r) => r.status == RequestStatus.accepted).toList();
+    final ongoingJobs = customerRequests
+        .where((r) => r.status == RequestStatus.accepted)
+        .toList();
 
     activeRequests.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     ongoingJobs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     final recentActiveRequests = activeRequests.take(3).toList();
-    final allQuotes = customerRequests.expand((r) => quoteProvider.getQuotesForRequest(r.id)).toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final allQuotes =
+        customerRequests
+            .expand((r) => quoteProvider.getQuotesForRequest(r.id))
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     final recentQuotes = allQuotes.take(3).toList();
 
-    final unreadMessagesCount = currentUser == null ? 0 : messageProvider.getUnreadCountForUser(currentUser.id);
-    final unreadNotificationsCount = _notifications.where((n) => !n.isRead).length;
+    final unreadMessagesCount = currentUser == null
+        ? 0
+        : messageProvider.getUnreadCountForUser(currentUser.id);
+    final unreadNotificationsCount = _notifications
+        .where((n) => !n.isRead)
+        .length;
 
     return Scaffold(
       appBar: AppBar(
@@ -173,21 +200,31 @@ class _HomePageState extends State<HomePage> {
                           color: const Color(0xFF3366FF).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.waving_hand_outlined, 
-                          color: Color(0xFF3366FF), size: 24),
+                        child: const Icon(
+                          Icons.waving_hand_outlined,
+                          color: Color(0xFF3366FF),
+                          size: 24,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Hello,', 
-                            style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
-                          Text(customerName, 
+                          Text(
+                            'Hello,',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          Text(
+                            customerName,
                             style: const TextStyle(
-                              fontSize: 24, 
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1A1F36),
-                            )),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -211,7 +248,10 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -225,10 +265,16 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: const Color(0xFF3366FF), size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: const Color(0xFF3366FF),
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    const Text("Here's your activity overview", 
-                      style: TextStyle(color: Color(0xFF4A4E69), fontSize: 15)),
+                    const Text(
+                      "Here's your activity overview",
+                      style: TextStyle(color: Color(0xFF4A4E69), fontSize: 15),
+                    ),
                   ],
                 ),
               ),
@@ -240,26 +286,26 @@ class _HomePageState extends State<HomePage> {
                 runSpacing: 12,
                 children: [
                   _SummaryCard(
-                    icon: Icons.assignment_outlined, 
-                    label: 'Active Requests', 
+                    icon: Icons.assignment_outlined,
+                    label: 'Active Requests',
                     value: activeRequests.length.toString(),
                     color: const Color(0xFF3366FF),
                   ),
                   _SummaryCard(
-                    icon: Icons.mark_email_unread_outlined, 
-                    label: 'Unread Messages', 
+                    icon: Icons.mark_email_unread_outlined,
+                    label: 'Unread Messages',
                     value: unreadMessagesCount.toString(),
                     color: const Color(0xFF00C48C), // Green accent
                   ),
                   _SummaryCard(
-                    icon: Icons.receipt_long_outlined, 
-                    label: 'New Quotes', 
+                    icon: Icons.receipt_long_outlined,
+                    label: 'New Quotes',
                     value: allQuotes.length.toString(),
                     color: const Color(0xFF3366FF),
                   ),
                   _SummaryCard(
-                    icon: Icons.star_border, 
-                    label: 'Ongoing Jobs', 
+                    icon: Icons.star_border,
+                    label: 'Ongoing Jobs',
                     value: ongoingJobs.length.toString(),
                     color: const Color(0xFF00C48C), // Green accent
                   ),
@@ -269,28 +315,38 @@ class _HomePageState extends State<HomePage> {
 
               /// Active Requests Section
               _SectionHeader(
-                title: 'Active Requests', 
-                actionLabel: 'View All', 
+                title: 'Active Requests',
+                actionLabel: 'View All',
                 onActionTap: () => widget.onNavigateToTab(1),
               ),
               const SizedBox(height: 8),
               ...recentActiveRequests.isEmpty
-                  ? [Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      alignment: Alignment.center,
-                      child: Column(
-                        children: [
-                          Icon(Icons.inbox, size: 48, color: Colors.grey.shade300),
-                          const SizedBox(height: 8),
-                          Text('No active requests yet',
-                            style: TextStyle(color: Colors.grey.shade500)),
-                        ],
+                  ? [
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        alignment: Alignment.center,
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.inbox,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No active requests yet',
+                              style: TextStyle(color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
                       ),
-                    )]
+                    ]
                   : recentActiveRequests.map((req) {
-                      final quoteCount = quoteProvider.getQuotesForRequest(req.id).length;
-                      final statusLabel = req.status == RequestStatus.pending 
-                          ? 'Pending' 
+                      final quoteCount = quoteProvider
+                          .getQuotesForRequest(req.id)
+                          .length;
+                      final statusLabel = req.status == RequestStatus.pending
+                          ? 'Pending'
                           : '\u2022 $quoteCount Quotes';
                       return Container(
                         margin: const EdgeInsets.only(bottom: 8),
@@ -300,36 +356,54 @@ class _HomePageState extends State<HomePage> {
                           border: Border.all(color: Colors.grey.shade100),
                         ),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
                           leading: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: const Color(0xFF3366FF).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Icon(Icons.build_circle_outlined, 
-                              color: const Color(0xFF3366FF), size: 20),
+                            child: Icon(
+                              Icons.build_circle_outlined,
+                              color: const Color(0xFF3366FF),
+                              size: 20,
+                            ),
                           ),
-                          title: Text(req.category, 
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(req.location, 
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                          title: Text(
+                            req.category,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          subtitle: Text(
+                            req.location,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
+                          ),
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
-                              color: req.status == RequestStatus.pending 
+                              color: req.status == RequestStatus.pending
                                   ? const Color(0xFFFFB800).withOpacity(0.1)
                                   : const Color(0xFF00C48C).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text(statusLabel, 
+                            child: Text(
+                              statusLabel,
                               style: TextStyle(
-                                color: req.status == RequestStatus.pending 
+                                color: req.status == RequestStatus.pending
                                     ? const Color(0xFFFFB800)
                                     : const Color(0xFF00C48C),
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                              )),
+                              ),
+                            ),
                           ),
                         ),
                       );
@@ -339,63 +413,103 @@ class _HomePageState extends State<HomePage> {
 
               /// Recent Quotes Section
               _SectionHeader(
-                title: 'Recent Quotes', 
-                actionLabel: 'View All Quotes', 
+                title: 'Recent Quotes',
+                actionLabel: 'View All Quotes',
                 onActionTap: () => widget.onNavigateToTab(1),
               ),
               const SizedBox(height: 8),
               ...recentQuotes.isEmpty
-                  ? [Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      alignment: Alignment.center,
-                      child: Column(
-                        children: [
-                          Icon(Icons.receipt, size: 48, color: Colors.grey.shade300),
-                          const SizedBox(height: 8),
-                          Text('No quotes yet',
-                            style: TextStyle(color: Colors.grey.shade500)),
-                        ],
-                      ),
-                    )]
-                  : recentQuotes.map((quote) => Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade100),
+                  ? [
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        alignment: Alignment.center,
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.receipt,
+                              size: 48,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No quotes yet',
+                              style: TextStyle(color: Colors.grey.shade500),
+                            ),
+                          ],
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                          leading: CircleAvatar(
-                            backgroundColor: const Color(0xFF00C48C).withOpacity(0.1),
-                            radius: 20,
-                            child: Text(
-                              quote.providerName[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: Color(0xFF00C48C),
-                                fontWeight: FontWeight.bold,
+                      ),
+                    ]
+                  : recentQuotes
+                        .map(
+                          (quote) => Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade100),
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 4,
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(
+                                  0xFF00C48C,
+                                ).withOpacity(0.1),
+                                radius: 20,
+                                child: Text(
+                                  quote.providerName[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Color(0xFF00C48C),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                quote.providerName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '\$${quote.price.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  color: const Color(0xFF3366FF),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      quote.rating.toStringAsFixed(1),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                          title: Text(quote.providerName, 
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text('\$${quote.price.toStringAsFixed(0)}',
-                            style: TextStyle(color: const Color(0xFF3366FF), fontWeight: FontWeight.w500)),
-                          trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(mainAxisSize: MainAxisSize.min, children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 16),
-                              const SizedBox(width: 4),
-                              Text(quote.rating.toStringAsFixed(1),
-                                style: const TextStyle(fontWeight: FontWeight.w600)),
-                            ]),
-                          ),
-                        ),
-                      )).toList(),
+                        )
+                        .toList(),
 
               const SizedBox(height: 24),
 
@@ -408,10 +522,16 @@ class _HomePageState extends State<HomePage> {
                       alignment: Alignment.center,
                       child: Column(
                         children: [
-                          Icon(Icons.work_outline, size: 48, color: Colors.grey.shade300),
+                          Icon(
+                            Icons.work_outline,
+                            size: 48,
+                            color: Colors.grey.shade300,
+                          ),
                           const SizedBox(height: 8),
-                          Text('No ongoing jobs',
-                            style: TextStyle(color: Colors.grey.shade500)),
+                          Text(
+                            'No ongoing jobs',
+                            style: TextStyle(color: Colors.grey.shade500),
+                          ),
                         ],
                       ),
                     )
@@ -427,22 +547,34 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
-                        title: Text(ongoingJobs.first.category, 
+                        title: Text(
+                          ongoingJobs.first.category,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                             fontSize: 18,
-                          )),
-                        subtitle: Text('Provider: ${recentQuotes.isEmpty ? 'Assigned' : recentQuotes.first.providerName}',
-                          style: const TextStyle(color: Colors.white70)),
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Provider: ${recentQuotes.isEmpty ? 'Assigned' : recentQuotes.first.providerName}',
+                          style: const TextStyle(color: Colors.white70),
+                        ),
                         trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text('In Progress',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                          child: const Text(
+                            'In Progress',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -452,34 +584,41 @@ class _HomePageState extends State<HomePage> {
               /// Notifications Section
               const _SectionHeader(title: 'Notifications'),
               const SizedBox(height: 8),
-              ..._notifications.take(3).map((n) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: n.isRead ? Colors.white : const Color(0xFF3366FF).withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: n.isRead ? Colors.grey.shade200 : const Color(0xFF3366FF).withOpacity(0.2),
+              ..._notifications
+                  .take(3)
+                  .map(
+                    (n) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: n.isRead
+                            ? Colors.white
+                            : const Color(0xFF3366FF).withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: n.isRead
+                              ? Colors.grey.shade200
+                              : const Color(0xFF3366FF).withOpacity(0.2),
+                        ),
+                      ),
+                      child: _NotificationTile(
+                        icon: Icons.notifications_outlined,
+                        text: n.title,
+                        isUnread: !n.isRead,
+                        onTap: () async {
+                          n.isRead = true;
+                          final navigator = Navigator.of(context);
+                          await navigator.push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  NotificationDetailScreen(notification: n),
+                            ),
+                          );
+                          if (!mounted) return;
+                          setState(() {});
+                        },
                       ),
                     ),
-                    child: _NotificationTile(
-                      icon: Icons.notifications_outlined,
-                      text: n.title,
-                      isUnread: !n.isRead,
-                      onTap: () async {
-                        n.isRead = true;
-                        final navigator = Navigator.of(context);
-                        await navigator.push(
-                          MaterialPageRoute(
-                            builder: (_) => NotificationDetailScreen(
-                              notification: n,
-                            ),
-                          ),
-                        );
-                        if (!mounted) return;
-                        setState(() {});
-                      },
-                    ),
-                  )),
+                  ),
             ],
           ),
         ),
@@ -491,8 +630,8 @@ class _HomePageState extends State<HomePage> {
 /// ----------------- REUSABLE WIDGETS -----------------
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
-    required this.icon, 
-    required this.label, 
+    required this.icon,
+    required this.label,
     required this.value,
     required this.color,
   });
@@ -512,10 +651,7 @@ class _SummaryCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            color.withOpacity(0.05),
-          ],
+          colors: [Colors.white, color.withOpacity(0.05)],
         ),
         boxShadow: [
           BoxShadow(
@@ -525,35 +661,43 @@ class _SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(height: 12),
-        Text(value, 
-          style: TextStyle(
-            fontSize: 24, 
-            fontWeight: FontWeight.bold,
-            color: color,
-          )),
-        const SizedBox(height: 4),
-        Text(label, 
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 13,
-          )),
-      ]),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.actionLabel, this.onActionTap});
+  const _SectionHeader({
+    required this.title,
+    this.actionLabel,
+    this.onActionTap,
+  });
   final String title;
   final String? actionLabel;
   final VoidCallback? onActionTap;
@@ -565,15 +709,17 @@ class _SectionHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, 
+          Text(
+            title,
             style: const TextStyle(
-              fontSize: 20, 
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Color(0xFF1A1F36),
-            )),
+            ),
+          ),
           if (actionLabel != null && onActionTap != null)
             TextButton(
-              onPressed: onActionTap, 
+              onPressed: onActionTap,
               style: TextButton.styleFrom(
                 foregroundColor: const Color(0xFF3366FF),
               ),
@@ -586,7 +732,12 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _NotificationTile extends StatelessWidget {
-  const _NotificationTile({required this.icon, required this.text, this.isUnread = false, this.onTap});
+  const _NotificationTile({
+    required this.icon,
+    required this.text,
+    this.isUnread = false,
+    this.onTap,
+  });
   final IconData icon;
   final String text;
   final bool isUnread;
@@ -599,25 +750,28 @@ class _NotificationTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isUnread 
+          color: isUnread
               ? const Color(0xFF3366FF).withOpacity(0.1)
               : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, 
+        child: Icon(
+          icon,
           color: isUnread ? const Color(0xFF3366FF) : Colors.grey.shade600,
           size: 20,
         ),
       ),
-      title: Text(text, 
+      title: Text(
+        text,
         style: TextStyle(
           fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
           color: isUnread ? const Color(0xFF1A1F36) : Colors.grey.shade700,
-        )),
+        ),
+      ),
       trailing: isUnread
           ? Container(
-              width: 10, 
-              height: 10, 
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(
                 color: const Color(0xFF00C48C),
                 shape: BoxShape.circle,
@@ -627,7 +781,8 @@ class _NotificationTile extends StatelessWidget {
                     blurRadius: 4,
                   ),
                 ],
-              ))
+              ),
+            )
           : null,
       onTap: onTap,
     );
@@ -641,44 +796,48 @@ class _NotificationBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(clipBehavior: Clip.none, children: [
-      IconButton(
-        onPressed: onTap, 
-        icon: Icon(Icons.notifications_none, 
-          color: count > 0 ? const Color(0xFF3366FF) : Colors.grey.shade600,
-          size: 28,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: onTap,
+          icon: Icon(
+            Icons.notifications_none,
+            color: count > 0 ? const Color(0xFF3366FF) : Colors.grey.shade600,
+            size: 28,
+          ),
         ),
-      ),
-      if (count > 0)
-        Positioned(
-          right: 6,
-          top: 6,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF00C48C),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF00C48C).withOpacity(0.4),
-                  blurRadius: 4,
+        if (count > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF00C48C),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00C48C).withOpacity(0.4),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              child: Text(
+                count > 99 ? '99+' : count.toString(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-            child: Text(
-              count > 99 ? '99+' : count.toString(),
-              textAlign: TextAlign.center, 
-              style: const TextStyle(
-                color: Colors.white, 
-                fontSize: 10, 
-                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        ),
-    ]);
+      ],
+    );
   }
 }
 
@@ -701,9 +860,12 @@ class PaymentsPage extends StatelessWidget {
     final quoteProvider = context.watch<QuoteProvider>();
 
     final currentUser = authProvider.currentUser;
-    if (currentUser == null) return const Center(child: Text('No user logged in'));
+    if (currentUser == null)
+      return const Center(child: Text('No user logged in'));
 
-    final payments = paymentProvider.payments.where((p) => p.payerId == currentUser.id).toList();
+    final payments = paymentProvider.payments
+        .where((p) => p.payerId == currentUser.id)
+        .toList();
     if (payments.isEmpty) return const Center(child: Text('No payments yet'));
 
     return Container(
@@ -715,8 +877,20 @@ class PaymentsPage extends StatelessWidget {
           final payment = payments[index];
           ServiceRequest? request;
           Quote? quote;
-          try { request = requestProvider.requests.firstWhere((r) => r.id == payment.requestId); } catch (_) { request = null; }
-          try { quote = quoteProvider.quotes.firstWhere((q) => q.id == payment.quoteId); } catch (_) { quote = null; }
+          try {
+            request = requestProvider.requests.firstWhere(
+              (r) => r.id == payment.requestId,
+            );
+          } catch (_) {
+            request = null;
+          }
+          try {
+            quote = quoteProvider.quotes.firstWhere(
+              (q) => q.id == payment.quoteId,
+            );
+          } catch (_) {
+            quote = null;
+          }
 
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
@@ -739,23 +913,36 @@ class PaymentsPage extends StatelessWidget {
                   color: const Color(0xFF3366FF).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.payment, color: const Color(0xFF3366FF), size: 24),
+                child: Icon(
+                  Icons.payment,
+                  color: const Color(0xFF3366FF),
+                  size: 24,
+                ),
               ),
-              title: Text('\$${payment.amount.toStringAsFixed(2)}', 
+              title: Text(
+                '\$${payment.amount.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: Color(0xFF1A1F36),
-                )),
+                ),
+              ),
               subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, 
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 4),
-                  Text(request?.category ?? 'Service request',
-                    style: TextStyle(color: Colors.grey.shade600)),
+                  Text(
+                    request?.category ?? 'Service request',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
                   const SizedBox(height: 2),
-                  Text('Provider: ${quote?.providerName ?? 'Unknown'}', 
-                    style: TextStyle(color: const Color(0xFF00C48C), fontSize: 12)),
+                  Text(
+                    'Provider: ${quote?.providerName ?? 'Unknown'}',
+                    style: TextStyle(
+                      color: const Color(0xFF00C48C),
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
               trailing: Container(
@@ -765,7 +952,7 @@ class PaymentsPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  payment.createdAt.toLocal().toString().split(' ').first, 
+                  payment.createdAt.toLocal().toString().split(' ').first,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ),
@@ -812,7 +999,12 @@ class _RequestsPageState extends State<RequestsPage> {
   }
 
   String _getStatusText(RequestStatus status) {
-    return status.toString().split('.').last.replaceAllMapped(RegExp(r'([A-Z])'), (m) => ' ${m.group(0)}').trim();
+    return status
+        .toString()
+        .split('.')
+        .last
+        .replaceAllMapped(RegExp(r'([A-Z])'), (m) => ' ${m.group(0)}')
+        .trim();
   }
 
   @override
@@ -822,7 +1014,8 @@ class _RequestsPageState extends State<RequestsPage> {
     final quoteProvider = context.watch<QuoteProvider>();
 
     final currentUser = authProvider.currentUser;
-    if (currentUser == null) return const Center(child: Text('No user logged in'));
+    if (currentUser == null)
+      return const Center(child: Text('No user logged in'));
 
     final requests = requestProvider.getCustomerRequests(currentUser.id);
 
@@ -839,119 +1032,115 @@ class _RequestsPageState extends State<RequestsPage> {
               child: CircularProgressIndicator(color: Color(0xFF3366FF)),
             )
           : requests.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.assignment_outlined,
-                        size: 64,
-                        color: Colors.grey.shade300,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No requests yet',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 16,
-                        ),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.assignment_outlined,
+                    size: 64,
+                    color: Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No requests yet',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: requests.length,
+              itemBuilder: (context, index) {
+                final req = requests[index];
+                final List<Quote> quotes = quoteProvider.getQuotesForRequest(
+                  req.id,
+                );
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3366FF).withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: requests.length,
-                  itemBuilder: (context, index) {
-                    final req = requests[index];
-                    final List<Quote> quotes =
-                        quoteProvider.getQuotesForRequest(req.id);
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF3366FF).withOpacity(0.08),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: _getStatusColor(req.status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
-                        leading: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(req.status).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            req.status == RequestStatus.pending
-                                ? Icons.hourglass_empty
-                                : req.status == RequestStatus.quoted
-                                    ? Icons.receipt
-                                    : req.status == RequestStatus.accepted
-                                        ? Icons.check_circle
-                                        : req.status == RequestStatus.completed
-                                            ? Icons.done_all
-                                            : Icons.cancel,
-                            color: _getStatusColor(req.status),
-                            size: 24,
-                          ),
-                        ),
-                        title: Text(
-                          '${req.category} - ${req.location}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A1F36),
-                          ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            req.description,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getStatusColor(req.status).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            _getStatusText(req.status),
-                            style: TextStyle(
-                              color: _getStatusColor(req.status),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => RequestDetailScreen(
-                                request: req,
-                                quotes: quotes,
-                              ),
-                            ),
-                          );
-                        },
+                      child: Icon(
+                        req.status == RequestStatus.pending
+                            ? Icons.hourglass_empty
+                            : req.status == RequestStatus.quoted
+                            ? Icons.receipt
+                            : req.status == RequestStatus.accepted
+                            ? Icons.check_circle
+                            : req.status == RequestStatus.completed
+                            ? Icons.done_all
+                            : Icons.cancel,
+                        color: _getStatusColor(req.status),
+                        size: 24,
                       ),
-                    );
-                  },
-                ),
+                    ),
+                    title: Text(
+                      '${req.category} - ${req.location}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1F36),
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        req.description,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(req.status).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _getStatusText(req.status),
+                        style: TextStyle(
+                          color: _getStatusColor(req.status),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              RequestDetailScreen(request: req, quotes: quotes),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -978,10 +1167,14 @@ class NotificationListScreen extends StatelessWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
-              color: n.isRead ? Colors.white : const Color(0xFF3366FF).withOpacity(0.05),
+              color: n.isRead
+                  ? Colors.white
+                  : const Color(0xFF3366FF).withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: n.isRead ? Colors.grey.shade200 : const Color(0xFF3366FF).withOpacity(0.2),
+                color: n.isRead
+                    ? Colors.grey.shade200
+                    : const Color(0xFF3366FF).withOpacity(0.2),
               ),
             ),
             child: ListTile(
@@ -994,8 +1187,12 @@ class NotificationListScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  n.isRead ? Icons.notifications_none : Icons.notifications_active,
-                  color: n.isRead ? Colors.grey.shade600 : const Color(0xFF3366FF),
+                  n.isRead
+                      ? Icons.notifications_none
+                      : Icons.notifications_active,
+                  color: n.isRead
+                      ? Colors.grey.shade600
+                      : const Color(0xFF3366FF),
                 ),
               ),
               title: Text(
@@ -1074,8 +1271,11 @@ class NotificationDetailScreen extends StatelessWidget {
                             color: const Color(0xFF3366FF).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.notifications, 
-                            color: Color(0xFF3366FF), size: 20),
+                          child: const Icon(
+                            Icons.notifications,
+                            color: Color(0xFF3366FF),
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -1093,12 +1293,18 @@ class NotificationDetailScreen extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       notification.message,
-                      style: const TextStyle(fontSize: 16, color: Color(0xFF4A4E69)),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF4A4E69),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Received: ${_formatDate(notification.createdAt)}',
-                      style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -1113,7 +1319,7 @@ class NotificationDetailScreen extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
     } else if (difference.inHours > 0) {
