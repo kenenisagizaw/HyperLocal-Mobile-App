@@ -23,7 +23,7 @@ class RoleSelectionScreen extends StatelessWidget {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
