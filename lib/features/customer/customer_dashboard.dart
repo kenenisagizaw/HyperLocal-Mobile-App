@@ -177,9 +177,6 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1F36),
-        elevation: 0,
       ),
       backgroundColor: const Color(0xFFF8FAFF), // Light blue background
       body: SafeArea(
@@ -281,9 +278,13 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 20),
 
               /// Summary Cards
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
+              GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.1,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _SummaryCard(
                     icon: Icons.assignment_outlined,
@@ -643,8 +644,7 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: (MediaQuery.of(context).size.width - 44) / 2,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -672,16 +672,16 @@ class _SummaryCard extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
@@ -1022,9 +1022,6 @@ class _RequestsPageState extends State<RequestsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Requests'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1F36),
-        elevation: 0,
       ),
       backgroundColor: const Color(0xFFF8FAFF),
       body: requestProvider.isLoading
@@ -1154,9 +1151,6 @@ class NotificationListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1F36),
-        elevation: 0,
       ),
       backgroundColor: const Color(0xFFF8FAFF),
       body: ListView.builder(
@@ -1237,9 +1231,6 @@ class NotificationDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(notification.title),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1F36),
-        elevation: 0,
       ),
       body: Container(
         color: const Color(0xFFF8FAFF),
