@@ -56,7 +56,7 @@ class RoleSelectionScreen extends StatelessWidget {
 
                   // Welcome Text
                   Text(
-                    'Welcome to HandyFix',
+                    'Welcome to HyperLocal',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
