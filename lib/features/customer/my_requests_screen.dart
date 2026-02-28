@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../auth/providers/auth_provider.dart';
+import 'create_request_screen.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
 import 'request_detail_screen.dart';
@@ -181,7 +182,12 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                         const SizedBox(height: 24),
                         ElevatedButton.icon(
                           onPressed: () {
-                            // Navigate to create request screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CreateRequestScreen(),
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.add),
                           label: const Text('Create New Request'),
@@ -211,17 +217,20 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                     },
                   ),
       ),
-      floatingActionButton: myRequests.isNotEmpty
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                // Navigate to create request screen
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('New Request'),
-              backgroundColor: Colors.green.shade600,
-              foregroundColor: Colors.white,
-            )
-          : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CreateRequestScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('New Request'),
+        backgroundColor: Colors.green.shade600,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 
