@@ -618,18 +618,18 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // Submit Button
-                CustomButton(
-                  text: isLoading ? 'Submitting...' : 'Submit Request',
-                  onPressed: isLoading ? () {} : () => _submit(context),
-                ),
               ],
             ),
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: isLoading ? null : () => _submit(context),
+        backgroundColor: Colors.blue.shade600,
+        icon: const Icon(Icons.send_rounded),
+        label: Text(isLoading ? 'Creating...' : 'Create'),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
