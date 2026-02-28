@@ -43,9 +43,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Messages'),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1A1F36),
-          elevation: 0,
         ),
         body: const Center(child: Text('No user logged in')),
       );
@@ -60,9 +57,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Messages'),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF1A1F36),
-          elevation: 0,
         ),
         body: Center(
           child: Column(
@@ -91,9 +85,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Messages'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1A1F36),
-        elevation: 0,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -317,13 +308,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E3A8A),
-        title: Text(
-          widget.otherUserName,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-        ),
+        title: Text(widget.otherUserName),
         centerTitle: true,
         leading: widget.otherUser == null
             ? null
@@ -537,13 +522,7 @@ class UserProfileDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E3A8A),
-        title: Text(
-          isProvider ? 'Provider Profile' : 'Customer Profile',
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-        ),
+        title: Text(isProvider ? 'Provider Profile' : 'Customer Profile'),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
