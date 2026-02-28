@@ -119,9 +119,6 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -747,9 +744,6 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notifications'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
       ),
       body: notifications.isEmpty
           ? Center(
@@ -855,9 +849,6 @@ class NotificationDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Details'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
