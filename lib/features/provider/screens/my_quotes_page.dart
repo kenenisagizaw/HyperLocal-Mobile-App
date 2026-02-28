@@ -231,9 +231,6 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quotes'),
-        backgroundColor: Colors.white,
-        foregroundColor: _textPrimary,
-        elevation: 0,
       ),
       backgroundColor: _surfaceColor,
       body: body,
@@ -342,14 +339,8 @@ class QuoteDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Quote Details',
-          style: TextStyle(fontWeight: FontWeight.w600, color: _textPrimary),
-        ),
+        title: const Text('Quote Details'),
         centerTitle: false,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: _textPrimary,
         shape: Border(bottom: BorderSide(color: _surfaceColor, width: 1)),
       ),
       body: SingleChildScrollView(
