@@ -5,6 +5,8 @@ class CustomTextField extends StatelessWidget {
   final String label;
   final TextInputType keyboardType;
   final int maxLines;
+  final bool enabled;
+  final bool readOnly;
 
   const CustomTextField({
     super.key,
@@ -12,6 +14,8 @@ class CustomTextField extends StatelessWidget {
     required this.label,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
+    this.enabled = true,
+    this.readOnly = false,
   });
 
   @override
@@ -20,6 +24,8 @@ class CustomTextField extends StatelessWidget {
       controller: controller,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      enabled: enabled,
+      readOnly: readOnly,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
