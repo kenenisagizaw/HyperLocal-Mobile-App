@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -126,8 +125,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   // ---------------- Stepper navigation ----------------
   void _updateProfile() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final providerDirectory =
-      Provider.of<ProviderDirectoryProvider>(context, listen: false);
+    final providerDirectory = Provider.of<ProviderDirectoryProvider>(
+      context,
+      listen: false,
+    );
 
     authProvider.updateProviderProfile(
       name: _nameController.text,
@@ -181,7 +182,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Colors.blue, width: 2),
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
       ),
     );
@@ -229,7 +233,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             icon: const Icon(Icons.verified, color: Colors.white),
             label: const Text(
               'Verify',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -288,8 +295,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                   children: [
                     GestureDetector(
                       onTap: _isEditing
-                        ? () => _pickFile(ImageSource.gallery, 'profile')
-                        : null,
+                          ? () => _pickFile(ImageSource.gallery, 'profile')
+                          : null,
                       child: Stack(
                         children: [
                           CircleAvatar(
@@ -299,7 +306,11 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                 ? FileImage(File(_profileImage!.path))
                                 : null,
                             child: _profileImage == null
-                                ? Icon(Icons.person, size: 50, color: Colors.blue.shade700)
+                                ? Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Colors.blue.shade700,
+                                  )
                                 : null,
                           ),
                           Positioned(
@@ -310,7 +321,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                               decoration: BoxDecoration(
                                 color: Colors.blue,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
                               ),
                               child: const Icon(
                                 Icons.camera_alt,
