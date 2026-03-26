@@ -162,7 +162,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
-        enabled: true,
+        enabled: enabled,
         readOnly: !enabled,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.blue),
