@@ -134,6 +134,21 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              setState(() => _isEditing = !_isEditing);
+            },
+            icon: const Icon(Icons.edit, color: Colors.white),
+            label: Text(
+              _isEditing ? 'Done' : 'Edit',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -195,7 +210,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                           bottom: 0,
                           right: 0,
                           child: GestureDetector(
-                            onTap: _pickProfileImage,
+                            onTap: _isEditing ? _pickProfileImage : null,
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
@@ -279,6 +294,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                               child: CustomTextField(
                                 controller: _nameController,
                                 label: 'Full Name',
+                                enabled: _isEditing,
                               ),
                             ),
                           ),
@@ -299,6 +315,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                               child: CustomTextField(
                                 controller: _addressController,
                                 label: 'Address',
+                                enabled: _isEditing,
                               ),
                             ),
                           ),
@@ -320,6 +337,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                                 controller: _phoneController,
                                 label: 'Phone Number',
                                 keyboardType: TextInputType.phone,
+                                enabled: _isEditing,
                               ),
                             ),
                           ),
