@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
+import 'provider_verification_screen.dart';
 
 class ProviderProfilePage extends StatefulWidget {
   const ProviderProfilePage({super.key});
@@ -18,22 +19,15 @@ class ProviderProfilePage extends StatefulWidget {
 }
 
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
-  int _currentStep = 0;
+  bool _isEditing = false;
 
   // Controllers
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _bioController = TextEditingController();
-  final _nationalIdController = TextEditingController();
-  final _businessLicenseController = TextEditingController();
-  final _educationController = TextEditingController();
-
   // Files
   XFile? _profileImage;
-  XFile? _nationalIdFile;
-  XFile? _businessLicenseFile;
-  XFile? _educationFile;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -46,9 +40,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     _phoneController.dispose();
     _emailController.dispose();
     _bioController.dispose();
-    _nationalIdController.dispose();
-    _businessLicenseController.dispose();
-    _educationController.dispose();
     super.dispose();
   }
 
@@ -72,19 +63,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     final file = await _picker.pickImage(source: source);
     if (file != null) {
       setState(() {
-        switch (type) {
-          case 'profile':
-            _profileImage = file;
-            break;
-          case 'nid':
-            _nationalIdFile = file;
-            break;
-          case 'business':
-            _businessLicenseFile = file;
-            break;
-          case 'education':
-            _educationFile = file;
-            break;
+        if (type == 'profile') {
+          _profileImage = file;
         }
       });
     }
@@ -144,22 +124,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   }
 
   // ---------------- Stepper navigation ----------------
-  void _nextStep() {
-    if (_currentStep < 1) {
-      setState(() => _currentStep += 1);
-    } else {
-      _submitProfile();
-    }
-  }
-
-  void _submitProfile() {
-    if (_providerLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide your location')),
-      );
-      return;
-    }
-
+  void _updateProfile() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final providerDirectory =
       Provider.of<ProviderDirectoryProvider>(context, listen: false);
@@ -170,13 +135,6 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       email: _emailController.text,
       bio: _bioController.text,
       profileImage: _profileImage?.path,
-      nationalId: _nationalIdController.text,
-      businessLicense: _businessLicenseController.text,
-      educationDoc: _educationController.text,
-      location:
-          '${_providerLocation!.latitude},${_providerLocation!.longitude}',
-      latitude: _providerLocation!.latitude,
-      longitude: _providerLocation!.longitude,
     );
 
     final updatedProvider = authProvider.currentUser;
@@ -190,45 +148,21 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   }
 
   // ---------------- UI helpers ----------------
-  Widget _buildFileButton(String label, XFile? file, String type) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ElevatedButton.icon(
-        onPressed: () => _pickFile(ImageSource.gallery, type),
-        icon: Icon(
-          file == null ? Icons.upload_file : Icons.check_circle,
-          color: Colors.white,
-          size: 20,
-        ),
-        label: Text(
-          file == null ? label : 'Uploaded',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: file == null ? Colors.blue : Colors.green,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-        ),
-      ),
-    );
-  }
 
   Widget _buildTextField(
     TextEditingController controller,
     String label,
     IconData icon, {
     TextInputType keyboardType = TextInputType.text,
+    bool enabled = true,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        enabled: true,
+        readOnly: !enabled,
         decoration: InputDecoration(
           prefixIcon: Icon(icon, color: Colors.blue),
           labelText: label,
@@ -266,6 +200,39 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              if (_isEditing) {
+                _updateProfile();
+              }
+              setState(() => _isEditing = !_isEditing);
+            },
+            icon: const Icon(Icons.edit, color: Colors.white),
+            label: Text(
+              _isEditing ? 'Done' : 'Edit',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProviderVerificationScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.verified, color: Colors.white),
+            label: const Text(
+              'Verify',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
@@ -280,11 +247,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         ),
         child: Stepper(
           type: StepperType.vertical,
-          currentStep: _currentStep,
-          onStepContinue: _nextStep,
-          onStepCancel: () {
-            if (_currentStep > 0) setState(() => _currentStep -= 1);
-          },
+          currentStep: 0,
+          onStepContinue: null,
+          onStepCancel: null,
           connectorColor: WidgetStateProperty.all(Colors.blue.shade300),
           stepIconBuilder: (stepIndex, stepState) {
             if (stepState == StepState.complete) {
@@ -293,56 +258,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             return null;
           },
           controlsBuilder: (context, details) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: details.onStepContinue,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 3,
-                      ),
-                      child: Text(
-                        _currentStep == 1 ? 'Submit' : 'Next',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  if (_currentStep > 0)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: details.onStepCancel,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          side: const BorderSide(color: Colors.blue, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Back',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.blue,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            );
+            return const SizedBox.shrink();
           },
           steps: [
             // -------- Step 1: Basic Info --------
@@ -352,7 +268,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: _currentStep >= 0 ? Colors.blue : Colors.grey,
+                  color: Colors.blue,
                 ),
               ),
               content: Container(
@@ -371,7 +287,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: () => _pickFile(ImageSource.gallery, 'profile'),
+                      onTap: _isEditing
+                        ? () => _pickFile(ImageSource.gallery, 'profile')
+                        : null,
                       child: Stack(
                         children: [
                           CircleAvatar(
@@ -405,162 +323,32 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildTextField(_nameController, 'Full Name', Icons.person),
+                    _buildTextField(
+                      _nameController,
+                      'Full Name',
+                      Icons.person,
+                      enabled: _isEditing,
+                    ),
                     _buildTextField(
                       _phoneController,
                       'Phone Number',
                       Icons.phone,
                       keyboardType: TextInputType.phone,
+                      enabled: _isEditing,
                     ),
                     _buildTextField(
                       _emailController,
                       'Email (optional)',
                       Icons.email,
                       keyboardType: TextInputType.emailAddress,
+                      enabled: _isEditing,
                     ),
                     _buildTextField(
                       _bioController,
                       'Bio / Profession',
                       Icons.badge,
+                      enabled: _isEditing,
                     ),
-                  ],
-                ),
-              ),
-            ),
-            // -------- Step 2: Verification --------
-            Step(
-              title: Text(
-                'Verification',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: _currentStep >= 1 ? Colors.green : Colors.grey,
-                ),
-              ),
-              content: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _buildTextField(
-                      _nationalIdController,
-                      'National ID Number',
-                      Icons.badge,
-                    ),
-                    _buildFileButton('Upload National ID', _nationalIdFile, 'nid'),
-                    const SizedBox(height: 8),
-                    _buildTextField(
-                      _businessLicenseController,
-                      'Business License Number',
-                      Icons.business,
-                    ),
-                    _buildFileButton(
-                      'Upload License',
-                      _businessLicenseFile,
-                      'business',
-                    ),
-                    const SizedBox(height: 8),
-                    _buildTextField(
-                      _educationController,
-                      'Educational Qualification',
-                      Icons.school,
-                    ),
-                    _buildFileButton(
-                      'Upload Education Document',
-                      _educationFile,
-                      'education',
-                    ),
-                    const SizedBox(height: 16),
-                    // -------- GPS Location Button --------
-                    Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      child: ElevatedButton.icon(
-                        onPressed: _getCurrentLocation,
-                        icon: Icon(
-                          _providerLocation == null ? Icons.location_on : Icons.check,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        label: Text(
-                          _providerLocation == null
-                              ? 'Use Current Location'
-                              : 'Location Selected',
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _providerLocation == null
-                              ? Colors.blue
-                              : Colors.green,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    // Optional: Map Preview
-                    if (_providerLocation != null)
-                      Container(
-                        height: 200,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue.shade200, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.shade300,
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: FlutterMap(
-                            options: MapOptions(
-                              initialCenter: _providerLocation!,
-                              initialZoom: 15,
-                              interactionOptions: const InteractionOptions(
-                                flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
-                              ),
-                            ),
-                            children: [
-                              TileLayer(
-                                urlTemplate:
-                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                userAgentPackageName: 'com.example.my_first_app',
-                              ),
-                              MarkerLayer(
-                                markers: [
-                                  Marker(
-                                    point: _providerLocation!,
-                                    width: 40,
-                                    height: 40,
-                                    child: const Icon(
-                                      Icons.location_on,
-                                      color: Colors.red,
-                                      size: 40,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
