@@ -294,7 +294,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                               child: CustomTextField(
                                 controller: _nameController,
                                 label: 'Full Name',
-                                enabled: _isEditing,
+                                readOnly: !_isEditing,
                               ),
                             ),
                           ),
@@ -315,7 +315,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                               child: CustomTextField(
                                 controller: _addressController,
                                 label: 'Address',
-                                enabled: _isEditing,
+                                readOnly: !_isEditing,
                               ),
                             ),
                           ),
@@ -337,7 +337,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                                 controller: _phoneController,
                                 label: 'Phone Number',
                                 keyboardType: TextInputType.phone,
-                                enabled: _isEditing,
+                                readOnly: !_isEditing,
                               ),
                             ),
                           ),
