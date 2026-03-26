@@ -27,12 +27,6 @@ class AuthProvider extends ChangeNotifier {
     String? email,
     String? profileImage,
     String? bio,
-    String? nationalId,
-    String? businessLicense,
-    String? educationDoc,
-    String? location,
-    double? latitude,
-    double? longitude,
   }) {
     if (currentUser != null) {
       currentUser = currentUser!.copyWith(
@@ -41,12 +35,29 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         profilePicture: profileImage,
         bio: bio,
+      );
+      notifyListeners();
+    }
+  }
+
+  void updateProviderVerification({
+    required String nationalId,
+    required String businessLicense,
+    required String educationDoc,
+    required String location,
+    required double latitude,
+    required double longitude,
+    bool isVerified = false,
+  }) {
+    if (currentUser != null) {
+      currentUser = currentUser!.copyWith(
         nationalId: nationalId,
         businessLicense: businessLicense,
         educationDocument: educationDoc,
         location: location,
         latitude: latitude,
         longitude: longitude,
+        isVerified: isVerified,
       );
       notifyListeners();
     }
