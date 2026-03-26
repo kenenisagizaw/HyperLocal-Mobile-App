@@ -123,14 +123,17 @@ class _ProviderVerificationScreenState
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final providerDirectory =
-        Provider.of<ProviderDirectoryProvider>(context, listen: false);
+    final providerDirectory = Provider.of<ProviderDirectoryProvider>(
+      context,
+      listen: false,
+    );
 
     authProvider.updateProviderVerification(
       nationalId: _nationalIdController.text.trim(),
       businessLicense: _businessLicenseController.text.trim(),
       educationDoc: _educationController.text.trim(),
-      location: '${_providerLocation!.latitude},${_providerLocation!.longitude}',
+      location:
+          '${_providerLocation!.latitude},${_providerLocation!.longitude}',
       latitude: _providerLocation!.latitude,
       longitude: _providerLocation!.longitude,
       isVerified: true,
@@ -342,14 +345,16 @@ class _ProviderVerificationScreenState
                                 initialZoom: 15,
                                 interactionOptions: const InteractionOptions(
                                   flags:
-                                      InteractiveFlag.pinchZoom | InteractiveFlag.drag,
+                                      InteractiveFlag.pinchZoom |
+                                      InteractiveFlag.drag,
                                 ),
                               ),
                               children: [
                                 TileLayer(
                                   urlTemplate:
                                       'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                  userAgentPackageName: 'com.example.my_first_app',
+                                  userAgentPackageName:
+                                      'com.example.my_first_app',
                                 ),
                                 MarkerLayer(
                                   markers: [
