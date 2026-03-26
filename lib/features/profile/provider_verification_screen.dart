@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -322,56 +321,33 @@ class _ProviderVerificationScreenState
                       const SizedBox(height: 12),
                       if (_providerLocation != null)
                         Container(
-                          height: 200,
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: Colors.blue.shade200,
                               width: 2,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.shade300,
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                            color: Colors.blue.shade50,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.location_on,
+                                color: Colors.red,
+                                size: 28,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  '${_providerLocation!.latitude.toStringAsFixed(5)}, '
+                                  '${_providerLocation!.longitude.toStringAsFixed(5)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: FlutterMap(
-                              options: MapOptions(
-                                initialCenter: _providerLocation!,
-                                initialZoom: 15,
-                                interactionOptions: const InteractionOptions(
-                                  flags:
-                                      InteractiveFlag.pinchZoom |
-                                      InteractiveFlag.drag,
-                                ),
-                              ),
-                              children: [
-                                TileLayer(
-                                  urlTemplate:
-                                      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                  userAgentPackageName:
-                                      'com.example.my_first_app',
-                                ),
-                                MarkerLayer(
-                                  markers: [
-                                    Marker(
-                                      point: _providerLocation!,
-                                      width: 40,
-                                      height: 40,
-                                      child: const Icon(
-                                        Icons.location_on,
-                                        color: Colors.red,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                     ],
