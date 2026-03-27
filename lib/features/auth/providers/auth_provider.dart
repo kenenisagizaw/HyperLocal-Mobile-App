@@ -145,10 +145,7 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  Future<bool> loginWithGoogle({
-    required String idToken,
-    String? role,
-  }) async {
+  Future<bool> loginWithGoogle({required String idToken, String? role}) async {
     return _runAuthAction(() async {
       await _ensureRepository();
       final user = await _repository!.loginWithGoogle(
