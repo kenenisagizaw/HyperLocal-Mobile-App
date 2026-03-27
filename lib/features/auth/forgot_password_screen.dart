@@ -39,9 +39,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Request failed'),
-        ),
+        SnackBar(content: Text(authProvider.errorMessage ?? 'Request failed')),
       );
       return;
     }
