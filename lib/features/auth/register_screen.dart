@@ -45,9 +45,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     if (selectedRole == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a role')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a role')));
       return;
     }
 
@@ -149,10 +149,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: const InputDecoration(labelText: 'Role'),
               items: UserRole.values
                   .map(
-                    (role) => DropdownMenuItem(
-                      value: role,
-                      child: Text(role.name),
-                    ),
+                    (role) =>
+                        DropdownMenuItem(value: role, child: Text(role.name)),
                   )
                   .toList(),
               onChanged: (role) => setState(() => selectedRole = role),
