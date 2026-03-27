@@ -53,9 +53,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     }
 
     _startCooldown(60);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Verification code sent')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Verification code sent')));
   }
 
   void _startCooldown(int seconds) {
@@ -78,9 +78,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   Future<void> _verifyCode() async {
     final code = codeController.text.trim();
     if (code.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter the 6-digit code')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter the 6-digit code')));
       return;
     }
 
@@ -121,9 +121,9 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
       _ => authProvider.errorMessage ?? 'Verification failed',
     };
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
