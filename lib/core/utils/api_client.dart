@@ -3,8 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../constants/api_constants.dart';
 import '../../data/datasources/local/local_storage.dart';
+import '../constants/api_constants.dart';
 
 class ApiClient {
   static Future<Dio> create() async {
@@ -38,10 +38,10 @@ class ApiClient {
         onError: (error, handler) async {
           final statusCode = error.response?.statusCode;
           final isUnauthorized = statusCode == 401;
-          final isRefreshRequest =
-              error.requestOptions.path.endsWith(ApiConstants.refreshToken);
-          final alreadyRetried =
-              error.requestOptions.extra['retried'] == true;
+          final isRefreshRequest = error.requestOptions.path.endsWith(
+            ApiConstants.refreshToken,
+          );
+          final alreadyRetried = error.requestOptions.extra['retried'] == true;
 
           if (isUnauthorized && !isRefreshRequest && !alreadyRetried) {
             error.requestOptions.extra['retried'] = true;
