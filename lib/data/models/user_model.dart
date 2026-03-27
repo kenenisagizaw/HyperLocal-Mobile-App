@@ -17,7 +17,7 @@ class UserModel {
   final String? businessLicense;
   final String? educationDocument;
   final String? location;
-  final double? latitude;  // <-- new field
+  final double? latitude; // <-- new field
   final double? longitude; // <-- new field
   final bool isVerified;
 
@@ -42,6 +42,67 @@ class UserModel {
     this.isVerified = false,
     this.createdAt,
   });
+
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    final roleValue = json['role'];
+    UserRole role = UserRole.customer;
+
+    if (roleValue is String) {
+      role = UserRole.values.firstWhere(
+        (value) => value.name == roleValue,
+        orElse: () => UserRole.customer,
+      );
+    } else if (roleValue is int &&
+        roleValue >= 0 &&
+        roleValue < UserRole.values.length) {
+      role = UserRole.values[roleValue];
+    }
+
+    final latitudeValue = json['latitude'];
+    final longitudeValue = json['longitude'];
+
+    return UserModel(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      role: role,
+      name: (json['name'] ?? '').toString(),
+      phone: (json['phone'] ?? '').toString(),
+      email: json['email']?.toString(),
+      profilePicture: json['profilePicture']?.toString(),
+      address: json['address']?.toString(),
+      bio: json['bio']?.toString(),
+      nationalId: json['nationalId']?.toString(),
+      businessLicense: json['businessLicense']?.toString(),
+      educationDocument: json['educationDocument']?.toString(),
+      location: json['location']?.toString(),
+      latitude: latitudeValue is num ? latitudeValue.toDouble() : null,
+      longitude: longitudeValue is num ? longitudeValue.toDouble() : null,
+      isVerified: json['isVerified'] == true,
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'role': role.name,
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'profilePicture': profilePicture,
+      'address': address,
+      'bio': bio,
+      'nationalId': nationalId,
+      'businessLicense': businessLicense,
+      'educationDocument': educationDocument,
+      'location': location,
+      'latitude': latitude,
+      'longitude': longitude,
+      'isVerified': isVerified,
+      'createdAt': createdAt?.toIso8601String(),
+    };
+  }
 
   /// Creates a copy of the user with updated fields
   UserModel copyWith({
