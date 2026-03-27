@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../data/models/user_model.dart';
-import '../customer/customer_dashboard.dart';
-import '../provider/provider_dashboard.dart';
-import 'providers/auth_provider.dart';
+import 'register_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -57,9 +55,9 @@ class RoleSelectionScreen extends StatelessWidget {
                   // Welcome Text
                   Text(
                     'Welcome to HyperLocal',
-                    style: TextStyle(
+                    style: GoogleFonts.playfairDisplay(
                       fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       foreground: Paint()
                         ..shader = LinearGradient(
                           colors: [Colors.blue.shade800, Colors.green.shade800],
@@ -69,7 +67,10 @@ class RoleSelectionScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     'Choose how you want to continue',
-                    style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                   const SizedBox(height: 50),
 
@@ -83,21 +84,12 @@ class RoleSelectionScreen extends StatelessWidget {
                       colors: [Colors.blue.shade400, Colors.blue.shade600],
                     ),
                     onTap: () {
-                      final user = UserModel(
-                        id: 'customer-1',
-                        name: 'Michael Abate',
-                        email: 'customer@example.com',
-                        role: UserRole.customer,
-                        phone: '0922 445 566',
-                      );
-                      Provider.of<AuthProvider>(
-                        context,
-                        listen: false,
-                      ).login(user);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const CustomerDashboard(),
+                          builder: (_) => const RegisterScreen(
+                            initialRole: UserRole.customer,
+                          ),
                         ),
                       );
                     },
@@ -115,21 +107,12 @@ class RoleSelectionScreen extends StatelessWidget {
                       colors: [Colors.green.shade400, Colors.green.shade600],
                     ),
                     onTap: () {
-                      final user = UserModel(
-                        id: 'provider-1',
-                        name: 'Abebe Bekele',
-                        email: 'provider@example.com',
-                        role: UserRole.provider,
-                        phone: '0911 223 344',
-                      );
-                      Provider.of<AuthProvider>(
-                        context,
-                        listen: false,
-                      ).login(user);
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const ProviderDashboard(),
+                          builder: (_) => const RegisterScreen(
+                            initialRole: UserRole.provider,
+                          ),
                         ),
                       );
                     },
@@ -140,7 +123,7 @@ class RoleSelectionScreen extends StatelessWidget {
                   // Footer Text
                   Text(
                     'Your trusted service partner',
-                    style: TextStyle(
+                    style: GoogleFonts.dmSans(
                       color: Colors.grey.shade600,
                       fontStyle: FontStyle.italic,
                     ),
@@ -200,16 +183,16 @@ class RoleSelectionScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: GoogleFonts.dmSans(
                       fontSize: 22,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: GoogleFonts.dmSans(
                       fontSize: 14,
                       color: Colors.white.withOpacity(0.9),
                     ),
