@@ -16,6 +16,7 @@ import 'features/payments/providers/payment_provider.dart';
 import 'features/reviews/providers/review_provider.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     MultiProvider(
       providers: [
@@ -33,22 +34,28 @@ void main() {
             return previous ?? RequestProvider(repository: repository);
           },
         ),
-        ChangeNotifierProxyProvider<ProviderRepository,
-            ProviderDirectoryProvider>(
+        ChangeNotifierProxyProvider<
+          ProviderRepository,
+          ProviderDirectoryProvider
+        >(
           create: (context) => ProviderDirectoryProvider(
             repository: context.read<ProviderRepository>(),
           ),
           update: (context, repository, previous) {
-            return previous ?? ProviderDirectoryProvider(repository: repository);
+            return previous ??
+                ProviderDirectoryProvider(repository: repository);
           },
         ),
-        ChangeNotifierProxyProvider<CustomerRepository,
-            CustomerDirectoryProvider>(
+        ChangeNotifierProxyProvider<
+          CustomerRepository,
+          CustomerDirectoryProvider
+        >(
           create: (context) => CustomerDirectoryProvider(
             repository: context.read<CustomerRepository>(),
           ),
           update: (context, repository, previous) {
-            return previous ?? CustomerDirectoryProvider(repository: repository);
+            return previous ??
+                CustomerDirectoryProvider(repository: repository);
           },
         ),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
