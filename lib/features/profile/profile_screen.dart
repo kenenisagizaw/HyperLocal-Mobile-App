@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,6 +28,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   final _bioController = TextEditingController();
   // Files
   XFile? _profileImage;
+  List<XFile> _portfolioImages = [];
+  List<PlatformFile> _certificationFiles = [];
 
   final ImagePicker _picker = ImagePicker();
 
@@ -67,6 +70,33 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         }
       });
     }
+  }
+
+  Future<void> _pickPortfolioImages() async {
+    final files = await _picker.pickMultiImage();
+    if (files.isNotEmpty) {
+      setState(() {
+        _portfolioImages = files;
+      });
+    }
+  }
+
+  Future<void> _pickCertifications() async {
+    final result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.custom,
+      allowedExtensions: const ['pdf'],
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      _certificationFiles = result.files
+          .where((file) => file.path != null)
+          .toList();
+    });
   }
 
   // ---------------- Location picker ----------------
@@ -123,29 +153,109 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   }
 
   // ---------------- Stepper navigation ----------------
-  void _updateProfile() {
+  Future<bool> _updateProfile() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final providerDirectory = Provider.of<ProviderDirectoryProvider>(
       context,
       listen: false,
     );
 
-    authProvider.updateProviderProfile(
+    final userSuccess = await authProvider.updateUserProfile(
       name: _nameController.text,
-      phone: _phoneController.text,
-      email: _emailController.text,
+      phoneNumber: _phoneController.text,
       bio: _bioController.text,
-      profileImage: _profileImage?.path,
+      avatarFile: _profileImage,
     );
+
+    if (!userSuccess) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Profile update failed'),
+        ),
+      );
+      return false;
+    }
+
+    if (_providerLocation != null) {
+      // location handled below if provider update is needed
+    }
+
+    final portfolioUrls = <String>[];
+    for (final file in _portfolioImages) {
+      final path = await authProvider.uploadPortfolio(file);
+      if (path == null) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ?? 'Portfolio upload failed',
+            ),
+          ),
+        );
+        return false;
+      }
+      portfolioUrls.add(path);
+    }
+
+    final certificationUrls = <String>[];
+    for (final file in _certificationFiles) {
+      final pathValue = file.path;
+      if (pathValue == null) {
+        continue;
+      }
+      final path = await authProvider.uploadCertification(XFile(pathValue));
+      if (path == null) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ?? 'Certification upload failed',
+            ),
+          ),
+        );
+        return false;
+      }
+      certificationUrls.add(path);
+    }
+
+    final needsProviderUpdate =
+        _providerLocation != null ||
+        portfolioUrls.isNotEmpty ||
+        certificationUrls.isNotEmpty;
+
+    if (needsProviderUpdate) {
+      final providerSuccess = await authProvider.updateProviderProfileRemote(
+        latitude: _providerLocation?.latitude,
+        longitude: _providerLocation?.longitude,
+        portfolioUrls: portfolioUrls.isNotEmpty ? portfolioUrls : null,
+        certificationsUrls: certificationUrls.isNotEmpty
+            ? certificationUrls
+            : null,
+      );
+      if (!providerSuccess) {
+        // ignore: use_build_context_synchronously
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              authProvider.errorMessage ?? 'Provider profile update failed',
+            ),
+          ),
+        );
+        return false;
+      }
+    }
 
     final updatedProvider = authProvider.currentUser;
     if (updatedProvider != null) {
       providerDirectory.upsertProvider(updatedProvider);
     }
 
+    // ignore: use_build_context_synchronously
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile updated successfully!')),
     );
+    return true;
   }
 
   // ---------------- UI helpers ----------------
@@ -206,11 +316,15 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         centerTitle: true,
         actions: [
           TextButton.icon(
-            onPressed: () {
+            onPressed: () async {
               if (_isEditing) {
-                _updateProfile();
+                final success = await _updateProfile();
+                if (success) {
+                  setState(() => _isEditing = false);
+                }
+                return;
               }
-              setState(() => _isEditing = !_isEditing);
+              setState(() => _isEditing = true);
             },
             icon: const Icon(Icons.edit, color: Colors.white),
             label: Text(
@@ -363,6 +477,85 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       Icons.badge,
                       enabled: _isEditing,
                     ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(Icons.photo_library, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Portfolio Images',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const Spacer(),
+                        if (_isEditing)
+                          TextButton.icon(
+                            onPressed: _pickPortfolioImages,
+                            icon: const Icon(Icons.add_a_photo),
+                            label: const Text('Add'),
+                          ),
+                      ],
+                    ),
+                    if (_portfolioImages.isEmpty)
+                      Text(
+                        _isEditing
+                            ? 'No portfolio images selected'
+                            : 'No portfolio images',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _portfolioImages
+                            .map(
+                              (file) => Chip(
+                                label: Text(file.name),
+                                avatar: const Icon(Icons.image, size: 18),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.description, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Certifications (PDF)',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const Spacer(),
+                        if (_isEditing)
+                          TextButton.icon(
+                            onPressed: _pickCertifications,
+                            icon: const Icon(Icons.upload_file),
+                            label: const Text('Add'),
+                          ),
+                      ],
+                    ),
+                    if (_certificationFiles.isEmpty)
+                      Text(
+                        _isEditing
+                            ? 'No certifications selected'
+                            : 'No certifications',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _certificationFiles
+                            .map(
+                              (file) => Chip(
+                                label: Text(file.name),
+                                avatar: const Icon(
+                                  Icons.picture_as_pdf,
+                                  size: 18,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
                   ],
                 ),
               ),
