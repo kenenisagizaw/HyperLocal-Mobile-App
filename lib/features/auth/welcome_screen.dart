@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'role_selection_screen.dart';
 import 'login_screen.dart';
+import 'role_selection_screen.dart';
 import 'widgets/auth_scaffold.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -74,9 +74,7 @@ class WelcomeScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const RoleSelectionScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
               );
             },
             style: OutlinedButton.styleFrom(
