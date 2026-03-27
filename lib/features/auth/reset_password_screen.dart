@@ -43,9 +43,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Reset failed'),
-        ),
+        SnackBar(content: Text(authProvider.errorMessage ?? 'Reset failed')),
       );
       return;
     }
@@ -109,8 +107,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             const SizedBox(height: 14),
             TextFormField(
               controller: confirmController,
-              decoration:
-                  const InputDecoration(labelText: 'Confirm password'),
+              decoration: const InputDecoration(labelText: 'Confirm password'),
               obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
