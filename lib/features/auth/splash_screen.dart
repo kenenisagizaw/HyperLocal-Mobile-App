@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../data/models/user_model.dart';
 import '../customer/customer_dashboard.dart';
@@ -79,7 +79,11 @@ class _SplashScreenState extends State<SplashScreen> {
                   color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(28),
                 ),
-                child: const Icon(Icons.handyman, size: 52, color: Colors.white),
+                child: const Icon(
+                  Icons.handyman,
+                  size: 52,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 20),
               Text(
@@ -93,10 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 10),
               Text(
                 'Connecting you in seconds',
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  color: Colors.white70,
-                ),
+                style: GoogleFonts.dmSans(fontSize: 14, color: Colors.white70),
               ),
               const SizedBox(height: 28),
               const CircularProgressIndicator(
