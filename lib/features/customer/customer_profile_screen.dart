@@ -67,20 +67,25 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
 
     setState(() => _isSaving = true);
 
-    // Simulate network delay
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    authProvider.updateCustomerProfile(
+    final success = await authProvider.updateUserProfile(
       name: _nameController.text.trim(),
-      phone: _phoneController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
       address: _addressController.text.trim(),
-      profileImage: _selectedImage?.path ?? user.profilePicture,
+      avatarFile: _selectedImage,
     );
 
     setState(() {
       _isSaving = false;
-      _isEditing = false;
+      _isEditing = !success;
     });
+
+    if (!success) {
+      _showSnackBar(
+        authProvider.errorMessage ?? 'Profile update failed',
+        isError: true,
+      );
+      return;
+    }
 
     _showSnackBar('Profile updated successfully!', isError: false);
   }
