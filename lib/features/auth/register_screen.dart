@@ -3,8 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/user_model.dart';
+import '../customer/customer_dashboard.dart';
+import '../provider/provider_dashboard.dart';
 import 'providers/auth_provider.dart';
-import 'verify_email_screen.dart';
 import 'widgets/auth_scaffold.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -52,12 +53,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     final authProvider = context.read<AuthProvider>();
+    final roleToSend = selectedRole!.name;
     final success = await authProvider.register(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
       phone: phoneController.text.trim(),
       password: passwordController.text,
-      role: selectedRole!.name,
+      role: roleToSend,
     );
 
     if (!mounted) {
@@ -73,9 +75,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final user = authProvider.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration succeeded, login again.')),
+      );
+      Navigator.pop(context);
+      return;
+    }
+
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
+      MaterialPageRoute(
+        builder: (_) => user.role == UserRole.customer
+            ? const CustomerDashboard()
+            : const ProviderDashboard(),
+      ),
     );
   }
 
@@ -149,11 +164,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: const InputDecoration(labelText: 'Role'),
               items: UserRole.values
                   .map(
-                    (role) =>
-                        DropdownMenuItem(value: role, child: Text(role.name)),
+                    (role) => DropdownMenuItem(
+                      value: role,
+                      child: Text(role.name),
+                    ),
                   )
                   .toList(),
-              onChanged: (role) => setState(() => selectedRole = role),
+              onChanged: widget.initialRole != null
+                  ? null
+                  : (role) => setState(() => selectedRole = role),
             ),
             const SizedBox(height: 20),
             ElevatedButton(
