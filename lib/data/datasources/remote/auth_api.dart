@@ -142,6 +142,42 @@ class AuthApi {
     return _asMap(response.data);
   }
 
+  Future<Map<String, dynamic>> uploadIdentity({
+    required String accessToken,
+    required XFile idDocument,
+    required XFile selfie,
+  }) async {
+    final formData = FormData.fromMap({
+      'idDocument': await MultipartFile.fromFile(
+        idDocument.path,
+        filename: idDocument.name,
+      ),
+      'selfie': await MultipartFile.fromFile(
+        selfie.path,
+        filename: selfie.name,
+      ),
+    });
+
+    final response = await _dio.post(
+      ApiConstants.identityUpload,
+      data: formData,
+      options: Options(headers: _authHeaders(accessToken)),
+    );
+
+    return _asMap(response.data);
+  }
+
+  Future<Map<String, dynamic>> getIdentityStatus({
+    required String accessToken,
+  }) async {
+    final response = await _dio.get(
+      ApiConstants.identityStatus,
+      options: Options(headers: _authHeaders(accessToken)),
+    );
+
+    return _asMap(response.data);
+  }
+
   Map<String, dynamic> _asMap(dynamic data) {
     if (data is Map<String, dynamic>) {
       return data;
