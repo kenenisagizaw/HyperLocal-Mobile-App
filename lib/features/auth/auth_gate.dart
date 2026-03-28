@@ -5,7 +5,6 @@ import '../../data/models/user_model.dart';
 import '../customer/customer_dashboard.dart';
 import '../provider/provider_dashboard.dart';
 import 'providers/auth_provider.dart';
-import 'verify_email_screen.dart';
 import 'welcome_screen.dart';
 
 class AuthGate extends StatelessWidget {
@@ -18,10 +17,6 @@ class AuthGate extends StatelessWidget {
 
     if (user == null) {
       return const WelcomeScreen();
-    }
-
-    if (!user.isVerified) {
-      return const VerifyEmailScreen();
     }
 
     return user.role == UserRole.customer
