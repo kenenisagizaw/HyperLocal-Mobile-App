@@ -163,10 +163,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     return _runAuthAction(() async {
       await _ensureRepository();
-      await _repository!.uploadIdentity(
-        idDocument: idDocument,
-        selfie: selfie,
-      );
+      await _repository!.uploadIdentity(idDocument: idDocument, selfie: selfie);
     });
   }
 
