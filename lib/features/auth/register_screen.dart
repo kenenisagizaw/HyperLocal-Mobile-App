@@ -164,10 +164,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: const InputDecoration(labelText: 'Role'),
               items: UserRole.values
                   .map(
-                    (role) => DropdownMenuItem(
-                      value: role,
-                      child: Text(role.name),
-                    ),
+                    (role) =>
+                        DropdownMenuItem(value: role, child: Text(role.name)),
                   )
                   .toList(),
               onChanged: widget.initialRole != null
