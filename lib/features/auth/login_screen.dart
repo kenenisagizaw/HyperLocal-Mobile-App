@@ -9,7 +9,6 @@ import '../provider/provider_dashboard.dart';
 import 'forgot_password_screen.dart';
 import 'providers/auth_provider.dart';
 import 'role_selection_screen.dart';
-import 'verify_email_screen.dart';
 import 'widgets/auth_scaffold.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -47,15 +46,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (!success) {
-      final statusCode = authProvider.lastStatusCode;
-      if (statusCode == 403) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
-        );
-        return;
-      }
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(authProvider.errorMessage ?? 'Login failed')),
       );
@@ -64,14 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final user = authProvider.currentUser;
     if (user == null) {
-      return;
-    }
-
-    if (!user.isVerified) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
-      );
       return;
     }
 
@@ -111,14 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final user = authProvider.currentUser!;
-      if (!user.isVerified) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
-        );
-        return;
-      }
-
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
