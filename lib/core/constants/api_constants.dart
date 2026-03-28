@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://10.42.0.142:5000';
+  static const String baseUrl = 'http://192.168.137.74:5000';
 
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
@@ -14,6 +14,8 @@ class ApiConstants {
   static const String forgotPassword = '$authBase/forgot-password';
   static const String resetPassword = '$authBase/reset-password';
   static const String googleLogin = '$authBase/google';
+  static const String identityUpload = '$authBase/identity/upload';
+  static const String identityStatus = '$authBase/identity/status';
 
   static const String userProfile = '/api/users/profile';
   static const String userProfileAvatar = '/api/users/profile/avatar';
