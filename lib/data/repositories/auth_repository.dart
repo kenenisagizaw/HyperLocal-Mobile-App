@@ -152,6 +152,31 @@ class AuthRepository {
     return UserModel.fromJson(userJson);
   }
 
+  Future<Map<String, dynamic>> uploadIdentity({
+    required XFile idDocument,
+    required XFile selfie,
+  }) async {
+    final token = await _storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw StateError('Access token not available');
+    }
+
+    return _api.uploadIdentity(
+      accessToken: token,
+      idDocument: idDocument,
+      selfie: selfie,
+    );
+  }
+
+  Future<Map<String, dynamic>> getIdentityStatus() async {
+    final token = await _storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw StateError('Access token not available');
+    }
+
+    return _api.getIdentityStatus(accessToken: token);
+  }
+
   Map<String, dynamic> _unwrapData(Map<String, dynamic> data) {
     final inner = data['data'];
     if (inner is Map<String, dynamic>) {
