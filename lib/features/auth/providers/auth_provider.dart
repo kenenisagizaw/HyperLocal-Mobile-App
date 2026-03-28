@@ -157,6 +157,26 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
+  Future<bool> uploadIdentity({
+    required XFile idDocument,
+    required XFile selfie,
+  }) async {
+    return _runAuthAction(() async {
+      await _ensureRepository();
+      await _repository!.uploadIdentity(
+        idDocument: idDocument,
+        selfie: selfie,
+      );
+    });
+  }
+
+  Future<Map<String, dynamic>?> getIdentityStatus() async {
+    return _runAuthValue(() async {
+      await _ensureRepository();
+      return _repository!.getIdentityStatus();
+    });
+  }
+
   Future<bool> loadUserProfile() async {
     return _runAuthAction(() async {
       await _ensureProfileRepository();
