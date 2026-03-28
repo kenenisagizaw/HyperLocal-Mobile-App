@@ -6,7 +6,6 @@ import '../../data/models/user_model.dart';
 import '../customer/customer_dashboard.dart';
 import '../provider/provider_dashboard.dart';
 import 'providers/auth_provider.dart';
-import 'verify_email_screen.dart';
 import 'welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -36,14 +35,6 @@ class _SplashScreenState extends State<SplashScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-      );
-      return;
-    }
-
-    if (!user.isVerified) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const VerifyEmailScreen()),
       );
       return;
     }
