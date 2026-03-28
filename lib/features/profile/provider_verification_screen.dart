@@ -24,6 +24,7 @@ class _ProviderVerificationScreenState
   XFile? _nationalIdFile;
   XFile? _businessLicenseFile;
   XFile? _educationFile;
+  XFile? _selfieFile;
 
   final ImagePicker _picker = ImagePicker();
   LatLng? _providerLocation;
@@ -49,6 +50,9 @@ class _ProviderVerificationScreenState
           break;
         case 'education':
           _educationFile = file;
+          break;
+        case 'selfie':
+          _selfieFile = file;
           break;
       }
     });
@@ -105,42 +109,39 @@ class _ProviderVerificationScreenState
     );
   }
 
-  void _submitVerification() {
-    if (_providerLocation == null) {
+  Future<void> _submitVerification() async {
+    if (_nationalIdController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please provide your location')),
+        const SnackBar(content: Text('Please enter your ID number')),
       );
       return;
     }
-    if (_nationalIdController.text.trim().isEmpty ||
-        _businessLicenseController.text.trim().isEmpty ||
-        _educationController.text.trim().isEmpty) {
+    if (_nationalIdFile == null || _selfieFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete verification details')),
+        const SnackBar(content: Text('Upload ID and selfie to continue')),
       );
       return;
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final providerDirectory = Provider.of<ProviderDirectoryProvider>(
-      context,
-      listen: false,
+    final success = await authProvider.uploadIdentity(
+      idDocument: _nationalIdFile!,
+      selfie: _selfieFile!,
     );
 
-    authProvider.updateProviderVerification(
-      nationalId: _nationalIdController.text.trim(),
-      businessLicense: _businessLicenseController.text.trim(),
-      educationDoc: _educationController.text.trim(),
-      location:
-          '${_providerLocation!.latitude},${_providerLocation!.longitude}',
-      latitude: _providerLocation!.latitude,
-      longitude: _providerLocation!.longitude,
-      isVerified: true,
-    );
+    if (!mounted) {
+      return;
+    }
 
-    final updatedProvider = authProvider.currentUser;
-    if (updatedProvider != null) {
-      providerDirectory.upsertProvider(updatedProvider);
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ?? 'Identity upload failed',
+          ),
+        ),
+      );
+      return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +150,60 @@ class _ProviderVerificationScreenState
       ),
     );
 
-    Navigator.pop(context);
+    if (_providerLocation != null) {
+      final providerDirectory = Provider.of<ProviderDirectoryProvider>(
+        context,
+        listen: false,
+      );
+      authProvider.updateProviderVerification(
+        nationalId: _nationalIdController.text.trim(),
+        businessLicense: _businessLicenseController.text.trim(),
+        educationDoc: _educationController.text.trim(),
+        location:
+            '${_providerLocation!.latitude},${_providerLocation!.longitude}',
+        latitude: _providerLocation!.latitude,
+        longitude: _providerLocation!.longitude,
+        isVerified: false,
+      );
+
+      final updatedProvider = authProvider.currentUser;
+      if (updatedProvider != null) {
+        providerDirectory.upsertProvider(updatedProvider);
+      }
+    }
+
+    if (mounted) {
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> _checkStatus() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final response = await authProvider.getIdentityStatus();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (response == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            authProvider.errorMessage ?? 'Unable to check status',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final data = response['data'] is Map<String, dynamic>
+        ? response['data'] as Map<String, dynamic>
+        : response;
+    final status = data['status']?.toString() ?? 'pending';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Verification status: $status')),
+    );
   }
 
   Widget _buildFileButton(String label, XFile? file, String type) {
@@ -265,6 +319,11 @@ class _ProviderVerificationScreenState
                         _nationalIdFile,
                         'nid',
                       ),
+                      _buildFileButton(
+                        'Upload Selfie',
+                        _selfieFile,
+                        'selfie',
+                      ),
                       const SizedBox(height: 8),
                       _buildTextField(
                         _businessLicenseController,
@@ -354,6 +413,22 @@ class _ProviderVerificationScreenState
                   ),
                 ),
                 const SizedBox(height: 20),
+                OutlinedButton(
+                  onPressed: _checkStatus,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    minimumSize: const Size(double.infinity, 48),
+                    side: const BorderSide(color: Colors.blue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text(
+                    'Check verification status',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: _submitVerification,
                   style: ElevatedButton.styleFrom(
