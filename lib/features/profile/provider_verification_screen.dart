@@ -136,9 +136,7 @@ class _ProviderVerificationScreenState
     if (!success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            authProvider.errorMessage ?? 'Identity upload failed',
-          ),
+          content: Text(authProvider.errorMessage ?? 'Identity upload failed'),
         ),
       );
       return;
@@ -188,9 +186,7 @@ class _ProviderVerificationScreenState
     if (response == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            authProvider.errorMessage ?? 'Unable to check status',
-          ),
+          content: Text(authProvider.errorMessage ?? 'Unable to check status'),
         ),
       );
       return;
@@ -201,9 +197,9 @@ class _ProviderVerificationScreenState
         : response;
     final status = data['status']?.toString() ?? 'pending';
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Verification status: $status')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Verification status: $status')));
   }
 
   Widget _buildFileButton(String label, XFile? file, String type) {
@@ -319,11 +315,7 @@ class _ProviderVerificationScreenState
                         _nationalIdFile,
                         'nid',
                       ),
-                      _buildFileButton(
-                        'Upload Selfie',
-                        _selfieFile,
-                        'selfie',
-                      ),
+                      _buildFileButton('Upload Selfie', _selfieFile, 'selfie'),
                       const SizedBox(height: 8),
                       _buildTextField(
                         _businessLicenseController,
