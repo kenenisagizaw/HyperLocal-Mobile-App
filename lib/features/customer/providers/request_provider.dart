@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/enums.dart';
@@ -12,6 +13,8 @@ class RequestProvider extends ChangeNotifier {
 
   List<ServiceRequest> _requests = [];
   bool _isLoading = false;
+  String? errorMessage;
+  int? lastStatusCode;
 
   List<ServiceRequest> get requests => _requests;
   bool get isLoading => _isLoading;
@@ -61,6 +64,8 @@ class RequestProvider extends ChangeNotifier {
     List<XFile> images = const [],
   }) async {
     _isLoading = true;
+    errorMessage = null;
+    lastStatusCode = null;
     notifyListeners();
     try {
       final created = await repository.createRequest(
@@ -75,10 +80,31 @@ class RequestProvider extends ChangeNotifier {
       );
       _requests = [created, ..._requests];
       return created;
+    } on DioException catch (error) {
+      lastStatusCode = error.response?.statusCode;
+      errorMessage = _extractErrorMessage(error);
+      return null;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  String? _extractErrorMessage(DioException error) {
+    final data = error.response?.data;
+    if (data is Map<String, dynamic>) {
+      final message = data['message'] ?? data['error'] ?? data['detail'];
+      if (message is String && message.isNotEmpty) {
+        return message;
+      }
+    }
+    if (data is Map) {
+      final message = data['message'] ?? data['error'] ?? data['detail'];
+      if (message is String && message.isNotEmpty) {
+        return message.toString();
+      }
+    }
+    return error.message;
   }
 
   List<ServiceRequest> getCustomerRequests(String customerId) {
