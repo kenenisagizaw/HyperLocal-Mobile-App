@@ -5,10 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/enums.dart';
-import '../../data/models/service_request_model.dart';
 import '../../data/models/user_model.dart';
-import '../../shared/widgets/custom_button.dart';
 import '../auth/providers/auth_provider.dart';
 import 'my_requests_screen.dart';
 import 'providers/request_provider.dart';
@@ -24,6 +21,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _budgetController = TextEditingController();
+  final _titleController = TextEditingController();
 
   final List<XFile> _photos = [];
   final ImagePicker _picker = ImagePicker();
@@ -45,6 +43,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     _descriptionController.dispose();
     _locationController.dispose();
     _budgetController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -170,9 +169,9 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     }
 
     if (_selectedCategory == null ||
+        _titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty ||
-        _locationController.text.trim().isEmpty ||
-        _budgetController.text.trim().isEmpty) {
+        _locationController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please fill all fields.'),
@@ -185,8 +184,10 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       return;
     }
 
-    final budget = double.tryParse(_budgetController.text.trim());
-    if (budget == null || budget <= 0) {
+    final budget = _budgetController.text.trim().isEmpty
+        ? null
+        : double.tryParse(_budgetController.text.trim());
+    if (budget != null && budget <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please enter a valid budget.'),
@@ -199,21 +200,29 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
       return;
     }
 
-    final request = ServiceRequest(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      customerId: user.id,
+    final created = await requestProvider.createRequest(
+      title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       category: _selectedCategory!,
       location: _locationController.text.trim(),
-      locationLat: _locationLat,
-      locationLng: _locationLng,
       budget: budget,
-      photoPaths: _photos.map((file) => file.path).toList(),
-      createdAt: DateTime.now(),
-      status: RequestStatus.pending,
+      latitude: _locationLat,
+      longitude: _locationLng,
+      images: _photos,
     );
 
-    await requestProvider.createRequest(request);
+    if (created == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Request creation failed.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
 
     if (!mounted) return;
     navigator.pushReplacement(
@@ -281,6 +290,32 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                     color: Colors.white,
                   ),
                 ),
+
+                // Title Field
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade200,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Title',
+                      border: InputBorder.none,
+                      prefixIcon: Icon(Icons.title),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
 
                 // Category Dropdown
                 Container(
@@ -460,7 +495,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                     controller: _budgetController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: 'Budget (ETB)',
+                      labelText: 'Budget (ETB) - optional',
                       labelStyle: TextStyle(color: Colors.blue.shade700),
                       prefixIcon: Icon(
                         Icons.attach_money,
