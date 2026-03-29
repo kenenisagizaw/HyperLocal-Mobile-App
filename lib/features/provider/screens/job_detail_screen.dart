@@ -9,8 +9,8 @@ import '../../../data/models/service_request_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
-import '../widgets/customer_profile_widgets.dart';
 import '../quote_sent_screen.dart';
+import '../widgets/customer_profile_widgets.dart';
 
 class JobDetailScreen extends StatefulWidget {
   const JobDetailScreen({
@@ -53,7 +53,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         SnackBar(
           content: const Text('Enter price and notes to send a quote.'),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -65,7 +67,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         SnackBar(
           content: const Text('Enter a valid price.'),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -270,8 +274,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide:
-                            const BorderSide(color: _primaryBlue, width: 2),
+                        borderSide: const BorderSide(
+                          color: _primaryBlue,
+                          width: 2,
+                        ),
                       ),
                       filled: true,
                       fillColor: Colors.white,
@@ -295,8 +301,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide:
-                            const BorderSide(color: _primaryBlue, width: 2),
+                        borderSide: const BorderSide(
+                          color: _primaryBlue,
+                          width: 2,
+                        ),
                       ),
                       filled: true,
                       fillColor: Colors.white,
@@ -318,8 +326,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       ),
                       child: const Text(
                         'Send Quote',
-                        style:
-                            TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
