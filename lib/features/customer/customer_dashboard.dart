@@ -176,9 +176,7 @@ class _HomePageState extends State<HomePage> {
         .length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+      appBar: AppBar(title: const Text('Home')),
       backgroundColor: const Color(0xFFF8FAFF), // Light blue background
       body: SafeArea(
         child: SingleChildScrollView(
@@ -1021,9 +1019,7 @@ class _RequestsPageState extends State<RequestsPage> {
     final requests = requestProvider.requests;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Requests'),
-      ),
+      appBar: AppBar(title: const Text('Requests')),
       backgroundColor: const Color(0xFFF8FAFF),
       body: requestProvider.isLoading
           ? const Center(
@@ -1172,9 +1168,7 @@ class NotificationListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
       backgroundColor: const Color(0xFFF8FAFF),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -1252,9 +1246,7 @@ class NotificationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(notification.title),
-      ),
+      appBar: AppBar(title: Text(notification.title)),
       body: Container(
         color: const Color(0xFFF8FAFF),
         child: Padding(
