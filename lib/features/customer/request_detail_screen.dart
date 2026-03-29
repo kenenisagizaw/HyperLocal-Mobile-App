@@ -28,16 +28,11 @@ class RequestDetailScreen extends StatelessWidget {
         foregroundColor: const Color(0xFF1E3A8A), // Deep blue
         title: const Text(
           'Request Details',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22),
         ),
         centerTitle: true,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
       ),
       body: Container(
@@ -45,10 +40,7 @@ class RequestDetailScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Colors.white,
-              Colors.green.shade50,
-            ],
+            colors: [Colors.white, Colors.green.shade50],
           ),
         ),
         child: Padding(
@@ -62,7 +54,10 @@ class RequestDetailScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)], // Blue gradient
+                    colors: [
+                      Color(0xFF1E3A8A),
+                      Color(0xFF2563EB),
+                    ], // Blue gradient
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -98,7 +93,7 @@ class RequestDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 20),
 
               Text(
@@ -111,7 +106,7 @@ class RequestDetailScreen extends StatelessWidget {
               ),
 
               const SizedBox(height: 16),
-              
+
               // Details Card
               Container(
                 padding: const EdgeInsets.all(20),
@@ -147,9 +142,9 @@ class RequestDetailScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Quotes Header
               Row(
                 children: [
@@ -176,9 +171,9 @@ class RequestDetailScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Quotes List
               Expanded(
                 child: quotes.isEmpty
@@ -220,10 +215,7 @@ class RequestDetailScreen extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [
-                                  Colors.white,
-                                  Colors.green.shade50,
-                                ],
+                                colors: [Colors.white, Colors.green.shade50],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
@@ -301,7 +293,9 @@ class RequestDetailScreen extends StatelessWidget {
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1E3A8A), // Deep blue
+                                  backgroundColor: const Color(
+                                    0xFF1E3A8A,
+                                  ), // Deep blue
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 16,
@@ -355,10 +349,7 @@ class _DetailRow extends StatelessWidget {
           flex: 2,
           child: Text(
             label,
-            style: const TextStyle(
-              color: Colors.black54,
-              fontSize: 15,
-            ),
+            style: const TextStyle(color: Colors.black54, fontSize: 15),
           ),
         ),
         Expanded(
