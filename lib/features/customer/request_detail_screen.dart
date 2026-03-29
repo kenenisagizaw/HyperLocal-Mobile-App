@@ -79,7 +79,7 @@ class RequestDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      request.category,
+                      request.title,
                       style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
@@ -89,11 +89,10 @@ class RequestDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      request.description,
+                      request.category,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         color: Colors.white70,
-                        height: 1.4,
                       ),
                     ),
                   ],
@@ -101,6 +100,17 @@ class RequestDetailScreen extends StatelessWidget {
               ),
               
               const SizedBox(height: 20),
+
+              Text(
+                request.description,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.grey.shade700,
+                  height: 1.4,
+                ),
+              ),
+
+              const SizedBox(height: 16),
               
               // Details Card
               Container(
@@ -129,7 +139,9 @@ class RequestDetailScreen extends StatelessWidget {
                     ),
                     _DetailRow(
                       label: '💰 Budget',
-                      value: '\$${request.budget.toStringAsFixed(0)}',
+                      value: request.budget == null
+                          ? 'Not set'
+                          : '\$${request.budget!.toStringAsFixed(0)}',
                       icon: Icons.attach_money,
                     ),
                   ],
