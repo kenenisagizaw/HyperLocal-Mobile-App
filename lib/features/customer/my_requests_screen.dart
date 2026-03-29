@@ -21,7 +21,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<RequestProvider>().loadRequests();
+      context.read<RequestProvider>().loadMyRequests();
     });
   }
 
@@ -92,7 +92,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       );
     }
 
-    final myRequests = requestProvider.getCustomerRequests(currentUser.id);
+    final myRequests = requestProvider.requests;
 
     return Scaffold(
       appBar: AppBar(
@@ -115,7 +115,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           IconButton(
             icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () {
-              context.read<RequestProvider>().loadRequests();
+              context.read<RequestProvider>().loadMyRequests();
             },
           ),
         ],
@@ -361,6 +361,19 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                     
                     const SizedBox(height: 16),
                     
+                    // Title
+                    Text(
+                      request.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 6),
+
                     // Description
                     Text(
                       request.description,
@@ -389,7 +402,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                           child: _buildInfoItem(
                             icon: Icons.attach_money,
                             label: 'Budget',
-                            value: '${request.budget} ETB',
+                            value: request.budget == null
+                              ? 'Not set'
+                              : '${request.budget!.toStringAsFixed(0)} ETB',
                             color: Colors.green.shade600,
                           ),
                         ),
