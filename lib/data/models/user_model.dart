@@ -48,10 +48,17 @@ class UserModel {
     UserRole role = UserRole.customer;
 
     if (roleValue is String) {
-      role = UserRole.values.firstWhere(
-        (value) => value.name == roleValue,
-        orElse: () => UserRole.customer,
-      );
+      final normalized = roleValue.toLowerCase();
+      if (normalized == 'provider' || normalized == 'work') {
+        role = UserRole.provider;
+      } else if (normalized == 'customer' || normalized == 'hire') {
+        role = UserRole.customer;
+      } else {
+        role = UserRole.values.firstWhere(
+          (value) => value.name == normalized,
+          orElse: () => UserRole.customer,
+        );
+      }
     } else if (roleValue is int &&
         roleValue >= 0 &&
         roleValue < UserRole.values.length) {
