@@ -214,7 +214,10 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     if (created == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Request creation failed.'),
+          content: Text(
+            requestProvider.errorMessage ??
+                'Request creation failed (status ${requestProvider.lastStatusCode ?? 'unknown'}).',
+          ),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
