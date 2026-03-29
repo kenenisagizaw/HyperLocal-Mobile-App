@@ -9,6 +9,7 @@ import '../auth/providers/auth_provider.dart';
 import '../messages/messages_screen.dart';
 import '../messages/providers/message_provider.dart';
 import '../payments/providers/payment_provider.dart';
+import 'create_request_screen.dart';
 import 'customer_profile_screen.dart';
 import 'providers/provider_directory_provider.dart';
 import 'providers/quote_provider.dart';
@@ -127,7 +128,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<RequestProvider>().loadRequests();
+      context.read<RequestProvider>().loadMyRequests();
       context.read<ProviderDirectoryProvider>().loadProviders();
     });
   }
@@ -978,7 +979,7 @@ class _RequestsPageState extends State<RequestsPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<RequestProvider>().loadRequests();
+      context.read<RequestProvider>().loadMyRequests();
       context.read<ProviderDirectoryProvider>().loadProviders();
     });
   }
@@ -1017,7 +1018,7 @@ class _RequestsPageState extends State<RequestsPage> {
     if (currentUser == null)
       return const Center(child: Text('No user logged in'));
 
-    final requests = requestProvider.getCustomerRequests(currentUser.id);
+    final requests = requestProvider.requests;
 
     return Scaffold(
       appBar: AppBar(
@@ -1042,6 +1043,19 @@ class _RequestsPageState extends State<RequestsPage> {
                   Text(
                     'No requests yet',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CreateRequestScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create request'),
                   ),
                 ],
               ),
@@ -1138,6 +1152,15 @@ class _RequestsPageState extends State<RequestsPage> {
                 );
               },
             ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
