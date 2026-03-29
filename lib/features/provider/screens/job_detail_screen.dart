@@ -163,7 +163,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       const SizedBox(width: 8),
                       InfoChip(
                         icon: Icons.attach_money_rounded,
-                        label: '\$${request.budget.toStringAsFixed(0)}',
+                        label: request.budget == null
+                            ? 'Not set'
+                            : '\$${request.budget!.toStringAsFixed(0)}',
                       ),
                     ],
                   ),
