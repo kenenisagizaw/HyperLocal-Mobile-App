@@ -359,7 +359,9 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          '\$${req.budget.toStringAsFixed(0)}',
+                                          req.budget == null
+                                              ? 'Not set'
+                                              : '\$${req.budget!.toStringAsFixed(0)}',
                                           style: TextStyle(
                                             color: Colors.grey.shade600,
                                             fontSize: 13,
