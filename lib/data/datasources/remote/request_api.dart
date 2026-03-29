@@ -1,45 +1,126 @@
-import '../../../core/constants/enums.dart';
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/api_client.dart';
 import '../../models/service_request_model.dart';
 
 class RequestApi {
-  final List<ServiceRequest> _requests = [];
+  RequestApi() : _dioFuture = ApiClient.create();
 
-  RequestApi() {
-    _requests.addAll([
-      ServiceRequest(
-        id: 'seed-1',
-        customerId: '1',
-        description: 'Fix leaking kitchen sink pipe',
-        category: 'Plumbing',
-        location: 'Bole',
-        locationLat: null,
-        locationLng: null,
-        budget: 1200,
-        photoPaths: const [],
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        status: RequestStatus.pending,
-      ),
-      ServiceRequest(
-        id: 'seed-2',
-        customerId: '1',
-        description: 'Repaint living room walls',
-        category: 'Painting',
-        location: 'Kazanchis',
-        locationLat: null,
-        locationLng: null,
-        budget: 2500,
-        photoPaths: const [],
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        status: RequestStatus.quoted,
-      ),
-    ]);
+  final Future<Dio> _dioFuture;
+
+  Future<ServiceRequest> createRequest({
+    required String title,
+    required String description,
+    required String category,
+    required String location,
+    double? budget,
+    double? latitude,
+    double? longitude,
+    DateTime? preferredDate,
+    DateTime? expiresAt,
+    List<XFile> images = const [],
+  }) async {
+    final dio = await _dioFuture;
+    final payload = <String, dynamic>{
+      'title': title,
+      'description': description,
+      'serviceCategory': category,
+      'category': category,
+      'location': location,
+      if (budget != null) 'budget': budget,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (preferredDate != null)
+        'preferredDate': preferredDate.toIso8601String(),
+      if (expiresAt != null) 'expiresAt': expiresAt.toIso8601String(),
+    };
+
+    if (images.isNotEmpty) {
+      final formData = FormData.fromMap({
+        ...payload,
+        'images': [
+          for (final file in images)
+            await MultipartFile.fromFile(file.path, filename: file.name),
+        ],
+      });
+      final response = await dio.post(
+        ApiConstants.serviceRequests,
+        data: formData,
+      );
+      return _parseRequest(response.data);
+    }
+
+    final response = await dio.post(
+      ApiConstants.serviceRequests,
+      data: payload,
+    );
+    return _parseRequest(response.data);
   }
 
-  Future<void> createRequest(ServiceRequest request) async {
-    _requests.add(request);
+  Future<List<ServiceRequest>> getRequests({
+    String? category,
+    String? city,
+    String? status,
+    int? take,
+    int? skip,
+  }) async {
+    final dio = await _dioFuture;
+    final response = await dio.get(
+      ApiConstants.serviceRequests,
+      queryParameters: {
+        if (category != null && category.isNotEmpty) 'category': category,
+        if (city != null && city.isNotEmpty) 'city': city,
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (take != null) 'take': take,
+        if (skip != null) 'skip': skip,
+      },
+    );
+    return _parseRequestList(response.data);
   }
 
-  Future<List<ServiceRequest>> getRequests() async {
-    return _requests;
+  Future<List<ServiceRequest>> getMyRequests() async {
+    final dio = await _dioFuture;
+    final response = await dio.get(ApiConstants.serviceRequestsMine);
+    return _parseRequestList(response.data);
+  }
+
+  Future<ServiceRequest> getRequestById(String id) async {
+    final dio = await _dioFuture;
+    final response = await dio.get('${ApiConstants.serviceRequests}/$id');
+    return _parseRequest(response.data);
+  }
+
+  ServiceRequest _parseRequest(dynamic data) {
+    final map = _unwrapMap(data);
+    final requestData = map['data'] is Map<String, dynamic>
+        ? map['data'] as Map<String, dynamic>
+        : map;
+    return ServiceRequest.fromJson(requestData);
+  }
+
+  List<ServiceRequest> _parseRequestList(dynamic data) {
+    final map = _unwrapMap(data);
+    final list = map['data'] ?? map['items'] ?? map['requests'];
+    if (list is List) {
+      return list
+          .whereType<Map>()
+          .map((item) => ServiceRequest.fromJson(
+                item.cast<String, dynamic>(),
+              ))
+          .toList();
+    }
+    return [];
+  }
+
+  Map<String, dynamic> _unwrapMap(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+    if (data is Map) {
+      return data.cast<String, dynamic>();
+    }
+    return <String, dynamic>{};
   }
 }
