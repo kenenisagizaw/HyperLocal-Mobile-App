@@ -128,7 +128,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.blue.shade600,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -139,91 +141,91 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                 ),
               )
             : myRequests.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Colors.blue.shade100, Colors.green.shade100],
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.inbox,
-                            size: 60,
-                            color: Colors.blue.shade400,
-                          ),
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.shade100, Colors.green.shade100],
                         ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'No Requests Yet',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: Text(
-                            'You have not created any service requests yet. Tap the + button to create your first request.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const CreateRequestScreen(),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text('Create New Request'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                        ),
-                      ],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.inbox,
+                        size: 60,
+                        color: Colors.blue.shade400,
+                      ),
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: myRequests.length,
-                    itemBuilder: (context, index) {
-                      final request = myRequests[index];
-                      final quotesCount = quoteProvider.getQuotesForRequest(request.id).length;
+                    const SizedBox(height: 24),
+                    Text(
+                      'No Requests Yet',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Text(
+                        'You have not created any service requests yet. Tap the + button to create your first request.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CreateRequestScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create New Request'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: myRequests.length,
+                itemBuilder: (context, index) {
+                  final request = myRequests[index];
+                  final quotesCount = quoteProvider
+                      .getQuotesForRequest(request.id)
+                      .length;
 
-                      return _buildRequestCard(context, request, quotesCount);
-                    },
-                  ),
+                  return _buildRequestCard(context, request, quotesCount);
+                },
+              ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CreateRequestScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
           );
         },
         icon: const Icon(Icons.add),
@@ -234,7 +236,11 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     );
   }
 
-  Widget _buildRequestCard(BuildContext context, dynamic request, int quotesCount) {
+  Widget _buildRequestCard(
+    BuildContext context,
+    dynamic request,
+    int quotesCount,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -278,7 +284,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                   ),
                 ),
               ),
-              
+
               // Main content
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -292,7 +298,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [Colors.blue.shade400, Colors.green.shade400],
+                              colors: [
+                                Colors.blue.shade400,
+                                Colors.green.shade400,
+                              ],
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -330,10 +339,14 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(request.status).withValues(alpha: 0.1),
+                            color: _getStatusColor(
+                              request.status,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: _getStatusColor(request.status).withValues(alpha: 0.3),
+                              color: _getStatusColor(
+                                request.status,
+                              ).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -358,9 +371,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Title
                     Text(
                       request.title,
@@ -384,9 +397,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Details grid
                     Row(
                       children: [
@@ -403,16 +416,16 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                             icon: Icons.attach_money,
                             label: 'Budget',
                             value: request.budget == null
-                              ? 'Not set'
-                              : '${request.budget!.toStringAsFixed(0)} ETB',
+                                ? 'Not set'
+                                : '${request.budget!.toStringAsFixed(0)} ETB',
                             color: Colors.green.shade600,
                           ),
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Quotes and date
                     Row(
                       children: [
@@ -420,7 +433,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                           child: _buildInfoItem(
                             icon: Icons.request_quote,
                             label: 'Quotes',
-                            value: '$quotesCount ${quotesCount == 1 ? 'quote' : 'quotes'}',
+                            value:
+                                '$quotesCount ${quotesCount == 1 ? 'quote' : 'quotes'}',
                             color: Colors.purple.shade600,
                           ),
                         ),
@@ -434,9 +448,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // View details button
                     Container(
                       width: double.infinity,
@@ -512,10 +526,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey.shade500,
-                ),
+                style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
               ),
               Text(
                 value,
@@ -537,10 +548,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       gradient: LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          Colors.blue.shade50,
-          Colors.green.shade50,
-        ],
+        colors: [Colors.blue.shade50, Colors.green.shade50],
       ),
     );
   }
