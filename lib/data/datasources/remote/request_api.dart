@@ -106,9 +106,7 @@ class RequestApi {
     if (list is List) {
       return list
           .whereType<Map>()
-          .map((item) => ServiceRequest.fromJson(
-                item.cast<String, dynamic>(),
-              ))
+          .map((item) => ServiceRequest.fromJson(item.cast<String, dynamic>()))
           .toList();
     }
     return [];
