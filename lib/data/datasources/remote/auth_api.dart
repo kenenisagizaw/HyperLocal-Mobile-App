@@ -16,13 +16,22 @@ class AuthApi {
     required String role,
     XFile? idDocument,
   }) async {
+    final normalizedRole =
+        role.toLowerCase() == 'provider' || role.toLowerCase() == 'work'
+        ? 'provider'
+        : 'customer';
+    final payload = <String, dynamic>{
+      'name': name,
+      'email': email,
+      'phoneNumber': phone,
+      'password': password,
+      'role': normalizedRole,
+      'accountType': normalizedRole == 'provider' ? 'work' : 'hire',
+    };
+
     if (idDocument != null) {
       final formData = FormData.fromMap({
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'password': password,
-        'role': role,
+        ...payload,
         'idDocument': await MultipartFile.fromFile(
           idDocument.path,
           filename: idDocument.name,
@@ -33,16 +42,7 @@ class AuthApi {
       return _asMap(response.data);
     }
 
-    final response = await _dio.post(
-      ApiConstants.register,
-      data: {
-        'name': name,
-        'email': email,
-        'phone': phone,
-        'password': password,
-        'role': role,
-      },
-    );
+    final response = await _dio.post(ApiConstants.register, data: payload);
 
     return _asMap(response.data);
   }
