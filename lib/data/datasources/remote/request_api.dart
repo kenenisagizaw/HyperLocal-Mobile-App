@@ -102,14 +102,27 @@ class RequestApi {
 
   List<ServiceRequest> _parseRequestList(dynamic data) {
     final map = _unwrapMap(data);
-    final list = map['data'] ?? map['items'] ?? map['requests'];
-    if (list is List) {
-      return list
-          .whereType<Map>()
-          .map((item) => ServiceRequest.fromJson(item.cast<String, dynamic>()))
-          .toList();
+    final list = _extractList(map);
+    return list
+        .whereType<Map>()
+        .map((item) => ServiceRequest.fromJson(item.cast<String, dynamic>()))
+        .toList();
+  }
+
+  List<dynamic> _extractList(Map<String, dynamic> map) {
+    final direct = map['data'] ?? map['items'] ?? map['requests'];
+    if (direct is List) {
+      return direct;
     }
-    return [];
+
+    if (direct is Map) {
+      final nested = direct['items'] ?? direct['requests'] ?? direct['data'];
+      if (nested is List) {
+        return nested;
+      }
+    }
+
+    return const [];
   }
 
   Map<String, dynamic> _unwrapMap(dynamic data) {
