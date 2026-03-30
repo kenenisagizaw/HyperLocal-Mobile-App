@@ -23,6 +23,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
   XFile? _selectedImage;
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _isLoggingOut = false;
 
   @override
   void initState() {
@@ -90,6 +91,34 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     _showSnackBar('Profile updated successfully!', isError: false);
   }
 
+  Future<void> _confirmLogout() async {
+    if (_isLoggingOut) return;
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Log out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true) return;
+
+    setState(() => _isLoggingOut = true);
+    await context.read<AuthProvider>().logout();
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+  }
+
   void _showSnackBar(String message, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -147,6 +176,17 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             icon: const Icon(Icons.edit, color: Colors.white),
             label: Text(
               _isEditing ? 'Done' : 'Edit',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _isLoggingOut ? null : _confirmLogout,
+            icon: const Icon(Icons.logout, color: Colors.white),
+            label: Text(
+              _isLoggingOut ? 'Logging out' : 'Logout',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
