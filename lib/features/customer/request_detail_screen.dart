@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/enums.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../payments/payment_screen.dart';
 import 'providers/provider_directory_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
-import '../../core/constants/enums.dart';
 
 class RequestDetailScreen extends StatefulWidget {
   const RequestDetailScreen({
@@ -198,8 +198,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
               // Quotes List
               Expanded(
                 child: quoteProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : quotes.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : quotes.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -325,8 +325,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                                 RequestStatus.completed ||
                                             request.status ==
                                                 RequestStatus.cancelled) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: const Text(
                                                 'This request can no longer accept quotes.',
@@ -344,8 +345,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
                                         if (quote.status !=
                                             QuoteStatus.pending) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: const Text(
                                                 'Only pending quotes can be accepted.',
@@ -363,16 +365,17 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
                                         final accepted = await quoteProvider
                                             .acceptQuote(
-                                          requestId: request.id,
-                                          quoteId: quote.id,
-                                        );
+                                              requestId: request.id,
+                                              quoteId: quote.id,
+                                            );
 
                                         if (!accepted) {
                                           final message =
                                               quoteProvider.errorMessage ??
-                                                  'Failed to accept quote.';
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
+                                              'Failed to accept quote.';
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             SnackBar(
                                               content: Text(message),
                                               behavior:
@@ -412,8 +415,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                           vertical: 12,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(30),
+                                          borderRadius: BorderRadius.circular(
+                                            30,
+                                          ),
                                         ),
                                         elevation: 0,
                                       ),
@@ -493,10 +497,7 @@ Widget _buildAcceptedBadge() {
         SizedBox(width: 6),
         Text(
           'Accepted',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ],
     ),
