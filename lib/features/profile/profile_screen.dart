@@ -20,6 +20,7 @@ class ProviderProfilePage extends StatefulWidget {
 
 class _ProviderProfilePageState extends State<ProviderProfilePage> {
   bool _isEditing = false;
+  bool _isLoggingOut = false;
 
   // Controllers
   final _nameController = TextEditingController();
@@ -258,6 +259,34 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     return true;
   }
 
+  Future<void> _confirmLogout() async {
+    if (_isLoggingOut) return;
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Log out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Log out'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout != true) return;
+
+    setState(() => _isLoggingOut = true);
+    await context.read<AuthProvider>().logout();
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+  }
+
   // ---------------- UI helpers ----------------
 
   Widget _buildTextField(
@@ -348,6 +377,17 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             label: const Text(
               'Verify',
               style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _isLoggingOut ? null : _confirmLogout,
+            icon: const Icon(Icons.logout, color: Colors.white),
+            label: Text(
+              _isLoggingOut ? 'Logging out' : 'Logout',
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
