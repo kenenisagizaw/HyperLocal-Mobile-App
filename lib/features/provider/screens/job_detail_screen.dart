@@ -4,7 +4,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
-import '../../../data/models/quote_model.dart';
 import '../../../data/models/service_request_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../customer/providers/quote_provider.dart';
