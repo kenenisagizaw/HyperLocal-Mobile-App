@@ -246,10 +246,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => RequestDetailScreen(
-              request: request,
-              initialQuotes: const [],
-            ),
+            builder: (_) =>
+                RequestDetailScreen(request: request, initialQuotes: const []),
           ),
         );
       },
