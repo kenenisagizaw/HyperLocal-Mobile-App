@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://10.42.0.142:5000';
+  static const String baseUrl = 'http://192.168.137.39:5000';
 
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
@@ -28,4 +28,9 @@ class ApiConstants {
 
   static const String serviceRequests = '/api/service-requests';
   static const String serviceRequestsMine = '/api/service-requests/mine';
+
+  static const String quotes = '/api/quotes';
+  static const String quotesMine = '/api/quotes/mine';
+  static const String quotesForRequest = '/api/quotes/service-request';
+  static const String quotesAccept = '/api/quotes/requests';
 }
