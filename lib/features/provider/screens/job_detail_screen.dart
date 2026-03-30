@@ -31,6 +31,8 @@ class JobDetailScreen extends StatefulWidget {
 class _JobDetailScreenState extends State<JobDetailScreen> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _estimatedTimeController =
+      TextEditingController();
 
   static const _primaryBlue = Color(0xFF2563EB);
   static const _primaryGreen = Color(0xFF059669);
@@ -39,19 +41,21 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   void dispose() {
     _priceController.dispose();
     _notesController.dispose();
+    _estimatedTimeController.dispose();
     super.dispose();
   }
 
-  void _submitQuote() {
+  Future<void> _submitQuote() async {
     final quoteProvider = context.read<QuoteProvider>();
     final requestProvider = context.read<RequestProvider>();
     final priceText = _priceController.text.trim();
     final notes = _notesController.text.trim();
+    final estimatedText = _estimatedTimeController.text.trim();
 
-    if (priceText.isEmpty || notes.isEmpty) {
+    if (priceText.isEmpty || notes.isEmpty || estimatedText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Enter price and notes to send a quote.'),
+          content: const Text('Enter price, message, and estimated time.'),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -75,23 +79,56 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       return;
     }
 
-    final providerUser = widget.providerUser;
+    final estimatedTime = int.tryParse(estimatedText);
+    if (estimatedTime == null || estimatedTime <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Enter a valid estimated time.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
 
-    final quote = Quote(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      requestId: widget.request.id,
-      providerName: providerUser?.name ?? 'Provider',
+    if (widget.request.status == RequestStatus.accepted ||
+        widget.request.status == RequestStatus.completed ||
+        widget.request.status == RequestStatus.cancelled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('This request is not open for quotes.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final quote = await quoteProvider.submitQuote(
+      serviceRequestId: widget.request.id,
       price: price,
-      notes: notes,
-      providerId: providerUser?.id,
-      providerPhone: providerUser?.phone,
-      providerLocation: providerUser?.location,
-      providerImage: providerUser?.profilePicture,
-      rating: 4.9,
-      createdAt: DateTime.now(),
+      message: notes,
+      estimatedTime: estimatedTime,
     );
 
-    quoteProvider.addQuote(quote);
+    if (quote == null) {
+      final message = quoteProvider.errorMessage ?? 'Quote submission failed.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     requestProvider.updateStatus(widget.request.id, RequestStatus.quoted);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -158,13 +195,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       InfoChip(
                         icon: Icons.place_rounded,
                         label: request.location,
                       ),
-                      const SizedBox(width: 8),
                       InfoChip(
                         icon: Icons.attach_money_rounded,
                         label: request.budget == null
@@ -285,10 +323,36 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextField(
+                    controller: _estimatedTimeController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Estimated Time (hours)',
+                      labelStyle: TextStyle(color: Colors.grey.shade600),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(
+                          color: _primaryBlue,
+                          width: 2,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
                     controller: _notesController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      labelText: 'Notes / Details',
+                      labelText: 'Message / Details',
                       alignLabelWithHint: true,
                       labelStyle: TextStyle(color: Colors.grey.shade600),
                       border: OutlineInputBorder(
