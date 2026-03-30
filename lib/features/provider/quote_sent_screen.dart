@@ -23,7 +23,11 @@ class QuoteSentScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Amount: \$${quote.price.toStringAsFixed(2)}'),
             const SizedBox(height: 6),
-            Text('Notes: ${quote.notes}'),
+            Text('Message: ${quote.message}'),
+            if (quote.estimatedTime != null) ...[
+              const SizedBox(height: 6),
+              Text('Estimated time: ${quote.estimatedTime} hours'),
+            ],
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
