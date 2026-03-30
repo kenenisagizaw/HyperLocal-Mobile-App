@@ -29,8 +29,8 @@ class Quote {
     this.status = QuoteStatus.pending,
     double? rating,
     DateTime? createdAt,
-  })  : rating = rating ?? 4.5,
-        createdAt = createdAt ?? DateTime.now();
+  }) : rating = rating ?? 4.5,
+       createdAt = createdAt ?? DateTime.now();
 
   String get notes => message;
 
@@ -38,19 +38,23 @@ class Quote {
     final statusValue = json['status'];
     return Quote(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
-      requestId:
-          (json['serviceRequestId'] ?? json['requestId'] ?? '').toString(),
-      providerName:
-          (json['providerName'] ?? json['provider']?['name'] ?? '').toString(),
+      requestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
+          .toString(),
+      providerName: (json['providerName'] ?? json['provider']?['name'] ?? '')
+          .toString(),
       price: _parseDouble(json['price'] ?? json['amount']),
       message: (json['message'] ?? json['notes'] ?? '').toString(),
       estimatedTime: _parseInt(json['estimatedTime'] ?? json['eta']),
       providerId: _asString(json['providerId'] ?? json['provider']?['id']),
-      providerPhone: _asString(json['providerPhone'] ?? json['provider']?['phone']),
-      providerLocation:
-          _asString(json['providerLocation'] ?? json['provider']?['location']),
-      providerImage:
-          _asString(json['providerImage'] ?? json['provider']?['profilePicture']),
+      providerPhone: _asString(
+        json['providerPhone'] ?? json['provider']?['phone'],
+      ),
+      providerLocation: _asString(
+        json['providerLocation'] ?? json['provider']?['location'],
+      ),
+      providerImage: _asString(
+        json['providerImage'] ?? json['provider']?['profilePicture'],
+      ),
       status: _parseStatus(statusValue),
       rating: _parseDouble(json['rating'], fallback: 4.5),
       createdAt: _parseDate(json['createdAt']),
