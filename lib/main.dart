@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
-import 'data/datasources/remote/quote_api.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/customer/providers/customer_directory_provider.dart';
 import 'features/customer/providers/provider_directory_provider.dart';
