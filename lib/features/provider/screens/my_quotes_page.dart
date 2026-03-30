@@ -48,14 +48,17 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     final customerDirectory = context.watch<CustomerDirectoryProvider>();
 
     final currentUser = authProvider.currentUser;
-    final quotes = currentUser == null
-        ? <Quote>[]
-        : quoteProvider.quotes
-            .where(
-              (q) => q.providerId == null || q.providerId == currentUser.id,
-            )
-            .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final quotes =
+        currentUser == null
+              ? <Quote>[]
+              : quoteProvider.quotes
+                    .where(
+                      (q) =>
+                          q.providerId == null ||
+                          q.providerId == currentUser.id,
+                    )
+                    .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     Widget body;
     if (quoteProvider.isLoading && quotes.isEmpty) {
@@ -65,10 +68,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
           children: [
             CircularProgressIndicator(color: _primaryBlue),
             const SizedBox(height: 16),
-            Text(
-              'Loading quotes...',
-              style: TextStyle(color: _textSecondary),
-            ),
+            Text('Loading quotes...', style: TextStyle(color: _textSecondary)),
           ],
         ),
       );
@@ -111,152 +111,150 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
         padding: const EdgeInsets.all(16),
         itemCount: quotes.length,
         itemBuilder: (context, index) {
-        final q = quotes[index];
-        final request = requestProvider.requests
-            .where((r) => r.id == q.requestId)
-            .cast<ServiceRequest?>()
-            .firstWhere((r) => r != null, orElse: () => null);
-        final customer = request == null
-            ? null
-            : customerDirectory.getCustomerById(request.customerId);
+          final q = quotes[index];
+          final request = requestProvider.requests
+              .where((r) => r.id == q.requestId)
+              .cast<ServiceRequest?>()
+              .firstWhere((r) => r != null, orElse: () => null);
+          final customer = request == null
+              ? null
+              : customerDirectory.getCustomerById(request.customerId);
 
-        final statusConfig = _getQuoteStatusConfig(q.status);
+          final statusConfig = _getQuoteStatusConfig(q.status);
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: _surfaceColor, width: 1.5),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => QuoteDetailScreen(
-                      quote: q,
-                      request: request,
-                      customer: customer,
-                    ),
-                  ),
-                );
-              },
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(24),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    UserAvatar(
-                      name: customer?.name ?? 'Customer',
-                      imagePath: customer?.profilePicture,
-                      radius: 32,
+              border: Border.all(color: _surfaceColor, width: 1.5),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => QuoteDetailScreen(
+                        quote: q,
+                        request: request,
+                        customer: customer,
+                      ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                '\$${q.price.toStringAsFixed(0)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 22,
-                                  color: _primaryBlue,
-                                  letterSpacing: -0.5,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: statusConfig.backgroundColor,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  statusConfig.label,
-                                  style: TextStyle(
-                                    color: statusConfig.textColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                  );
+                },
+                borderRadius: BorderRadius.circular(24),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      UserAvatar(
+                        name: customer?.name ?? 'Customer',
+                        imagePath: customer?.profilePicture,
+                        radius: 32,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  '\$${q.price.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 22,
+                                    color: _primaryBlue,
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (q.message.isNotEmpty) ...[
-                            Text(
-                              q.message,
-                              style: TextStyle(
-                                color: _textSecondary,
-                                fontSize: 14,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: statusConfig.backgroundColor,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    statusConfig.label,
+                                    style: TextStyle(
+                                      color: statusConfig.textColor,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 8),
-                          ],
-                          if (q.estimatedTime != null) ...[
-                            Text(
-                              'ETA: ${q.estimatedTime} hours',
-                              style: TextStyle(
-                                color: _textSecondary,
-                                fontSize: 12,
+                            if (q.message.isNotEmpty) ...[
+                              Text(
+                                q.message,
+                                style: TextStyle(
+                                  color: _textSecondary,
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          Row(
-                            children: [
-                              _buildInfoChip(
-                                icon: Icons.category_rounded,
-                                label: request?.category ?? 'Unknown',
-                              ),
-                              const SizedBox(width: 12),
-                              _buildInfoChip(
-                                icon: Icons.access_time_rounded,
-                                label: formatNotificationTime(q.createdAt),
-                              ),
+                              const SizedBox(height: 8),
                             ],
-                          ),
-                        ],
+                            if (q.estimatedTime != null) ...[
+                              Text(
+                                'ETA: ${q.estimatedTime} hours',
+                                style: TextStyle(
+                                  color: _textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            Row(
+                              children: [
+                                _buildInfoChip(
+                                  icon: Icons.category_rounded,
+                                  label: request?.category ?? 'Unknown',
+                                ),
+                                const SizedBox(width: 12),
+                                _buildInfoChip(
+                                  icon: Icons.access_time_rounded,
+                                  label: formatNotificationTime(q.createdAt),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: _surfaceColor,
-                        shape: BoxShape.circle,
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _surfaceColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: _textSecondary,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
+          );
         },
       );
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quotes'),
-      ),
+      appBar: AppBar(title: const Text('Quotes')),
       backgroundColor: _surfaceColor,
       body: body,
     );
@@ -617,18 +615,16 @@ class QuoteDetailScreen extends StatelessWidget {
                     if (!context.mounted) return;
                     if (success) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Quote withdrawn.'),
-                        ),
+                        const SnackBar(content: Text('Quote withdrawn.')),
                       );
                       Navigator.pop(context);
                     } else {
                       final message =
                           context.read<QuoteProvider>().errorMessage ??
-                              'Failed to withdraw quote.';
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(message)),
-                      );
+                          'Failed to withdraw quote.';
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(message)));
                     }
                   },
                   icon: const Icon(Icons.close_rounded),
@@ -650,9 +646,7 @@ class QuoteDetailScreen extends StatelessWidget {
         title: const Text('Withdraw Quote'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Reason',
-          ),
+          decoration: const InputDecoration(labelText: 'Reason'),
         ),
         actions: [
           TextButton(
