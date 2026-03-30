@@ -458,9 +458,9 @@ class _HomePageState extends State<HomePage> {
                                 ).withOpacity(0.1),
                                 radius: 20,
                                 child: Text(
-                                    quote.providerName.isNotEmpty
-                                        ? quote.providerName[0].toUpperCase()
-                                        : '?',
+                                  quote.providerName.isNotEmpty
+                                      ? quote.providerName[0].toUpperCase()
+                                      : '?',
                                   style: const TextStyle(
                                     color: Color(0xFF00C48C),
                                     fontWeight: FontWeight.bold,
