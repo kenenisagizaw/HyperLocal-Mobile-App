@@ -5,20 +5,41 @@ import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../payments/payment_screen.dart';
 import 'providers/provider_directory_provider.dart';
+import 'providers/quote_provider.dart';
+import 'providers/request_provider.dart';
+import '../../core/constants/enums.dart';
 
-class RequestDetailScreen extends StatelessWidget {
+class RequestDetailScreen extends StatefulWidget {
   const RequestDetailScreen({
     super.key,
     required this.request,
-    required this.quotes,
+    this.initialQuotes = const [],
   });
 
   final ServiceRequest request;
-  final List<Quote> quotes;
+  final List<Quote> initialQuotes;
+
+  @override
+  State<RequestDetailScreen> createState() => _RequestDetailScreenState();
+}
+
+class _RequestDetailScreenState extends State<RequestDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<QuoteProvider>().loadQuotesForRequest(widget.request.id);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final providerDirectory = context.watch<ProviderDirectoryProvider>();
+    final quoteProvider = context.watch<QuoteProvider>();
+    final requestProvider = context.watch<RequestProvider>();
+    final quotes = quoteProvider.getQuotesForRequest(widget.request.id);
+    final request = widget.request;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -176,7 +197,9 @@ class RequestDetailScreen extends StatelessWidget {
 
               // Quotes List
               Expanded(
-                child: quotes.isEmpty
+                child: quoteProvider.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : quotes.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -233,7 +256,9 @@ class RequestDetailScreen extends StatelessWidget {
                               leading: CircleAvatar(
                                 backgroundColor: Colors.green.shade100,
                                 child: Text(
-                                  providerName[0].toUpperCase(),
+                                  providerName.isNotEmpty
+                                      ? providerName[0].toUpperCase()
+                                      : '?',
                                   style: TextStyle(
                                     color: Colors.green.shade700,
                                     fontWeight: FontWeight.bold,
@@ -253,13 +278,23 @@ class RequestDetailScreen extends StatelessWidget {
                                 children: [
                                   const SizedBox(height: 4),
                                   Text(
-                                    quote.notes,
+                                    quote.message,
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 14,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
+                                  if (quote.estimatedTime != null)
+                                    Text(
+                                      'ETA: ${quote.estimatedTime} hours',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  if (quote.estimatedTime != null)
+                                    const SizedBox(height: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 12,
@@ -280,41 +315,117 @@ class RequestDetailScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              trailing: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => PaymentScreen(
-                                        request: request,
-                                        quote: quote,
+                              trailing: quote.status == QuoteStatus.accepted
+                                  ? _buildAcceptedBadge()
+                                  : ElevatedButton(
+                                      onPressed: () async {
+                                        if (request.status ==
+                                                RequestStatus.accepted ||
+                                            request.status ==
+                                                RequestStatus.completed ||
+                                            request.status ==
+                                                RequestStatus.cancelled) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: const Text(
+                                                'This request can no longer accept quotes.',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        if (quote.status !=
+                                            QuoteStatus.pending) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: const Text(
+                                                'Only pending quotes can be accepted.',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        final accepted = await quoteProvider
+                                            .acceptQuote(
+                                          requestId: request.id,
+                                          quoteId: quote.id,
+                                        );
+
+                                        if (!accepted) {
+                                          final message =
+                                              quoteProvider.errorMessage ??
+                                                  'Failed to accept quote.';
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(message),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        requestProvider.updateStatus(
+                                          request.id,
+                                          RequestStatus.accepted,
+                                        );
+
+                                        if (!mounted) return;
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => PaymentScreen(
+                                              request: request,
+                                              quote: quote,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF1E3A8A,
+                                        ), // Deep blue
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('Accept'),
+                                          SizedBox(width: 4),
+                                          Icon(Icons.arrow_forward, size: 16),
+                                        ],
                                       ),
                                     ),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(
-                                    0xFF1E3A8A,
-                                  ), // Deep blue
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('Accept'),
-                                    SizedBox(width: 4),
-                                    Icon(Icons.arrow_forward, size: 16),
-                                  ],
-                                ),
-                              ),
                             ),
                           );
                         },
@@ -366,4 +477,28 @@ class _DetailRow extends StatelessWidget {
       ],
     );
   }
+}
+
+Widget _buildAcceptedBadge() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.green.shade600,
+      borderRadius: BorderRadius.circular(30),
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.check_circle, color: Colors.white, size: 16),
+        SizedBox(width: 6),
+        Text(
+          'Accepted',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    ),
+  );
 }
