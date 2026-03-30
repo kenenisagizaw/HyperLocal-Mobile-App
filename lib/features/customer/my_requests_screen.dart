@@ -248,7 +248,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           MaterialPageRoute(
             builder: (_) => RequestDetailScreen(
               request: request,
-              quotes: [], // quotes will be loaded in detail screen
+              initialQuotes: const [],
             ),
           ),
         );
@@ -324,7 +324,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                                 ),
                               ),
                               Text(
-                                'Request #${request.id.substring(0, 6)}',
+                                'Request #${_shortId(request.id)}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
@@ -470,7 +470,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                               MaterialPageRoute(
                                 builder: (_) => RequestDetailScreen(
                                   request: request,
-                                  quotes: [],
+                                  initialQuotes: const [],
                                 ),
                               ),
                             );
@@ -508,6 +508,14 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         ),
       ),
     );
+  }
+
+  String _shortId(String id) {
+    if (id.isEmpty) {
+      return 'N/A';
+    }
+    final end = id.length < 6 ? id.length : 6;
+    return id.substring(0, end);
   }
 
   Widget _buildInfoItem({
