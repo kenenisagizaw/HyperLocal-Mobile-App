@@ -34,6 +34,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      context.read<QuoteProvider>().loadMyQuotes();
       context.read<RequestProvider>().loadRequests();
       context.read<CustomerDirectoryProvider>().loadCustomers();
     });
@@ -47,16 +48,31 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     final customerDirectory = context.watch<CustomerDirectoryProvider>();
 
     final currentUser = authProvider.currentUser;
-    final quotes =
-        currentUser == null
-              ? <Quote>[]
-              : quoteProvider.quotes
-                    .where((q) => q.providerId == currentUser.id)
-                    .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final quotes = currentUser == null
+        ? <Quote>[]
+        : quoteProvider.quotes
+            .where(
+              (q) => q.providerId == null || q.providerId == currentUser.id,
+            )
+            .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     Widget body;
-    if (quotes.isEmpty) {
+    if (quoteProvider.isLoading && quotes.isEmpty) {
+      body = Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(color: _primaryBlue),
+            const SizedBox(height: 16),
+            Text(
+              'Loading quotes...',
+              style: TextStyle(color: _textSecondary),
+            ),
+          ],
+        ),
+      );
+    } else if (quotes.isEmpty) {
       body = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -104,8 +120,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
             ? null
             : customerDirectory.getCustomerById(request.customerId);
 
-        final status = request?.status;
-        final statusConfig = _getStatusConfig(status);
+        final statusConfig = _getQuoteStatusConfig(q.status);
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -177,15 +192,25 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          if (q.notes.isNotEmpty) ...[
+                          if (q.message.isNotEmpty) ...[
                             Text(
-                              q.notes,
+                              q.message,
                               style: TextStyle(
                                 color: _textSecondary,
                                 fontSize: 14,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          if (q.estimatedTime != null) ...[
+                            Text(
+                              'ETA: ${q.estimatedTime} hours',
+                              style: TextStyle(
+                                color: _textSecondary,
+                                fontSize: 12,
+                              ),
                             ),
                             const SizedBox(height: 8),
                           ],
@@ -262,40 +287,31 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
     );
   }
 
-  _StatusConfig _getStatusConfig(RequestStatus? status) {
-    if (status == null) {
-      return _StatusConfig(
-        label: 'Unknown',
-        backgroundColor: Colors.grey.shade100,
-        textColor: Colors.grey.shade700,
-      );
-    }
-
+  _StatusConfig _getQuoteStatusConfig(QuoteStatus status) {
     switch (status) {
-      case RequestStatus.accepted:
+      case QuoteStatus.accepted:
         return _StatusConfig(
           label: 'Accepted',
           backgroundColor: _primaryGreen.withValues(alpha: 0.1),
           textColor: _primaryGreen,
         );
-      case RequestStatus.pending:
-      case RequestStatus.quoted:
+      case QuoteStatus.withdrawn:
+        return _StatusConfig(
+          label: 'Withdrawn',
+          backgroundColor: Colors.red.shade50,
+          textColor: Colors.red.shade700,
+        );
+      case QuoteStatus.rejected:
+        return _StatusConfig(
+          label: 'Rejected',
+          backgroundColor: Colors.grey.shade100,
+          textColor: Colors.grey.shade700,
+        );
+      case QuoteStatus.pending:
         return _StatusConfig(
           label: 'Pending',
           backgroundColor: Colors.orange.shade50,
           textColor: Colors.orange.shade700,
-        );
-      case RequestStatus.completed:
-        return _StatusConfig(
-          label: 'Completed',
-          backgroundColor: _primaryBlue.withValues(alpha: 0.1),
-          textColor: _primaryBlue,
-        );
-      case RequestStatus.cancelled:
-        return _StatusConfig(
-          label: 'Cancelled',
-          backgroundColor: Colors.red.shade50,
-          textColor: Colors.red.shade700,
         );
     }
   }
@@ -449,7 +465,7 @@ class QuoteDetailScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  quote.notes,
+                  quote.message,
                   style: const TextStyle(
                     fontSize: 15,
                     color: _textPrimary,
@@ -585,12 +601,72 @@ class QuoteDetailScreen extends StatelessWidget {
               icon: Icons.person_outline_rounded,
               child: CustomerProfileCard(customer: customer),
             ),
-
+            const SizedBox(height: 20),
+            if (quote.status == QuoteStatus.pending)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final reason = await _askWithdrawReason(context);
+                    if (reason == null || reason.isEmpty) {
+                      return;
+                    }
+                    final success = await context
+                        .read<QuoteProvider>()
+                        .withdrawQuote(quoteId: quote.id, reason: reason);
+                    if (!context.mounted) return;
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Quote withdrawn.'),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    } else {
+                      final message =
+                          context.read<QuoteProvider>().errorMessage ??
+                              'Failed to withdraw quote.';
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(message)),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.close_rounded),
+                  label: const Text('Withdraw Quote'),
+                ),
+              ),
             const SizedBox(height: 16),
           ],
         ),
       ),
     );
+  }
+
+  Future<String?> _askWithdrawReason(BuildContext context) async {
+    final controller = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Withdraw Quote'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Reason',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: const Text('Withdraw'),
+          ),
+        ],
+      ),
+    );
+    return result?.trim();
   }
 
   Widget _buildSection({
