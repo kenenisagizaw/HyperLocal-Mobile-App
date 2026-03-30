@@ -27,6 +27,8 @@ class RequestProvider extends ChangeNotifier {
     int? skip,
   }) async {
     _isLoading = true;
+    errorMessage = null;
+    lastStatusCode = null;
     notifyListeners();
     try {
       _requests = await repository.fetchRequests(
@@ -36,6 +38,10 @@ class RequestProvider extends ChangeNotifier {
         take: take,
         skip: skip,
       );
+    } on DioException catch (error) {
+      lastStatusCode = error.response?.statusCode;
+      errorMessage = _extractErrorMessage(error);
+      _requests = [];
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -44,9 +50,15 @@ class RequestProvider extends ChangeNotifier {
 
   Future<void> loadMyRequests() async {
     _isLoading = true;
+    errorMessage = null;
+    lastStatusCode = null;
     notifyListeners();
     try {
       _requests = await repository.fetchMyRequests();
+    } on DioException catch (error) {
+      lastStatusCode = error.response?.statusCode;
+      errorMessage = _extractErrorMessage(error);
+      _requests = [];
     } finally {
       _isLoading = false;
       notifyListeners();
