@@ -9,12 +9,11 @@ import '../auth/providers/auth_provider.dart';
 import '../messages/messages_screen.dart';
 import '../messages/providers/message_provider.dart';
 import '../payments/providers/payment_provider.dart';
-import 'create_request_screen.dart';
 import 'customer_profile_screen.dart';
+import 'my_requests_screen.dart';
 import 'providers/provider_directory_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
-import 'request_detail_screen.dart';
 
 /// ----------------- CUSTOMER DASHBOARD -----------------
 class CustomerDashboard extends StatefulWidget {
@@ -29,7 +28,7 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
 
   late final List<Widget> _pages = [
     HomePage(onNavigateToTab: (index) => setState(() => _currentIndex = index)),
-    const RequestsPage(),
+    const MyRequestsScreen(),
     const MessagesPage(),
     const PaymentsPage(),
     const CustomerProfileScreen(),
@@ -459,7 +458,9 @@ class _HomePageState extends State<HomePage> {
                                 ).withOpacity(0.1),
                                 radius: 20,
                                 child: Text(
-                                  quote.providerName[0].toUpperCase(),
+                                    quote.providerName.isNotEmpty
+                                        ? quote.providerName[0].toUpperCase()
+                                        : '?',
                                   style: const TextStyle(
                                     color: Color(0xFF00C48C),
                                     fontWeight: FontWeight.bold,
@@ -958,204 +959,6 @@ class PaymentsPage extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-/// ----------------- REQUESTS -----------------
-class RequestsPage extends StatefulWidget {
-  const RequestsPage({super.key});
-
-  @override
-  State<RequestsPage> createState() => _RequestsPageState();
-}
-
-class _RequestsPageState extends State<RequestsPage> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.read<RequestProvider>().loadMyRequests();
-      context.read<ProviderDirectoryProvider>().loadProviders();
-    });
-  }
-
-  Color _getStatusColor(RequestStatus status) {
-    switch (status) {
-      case RequestStatus.pending:
-        return const Color(0xFFFFB800);
-      case RequestStatus.quoted:
-        return const Color(0xFF3366FF);
-      case RequestStatus.accepted:
-        return const Color(0xFF00C48C);
-      case RequestStatus.completed:
-        return const Color(0xFF00C48C);
-      case RequestStatus.cancelled:
-        return Colors.red;
-    }
-  }
-
-  String _getStatusText(RequestStatus status) {
-    return status
-        .toString()
-        .split('.')
-        .last
-        .replaceAllMapped(RegExp(r'([A-Z])'), (m) => ' ${m.group(0)}')
-        .trim();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final requestProvider = context.watch<RequestProvider>();
-    final quoteProvider = context.watch<QuoteProvider>();
-
-    final currentUser = authProvider.currentUser;
-    if (currentUser == null)
-      return const Center(child: Text('No user logged in'));
-
-    final requests = requestProvider.requests;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Requests')),
-      backgroundColor: const Color(0xFFF8FAFF),
-      body: requestProvider.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF3366FF)),
-            )
-          : requests.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.assignment_outlined,
-                    size: 64,
-                    color: Colors.grey.shade300,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No requests yet',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const CreateRequestScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create request'),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: requests.length,
-              itemBuilder: (context, index) {
-                final req = requests[index];
-                final List<Quote> quotes = quoteProvider.getQuotesForRequest(
-                  req.id,
-                );
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF3366FF).withOpacity(0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(req.status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        req.status == RequestStatus.pending
-                            ? Icons.hourglass_empty
-                            : req.status == RequestStatus.quoted
-                            ? Icons.receipt
-                            : req.status == RequestStatus.accepted
-                            ? Icons.check_circle
-                            : req.status == RequestStatus.completed
-                            ? Icons.done_all
-                            : Icons.cancel,
-                        color: _getStatusColor(req.status),
-                        size: 24,
-                      ),
-                    ),
-                    title: Text(
-                      '${req.category} - ${req.location}',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1F36),
-                      ),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        req.description,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(req.status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _getStatusText(req.status),
-                        style: TextStyle(
-                          color: _getStatusColor(req.status),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              RequestDetailScreen(request: req, quotes: quotes),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateRequestScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }
