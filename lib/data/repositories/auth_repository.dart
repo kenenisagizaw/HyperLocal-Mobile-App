@@ -99,6 +99,11 @@ class AuthRepository {
     await _storage.clearAccessToken();
   }
 
+  Future<bool> hasAccessToken() async {
+    final token = await _storage.getAccessToken();
+    return token != null && token.isNotEmpty;
+  }
+
   Future<void> sendEmailVerificationCode() async {
     final token = await _storage.getAccessToken();
     if (token == null || token.isEmpty) {
@@ -189,7 +194,11 @@ class AuthRepository {
   }
 
   String? _extractToken(Map<String, dynamic> data) {
-    final token = data['token'] ?? data['accessToken'];
+    final token =
+        data['token'] ??
+        data['accessToken'] ??
+        data['access_token'] ??
+        data['jwt'];
     if (token is String) {
       return token;
     }
