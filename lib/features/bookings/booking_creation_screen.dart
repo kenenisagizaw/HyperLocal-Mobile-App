@@ -81,29 +81,30 @@ class _BookingCreationScreenState extends State<BookingCreationScreen> {
     }
 
     if (_addressController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an address.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter an address.')));
       return;
     }
 
     setState(() => _isSubmitting = true);
     final scheduledAt = _buildScheduledAt();
     final booking = await context.read<BookingProvider>().createBooking(
-          serviceRequestId: widget.request.id,
-          quoteId: widget.quote.id,
-          scheduledAt: scheduledAt,
-          address: _addressController.text.trim(),
-        );
+      serviceRequestId: widget.request.id,
+      quoteId: widget.quote.id,
+      scheduledAt: scheduledAt,
+      address: _addressController.text.trim(),
+    );
 
     setState(() => _isSubmitting = false);
 
     if (booking == null) {
-      final message = context.read<BookingProvider>().errorMessage ??
+      final message =
+          context.read<BookingProvider>().errorMessage ??
           'Failed to create booking.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
       return;
     }
 
@@ -231,10 +232,7 @@ class _SummaryRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.black54),
-            ),
+            child: Text(label, style: const TextStyle(color: Colors.black54)),
           ),
           Expanded(
             flex: 3,
