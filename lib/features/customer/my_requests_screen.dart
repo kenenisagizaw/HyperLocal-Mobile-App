@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
+import '../auth/providers/auth_provider.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
-import '../auth/providers/auth_provider.dart';
 import 'create_request_screen.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
@@ -126,7 +126,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       body: Container(
         decoration: _buildBackgroundGradient(),
         child: requestProvider.isLoading
-          ? Center(
+            ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -166,8 +166,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        requestProvider.errorMessage ??
-                            'Please try again.',
+                        requestProvider.errorMessage ?? 'Please try again.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -307,9 +306,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Widget _buildRequestCard(
     BuildContext context,
     dynamic request,
-    int quotesCount,
-    {String? bookingId}
-  ) {
+    int quotesCount, {
+    String? bookingId,
+  }) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
