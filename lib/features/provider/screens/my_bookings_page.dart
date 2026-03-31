@@ -22,14 +22,15 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     final user = authProvider.currentUser;
 
     final allBookings = bookingProvider.bookings;
-    final bookings = user == null
-        ? <Booking>[]
-        : allBookings
-            .where(
-              (b) => b.providerId == null || b.providerId == user.id,
-            )
-            .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final bookings =
+        user == null
+              ? <Booking>[]
+              : allBookings
+                    .where(
+                      (b) => b.providerId == null || b.providerId == user.id,
+                    )
+                    .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Bookings')),
@@ -38,11 +39,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.event_busy,
-                    size: 64,
-                    color: Colors.grey.shade300,
-                  ),
+                  Icon(Icons.event_busy, size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 12),
                   Text(
                     'No bookings yet',
@@ -77,9 +74,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => BookingDetailScreen(
-                            bookingId: booking.id,
-                          ),
+                          builder: (_) =>
+                              BookingDetailScreen(bookingId: booking.id),
                         ),
                       );
                     },
