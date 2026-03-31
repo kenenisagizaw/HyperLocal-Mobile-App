@@ -4,7 +4,9 @@ import 'package:provider/provider.dart';
 import '../../core/constants/enums.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
-import '../payments/payment_screen.dart';
+import '../bookings/booking_creation_screen.dart';
+import '../bookings/booking_detail_screen.dart';
+import '../bookings/providers/booking_provider.dart';
 import 'providers/provider_directory_provider.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
@@ -38,8 +40,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     final providerDirectory = context.watch<ProviderDirectoryProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
     final requestProvider = context.watch<RequestProvider>();
+    final bookingProvider = context.watch<BookingProvider>();
     final quotes = quoteProvider.getQuotesForRequest(widget.request.id);
     final request = widget.request;
+    final booking = bookingProvider.getBookingForRequest(widget.request.id);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -165,6 +169,26 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
               ),
 
               const SizedBox(height: 20),
+              if (booking != null) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookingDetailScreen(
+                            bookingId: booking.id,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_month),
+                    label: const Text('View Booking'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Quotes Header
               Row(
@@ -398,7 +422,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (_) => PaymentScreen(
+                                            builder: (_) =>
+                                                BookingCreationScreen(
                                               request: request,
                                               quote: quote,
                                             ),
