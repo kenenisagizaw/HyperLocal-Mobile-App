@@ -28,8 +28,8 @@ class Booking {
   factory Booking.fromJson(Map<String, dynamic> json) {
     return Booking(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
-      serviceRequestId:
-          (json['serviceRequestId'] ?? json['requestId'] ?? '').toString(),
+      serviceRequestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
+          .toString(),
       quoteId: (json['quoteId'] ?? '').toString(),
       customerId: _asString(json['customerId'] ?? json['userId']),
       providerId: _asString(json['providerId'] ?? json['provider']?['id']),
