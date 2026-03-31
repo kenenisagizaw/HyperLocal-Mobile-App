@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
+import '../bookings/booking_detail_screen.dart';
+import '../bookings/providers/booking_provider.dart';
 import '../auth/providers/auth_provider.dart';
 import 'create_request_screen.dart';
 import 'providers/quote_provider.dart';
@@ -67,6 +69,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
+    final bookingProvider = context.watch<BookingProvider>();
     final requestProvider = context.watch<RequestProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
 
@@ -123,7 +126,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       body: Container(
         decoration: _buildBackgroundGradient(),
         child: requestProvider.isLoading
-            ? Center(
+          ? Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -138,6 +141,63 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       style: TextStyle(color: Colors.grey.shade700),
                     ),
                   ],
+                ),
+              )
+            : requestProvider.errorMessage != null
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load requests',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade400,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        requestProvider.errorMessage ??
+                            'Please try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      if (requestProvider.lastStatusCode != null) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'Status: ${requestProvider.lastStatusCode}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<RequestProvider>().loadMyRequests();
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             : myRequests.isEmpty
@@ -217,7 +277,15 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       .getQuotesForRequest(request.id)
                       .length;
 
-                  return _buildRequestCard(context, request, quotesCount);
+                  final booking = bookingProvider.getBookingForRequest(
+                    request.id,
+                  );
+                  return _buildRequestCard(
+                    context,
+                    request,
+                    quotesCount,
+                    bookingId: booking?.id,
+                  );
                 },
               ),
       ),
@@ -240,6 +308,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     BuildContext context,
     dynamic request,
     int quotesCount,
+    {String? bookingId}
   ) {
     return GestureDetector(
       onTap: () {
@@ -449,54 +518,80 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
 
                     const SizedBox(height: 12),
 
-                    // View details button
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.blue.shade200,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => RequestDetailScreen(
-                                  request: request,
-                                  initialQuotes: const [],
+                    // Action buttons
+                    Column(
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.blue.shade200,
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => RequestDetailScreen(
+                                      request: request,
+                                      initialQuotes: const [],
+                                    ),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'View Details',
+                                      style: TextStyle(
+                                        color: Colors.blue.shade600,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward,
+                                      size: 16,
+                                      color: Colors.blue.shade600,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'View Details',
-                                  style: TextStyle(
-                                    color: Colors.blue.shade600,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  size: 16,
-                                  color: Colors.blue.shade600,
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      ),
+                        if (bookingId != null) ...[
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => BookingDetailScreen(
+                                      bookingId: bookingId,
+                                    ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.calendar_month),
+                              label: const Text('View Booking'),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
