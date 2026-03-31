@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'data/datasources/remote/booking_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
+import 'data/repositories/booking_repository.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/bookings/providers/booking_provider.dart';
 import 'features/customer/providers/customer_directory_provider.dart';
 import 'features/customer/providers/provider_directory_provider.dart';
 import 'features/customer/providers/quote_provider.dart';
@@ -23,11 +26,15 @@ void main() {
     MultiProvider(
       providers: [
         Provider(create: (_) => RequestApi()),
+        Provider(create: (_) => BookingApi()),
         Provider(create: (_) => QuoteApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
         Provider(
           create: (context) => RequestRepository(context.read<RequestApi>()),
+        ),
+        Provider(
+          create: (context) => BookingRepository(context.read<BookingApi>()),
         ),
         Provider(
           create: (context) => QuoteRepository(context.read<QuoteApi>()),
@@ -67,6 +74,13 @@ void main() {
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => ReviewProvider()),
+        ChangeNotifierProxyProvider<BookingRepository, BookingProvider>(
+          create: (context) =>
+              BookingProvider(repository: context.read<BookingRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? BookingProvider(repository: repository);
+          },
+        ),
         ChangeNotifierProxyProvider<QuoteRepository, QuoteProvider>(
           create: (context) =>
               QuoteProvider(repository: context.read<QuoteRepository>()),
