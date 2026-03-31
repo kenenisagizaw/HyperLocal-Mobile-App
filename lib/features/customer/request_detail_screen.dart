@@ -177,9 +177,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => BookingDetailScreen(
-                            bookingId: booking.id,
-                          ),
+                          builder: (_) =>
+                              BookingDetailScreen(bookingId: booking.id),
                         ),
                       );
                     },
@@ -424,9 +423,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                           MaterialPageRoute(
                                             builder: (_) =>
                                                 BookingCreationScreen(
-                                              request: request,
-                                              quote: quote,
-                                            ),
+                                                  request: request,
+                                                  quote: quote,
+                                                ),
                                           ),
                                         );
                                       },
