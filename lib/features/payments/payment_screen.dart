@@ -6,9 +6,9 @@ import '../../data/models/payment_model.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../auth/providers/auth_provider.dart';
+import '../bookings/booking_detail_screen.dart';
 import '../customer/providers/request_provider.dart';
 import '../reviews/review_screen.dart';
-import '../bookings/booking_detail_screen.dart';
 import 'providers/payment_provider.dart';
 
 class PaymentScreen extends StatelessWidget {
@@ -133,9 +133,8 @@ class PaymentSuccessScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => BookingDetailScreen(
-                          bookingId: bookingId!,
-                        ),
+                        builder: (_) =>
+                            BookingDetailScreen(bookingId: bookingId!),
                       ),
                     );
                   },
@@ -191,10 +190,7 @@ class _SummaryRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.black54),
-            ),
+            child: Text(label, style: const TextStyle(color: Colors.black54)),
           ),
           Expanded(
             flex: 3,
