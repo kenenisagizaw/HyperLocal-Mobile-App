@@ -8,6 +8,7 @@ import '../../data/models/service_request_model.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/request_provider.dart';
 import '../reviews/review_screen.dart';
+import '../bookings/booking_detail_screen.dart';
 import 'providers/payment_provider.dart';
 
 class PaymentScreen extends StatelessWidget {
@@ -15,10 +16,12 @@ class PaymentScreen extends StatelessWidget {
     super.key,
     required this.request,
     required this.quote,
+    this.bookingId,
   });
 
   final ServiceRequest request;
   final Quote quote;
+  final String? bookingId;
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +72,7 @@ class PaymentScreen extends StatelessWidget {
                               payment: payment,
                               request: request,
                               quote: quote,
+                              bookingId: bookingId,
                             ),
                           ),
                         );
@@ -89,11 +93,13 @@ class PaymentSuccessScreen extends StatelessWidget {
     required this.payment,
     required this.request,
     required this.quote,
+    this.bookingId,
   });
 
   final Payment payment;
   final ServiceRequest request;
   final Quote quote;
+  final String? bookingId;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +120,29 @@ class PaymentSuccessScreen extends StatelessWidget {
             Text('Amount: \$${payment.amount.toStringAsFixed(2)}'),
             const SizedBox(height: 6),
             Text('Status: ${payment.status.name}'),
+            if (bookingId != null) ...[
+              const SizedBox(height: 6),
+              Text('Booking ID: $bookingId'),
+            ],
             const SizedBox(height: 24),
+            if (bookingId != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookingDetailScreen(
+                          bookingId: bookingId!,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('View Booking'),
+                ),
+              ),
+            if (bookingId != null) const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
