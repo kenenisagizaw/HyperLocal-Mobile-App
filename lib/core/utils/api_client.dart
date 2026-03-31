@@ -27,7 +27,9 @@ class ApiClient {
     dio.interceptors.add(
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) async {
-          if (!options.headers.containsKey('Authorization')) {
+          final existing = options.headers['Authorization'];
+          final hasAuth = existing is String && existing.isNotEmpty;
+          if (!hasAuth) {
             final token = await storage.getAccessToken();
             if (token != null && token.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $token';
@@ -42,6 +44,7 @@ class ApiClient {
             ApiConstants.refreshToken,
           );
           final alreadyRetried = error.requestOptions.extra['retried'] == true;
+          final isRevoked = _isTokenRevoked(error.response?.data);
 
           if (isUnauthorized && !isRefreshRequest && !alreadyRetried) {
             error.requestOptions.extra['retried'] = true;
@@ -59,6 +62,11 @@ class ApiClient {
               final response = await dio.fetch(error.requestOptions);
               return handler.resolve(response);
             }
+          }
+
+          if (isUnauthorized && (isRefreshRequest || alreadyRetried || isRevoked)) {
+            await storage.clearAccessToken();
+            await cookieJar.deleteAll();
           }
 
           handler.next(error);
@@ -100,5 +108,21 @@ class ApiClient {
     } catch (_) {
       return false;
     }
+  }
+
+  static bool _isTokenRevoked(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final message = data['message'] ?? data['error'] ?? data['detail'];
+      if (message is String) {
+        return message.toLowerCase().contains('revoked');
+      }
+    }
+    if (data is Map) {
+      final message = data['message'] ?? data['error'] ?? data['detail'];
+      if (message is String) {
+        return message.toLowerCase().contains('revoked');
+      }
+    }
+    return false;
   }
 }
