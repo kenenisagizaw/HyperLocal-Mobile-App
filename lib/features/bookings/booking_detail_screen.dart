@@ -48,9 +48,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final user = authProvider.currentUser;
 
     if (bookingProvider.isLoading && booking == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (booking == null) {
@@ -75,8 +73,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         : customerDirectory.getCustomerById(booking.customerId!);
 
     final address = booking.address ?? request?.location ?? 'Not set';
-    final priceLabel =
-        quote == null ? 'Not set' : '\$${quote.price.toStringAsFixed(2)}';
+    final priceLabel = quote == null
+        ? 'Not set'
+        : '\$${quote.price.toStringAsFixed(2)}';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Booking Details')),
@@ -96,7 +95,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     label: 'Request ID',
                     value: booking.serviceRequestId,
                   ),
-                  _DetailRow(label: 'Status', value: _statusLabel(booking.status)),
+                  _DetailRow(
+                    label: 'Status',
+                    value: _statusLabel(booking.status),
+                  ),
                   if (booking.scheduledAt != null)
                     _DetailRow(
                       label: 'Scheduled',
@@ -176,11 +178,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               );
               if (!context.mounted) return;
               if (result == null) {
-                final message = bookingProvider.errorMessage ??
-                    'Failed to cancel booking.';
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(message)),
-                );
+                final message =
+                    bookingProvider.errorMessage ?? 'Failed to cancel booking.';
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(message)));
               }
             },
             icon: const Icon(Icons.cancel),
@@ -255,11 +257,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             );
             if (!context.mounted) return;
             if (result == null) {
-              final message = bookingProvider.errorMessage ??
+              final message =
+                  bookingProvider.errorMessage ??
                   'Failed to update booking status.';
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(message)));
             }
           },
           icon: const Icon(Icons.play_arrow),
@@ -284,16 +287,17 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             );
             if (!context.mounted) return;
             if (result == null) {
-              final message = bookingProvider.errorMessage ??
+              final message =
+                  bookingProvider.errorMessage ??
                   'Failed to update booking status.';
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(message)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(message)));
               return;
             }
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Job completed.')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Job completed.')));
           },
           icon: const Icon(Icons.check_circle),
           label: const Text('Mark Completed'),
@@ -442,10 +446,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return result?.trim();
   }
 
-  ServiceRequest? _findRequest(
-    List<ServiceRequest> requests,
-    dynamic booking,
-  ) {
+  ServiceRequest? _findRequest(List<ServiceRequest> requests, dynamic booking) {
     try {
       return requests.firstWhere((r) => r.id == booking.serviceRequestId);
     } catch (_) {
@@ -571,10 +572,7 @@ class _DetailRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.black54),
-            ),
+            child: Text(label, style: const TextStyle(color: Colors.black54)),
           ),
           Expanded(
             flex: 3,
@@ -615,19 +613,14 @@ class _StatusTimeline extends StatelessWidget {
                       color: _isReached(step) ? Colors.green : Colors.grey[300],
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      _iconFor(step),
-                      color: Colors.white,
-                      size: 16,
-                    ),
+                    child: Icon(_iconFor(step), color: Colors.white, size: 16),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _labelFor(step),
                     style: TextStyle(
                       fontSize: 12,
-                      color:
-                          _isReached(step) ? Colors.green : Colors.grey[600],
+                      color: _isReached(step) ? Colors.green : Colors.grey[600],
                     ),
                   ),
                 ],
