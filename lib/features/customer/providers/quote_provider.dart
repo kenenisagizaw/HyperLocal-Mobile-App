@@ -130,6 +130,13 @@ class QuoteProvider extends ChangeNotifier {
     return _quotes.where((q) => q.requestId == requestId).toList();
   }
 
+  Quote? getQuoteById(String id) {
+    for (final quote in _quotes) {
+      if (quote.id == id) return quote;
+    }
+    return null;
+  }
+
   List<Quote> getQuotesForRequests(List<String> requestIds) {
     final requestIdSet = requestIds.toSet();
     final results = _quotes.where((q) => requestIdSet.contains(q.requestId));
