@@ -64,7 +64,8 @@ class ApiClient {
             }
           }
 
-          if (isUnauthorized && (isRefreshRequest || alreadyRetried || isRevoked)) {
+          if (isUnauthorized &&
+              (isRefreshRequest || alreadyRetried || isRevoked)) {
             await storage.clearAccessToken();
             await cookieJar.deleteAll();
           }
