@@ -43,6 +43,7 @@ class AuthProvider extends ChangeNotifier {
     return _runAuthAction(() async {
       await _ensureRepository();
       final user = await _repository!.login(email: email, password: password);
+      await _ensureTokenStored();
       currentUser = user;
       notifyListeners();
     });
@@ -66,6 +67,7 @@ class AuthProvider extends ChangeNotifier {
         role: role,
         idDocument: idDocument,
       );
+      await _ensureTokenStored();
       currentUser = user;
       notifyListeners();
     });
@@ -152,6 +154,7 @@ class AuthProvider extends ChangeNotifier {
         idToken: idToken,
         role: role,
       );
+      await _ensureTokenStored();
       currentUser = user;
       notifyListeners();
     });
@@ -400,6 +403,13 @@ class AuthProvider extends ChangeNotifier {
     await _initFuture;
     if (_repository == null) {
       throw StateError('AuthProvider is not initialized yet');
+    }
+  }
+
+  Future<void> _ensureTokenStored() async {
+    final hasToken = await _repository!.hasAccessToken();
+    if (!hasToken) {
+      throw StateError('Access token not stored after login');
     }
   }
 
