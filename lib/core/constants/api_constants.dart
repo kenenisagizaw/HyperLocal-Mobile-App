@@ -33,4 +33,7 @@ class ApiConstants {
   static const String quotesMine = '/api/quotes/mine';
   static const String quotesForRequest = '/api/quotes/service-request';
   static const String quotesAccept = '/api/quotes/requests';
+
+  static const String bookings = '/api/bookings';
+  static const String bookingSlots = '/api/bookings/slots';
 }
