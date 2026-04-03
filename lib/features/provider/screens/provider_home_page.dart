@@ -56,6 +56,13 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<RequestProvider>().loadRequests();
+      final providerId = context.read<AuthProvider>().currentUser?.id;
+      if (providerId != null && providerId.isNotEmpty) {
+        context.read<ReviewProvider>().loadProviderReviews(
+          providerId: providerId,
+          take: 10,
+        );
+      }
     });
   }
 
@@ -71,24 +78,22 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final providerQuotes = currentUser?.id == null
         ? <Quote>[]
         : quoteProvider.quotes
-            .where((q) => q.providerId == currentUser!.id)
-            .toList();
+              .where((q) => q.providerId == currentUser!.id)
+              .toList();
     final providerReviews = currentUser?.id == null
         ? <Review>[]
         : reviewProvider.getReviewsForProvider(currentUser!.id);
     final rating = providerReviews.isNotEmpty
-        ? providerReviews
-                .map((r) => r.rating)
-                .fold<double>(0, (sum, value) => sum + value) /
-            providerReviews.length
+        ? reviewProvider.averageRating
         : (providerQuotes.isEmpty
-            ? 4.7
-            : providerQuotes
-                    .map((q) => q.rating)
-                    .fold<double>(0, (sum, value) => sum + value) /
-                providerQuotes.length);
-    final unreadNotificationsCount =
-        _notifications.where((n) => !n.isRead).length;
+              ? 4.7
+              : providerQuotes
+                        .map((q) => q.rating)
+                        .fold<double>(0, (sum, value) => sum + value) /
+                    providerQuotes.length);
+    final unreadNotificationsCount = _notifications
+        .where((n) => !n.isRead)
+        .length;
 
     final activeJobs = requestProvider.requests
         .where((r) => r.status == RequestStatus.accepted)
@@ -117,9 +122,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final activeJobsPreview = activeJobs.take(2).toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'),
-      ),
+      appBar: AppBar(title: const Text('Home')),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -210,8 +213,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                 ),
                 const SizedBox(height: 20),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -233,8 +238,11 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.star_rounded,
-                                color: _primaryBlue, size: 20),
+                            const Icon(
+                              Icons.star_rounded,
+                              color: _primaryBlue,
+                              size: 20,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               rating.toStringAsFixed(1),
@@ -254,8 +262,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                             Text(
                               _isOnline ? "You're online" : "You're offline",
                               style: TextStyle(
-                                color:
-                                    _isOnline ? _primaryGreen : Colors.grey,
+                                color: _isOnline ? _primaryGreen : Colors.grey,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -264,8 +271,9 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                               onChanged: (value) =>
                                   setState(() => _isOnline = value),
                               activeThumbColor: _primaryGreen,
-                              activeTrackColor:
-                                  _primaryGreen.withValues(alpha: 0.3),
+                              activeTrackColor: _primaryGreen.withValues(
+                                alpha: 0.3,
+                              ),
                               inactiveThumbColor: Colors.grey.shade400,
                               inactiveTrackColor: Colors.grey.shade200,
                             ),
@@ -325,8 +333,11 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.work_outline_rounded,
-                              size: 48, color: Colors.grey.shade300),
+                          Icon(
+                            Icons.work_outline_rounded,
+                            size: 48,
+                            color: Colors.grey.shade300,
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             'No active jobs yet',
@@ -351,8 +362,11 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                             ),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(Icons.build_rounded,
-                              color: Colors.white, size: 24),
+                          child: const Icon(
+                            Icons.build_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
                         title: Text(
                           job.category,
@@ -370,7 +384,9 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         ),
                         trailing: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: _primaryGreen.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -430,9 +446,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                           icon: Icons.work_rounded,
                         ),
                         Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey.shade200),
+                          width: 1,
+                          height: 40,
+                          color: Colors.grey.shade200,
+                        ),
                         WeeklyStat(
                           label: 'Earnings',
                           value:
@@ -440,9 +457,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                           icon: Icons.attach_money_rounded,
                         ),
                         Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey.shade200),
+                          width: 1,
+                          height: 40,
+                          color: Colors.grey.shade200,
+                        ),
                         WeeklyStat(
                           label: 'Rating',
                           value: rating.toStringAsFixed(1),
@@ -495,10 +513,7 @@ class WeeklyStat extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         Text(
           label,
@@ -540,13 +555,12 @@ class ActivityTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  text,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
+                Text(text, style: const TextStyle(fontWeight: FontWeight.w500)),
                 const SizedBox(height: 2),
-                Text(time,
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                Text(
+                  time,
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                ),
               ],
             ),
           ),
@@ -692,8 +706,10 @@ class NotificationBell extends StatelessWidget {
               color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
-            child:
-                const Icon(Icons.notifications_none_rounded, color: Colors.black87),
+            child: const Icon(
+              Icons.notifications_none_rounded,
+              color: Colors.black87,
+            ),
           ),
         ),
         if (count > 0)
@@ -742,16 +758,17 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-      ),
+      appBar: AppBar(title: const Text('Notifications')),
       body: notifications.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_none_rounded,
-                      size: 80, color: Colors.grey.shade300),
+                  Icon(
+                    Icons.notifications_none_rounded,
+                    size: 80,
+                    color: Colors.grey.shade300,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No notifications yet',
@@ -814,12 +831,16 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                         Text(
                           formatNotificationTime(notification.createdAt),
                           style: const TextStyle(
-                              color: Colors.black54, fontSize: 12),
+                            color: Colors.black54,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
-                    trailing: Icon(Icons.chevron_right_rounded,
-                        color: Colors.grey.shade400),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.grey.shade400,
+                    ),
                     onTap: () async {
                       setState(() => notification.isRead = true);
                       await Navigator.push(
@@ -847,9 +868,7 @@ class NotificationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notification Details'),
-      ),
+      appBar: AppBar(title: const Text('Notification Details')),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -868,7 +887,9 @@ class NotificationDetailScreen extends StatelessWidget {
                   Text(
                     notification.title,
                     style: const TextStyle(
-                        fontSize: 22, fontWeight: FontWeight.bold),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -876,8 +897,10 @@ class NotificationDetailScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 16),
-                  Text(notification.message,
-                      style: const TextStyle(fontSize: 16)),
+                  Text(
+                    notification.message,
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ],
               ),
             ),
