@@ -123,9 +123,13 @@ class RequestProvider extends ChangeNotifier {
     return _requests.where((r) => r.customerId == customerId).toList();
   }
 
-  void updateStatus(String requestId, RequestStatus status) {
-    final req = _requests.firstWhere((r) => r.id == requestId);
-    req.status = status;
+  bool updateStatus(String requestId, RequestStatus status) {
+    final index = _requests.indexWhere((r) => r.id == requestId);
+    if (index == -1) {
+      return false;
+    }
+    _requests[index].status = status;
     notifyListeners();
+    return true;
   }
 }
