@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/enums.dart';
-import '../../data/models/review_model.dart';
-import '../../data/models/service_request_model.dart';
 import '../auth/providers/auth_provider.dart';
-import '../customer/providers/request_provider.dart';
 import 'providers/review_provider.dart';
 
 class ReviewScreen extends StatefulWidget {
   const ReviewScreen({
     super.key,
-    required this.request,
     required this.providerId,
+    required this.bookingId,
   });
 
-  final ServiceRequest request;
   final String providerId;
+  final String bookingId;
 
   @override
   State<ReviewScreen> createState() => _ReviewScreenState();
@@ -32,9 +28,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     super.dispose();
   }
 
-  void _submitReview() {
+  Future<void> _submitReview() async {
     final authProvider = context.read<AuthProvider>();
-    final requestProvider = context.read<RequestProvider>();
     final reviewProvider = context.read<ReviewProvider>();
     final currentUser = authProvider.currentUser;
 
@@ -42,22 +37,23 @@ class _ReviewScreenState extends State<ReviewScreen> {
       return;
     }
 
-    final review = Review(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      requestId: widget.request.id,
-      providerId: widget.providerId,
-      reviewerId: currentUser.id,
+    final created = await reviewProvider.submitReview(
+      bookingId: widget.bookingId,
       rating: _rating,
       comment: _commentController.text.trim(),
-      createdAt: DateTime.now(),
     );
 
-    reviewProvider.addReview(review);
-    requestProvider.updateStatus(widget.request.id, RequestStatus.completed);
+    if (created == null) {
+      final message = reviewProvider.errorMessage ?? 'Failed to submit review.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Review submitted')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Review submitted')));
     Navigator.pop(context);
   }
 
