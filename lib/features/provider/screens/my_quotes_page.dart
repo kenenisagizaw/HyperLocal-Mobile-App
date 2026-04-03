@@ -214,13 +214,14 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                               ),
                               const SizedBox(height: 8),
                             ],
-                            Row(
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
                               children: [
                                 _buildInfoChip(
                                   icon: Icons.category_rounded,
                                   label: request?.category ?? 'Unknown',
                                 ),
-                                const SizedBox(width: 12),
                                 _buildInfoChip(
                                   icon: Icons.access_time_rounded,
                                   label: formatNotificationTime(q.createdAt),
