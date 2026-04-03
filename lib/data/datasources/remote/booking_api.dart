@@ -41,7 +41,7 @@ class BookingApi {
   }) async {
     final dio = await _dioFuture;
     final response = await dio.get(
-      ApiConstants.bookings,
+      ApiConstants.bookingsMine,
       queryParameters: {
         if (status != null && status.isNotEmpty) 'status': status,
         if (take != null) 'take': take,
