@@ -348,8 +348,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                             MaterialPageRoute(
                                               builder: (_) =>
                                                   BookingDetailScreen(
-                                                bookingId: booking.id,
-                                              ),
+                                                    bookingId: booking.id,
+                                                  ),
                                             ),
                                           );
                                           return;
@@ -370,7 +370,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                         size: 16,
                                       ),
                                       label: Text(
-                                        booking == null ? 'Schedule' : 'Booking',
+                                        booking == null
+                                            ? 'Schedule'
+                                            : 'Booking',
                                       ),
                                     )
                                   : ElevatedButton(
