@@ -340,7 +340,39 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                 ],
                               ),
                               trailing: quote.status == QuoteStatus.accepted
-                                  ? _buildAcceptedBadge()
+                                  ? OutlinedButton.icon(
+                                      onPressed: () {
+                                        if (booking != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  BookingDetailScreen(
+                                                bookingId: booking.id,
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                BookingCreationScreen(
+                                                  request: request,
+                                                  quote: quote,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.calendar_month,
+                                        size: 16,
+                                      ),
+                                      label: Text(
+                                        booking == null ? 'Schedule' : 'Booking',
+                                      ),
+                                    )
                                   : ElevatedButton(
                                       onPressed: () async {
                                         if (request.status ==
