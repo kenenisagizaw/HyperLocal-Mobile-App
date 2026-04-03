@@ -204,8 +204,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ReviewScreen(
-                    request: request,
                     providerId: providerUser!.id,
+                    bookingId: booking.id,
                   ),
                 ),
               );
