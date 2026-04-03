@@ -34,6 +34,23 @@ class BookingApi {
     return _parseBooking(response.data);
   }
 
+  Future<List<Booking>> getMyBookings({
+    String? status,
+    int? take,
+    int? skip,
+  }) async {
+    final dio = await _dioFuture;
+    final response = await dio.get(
+      ApiConstants.bookings,
+      queryParameters: {
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (take != null) 'take': take,
+        if (skip != null) 'skip': skip,
+      },
+    );
+    return _parseBookingList(response.data);
+  }
+
   Future<Booking?> updateStatus({
     required String bookingId,
     required String status,
@@ -118,6 +135,15 @@ class BookingApi {
       }
     }
     return const [];
+  }
+
+  List<Booking> _parseBookingList(dynamic data) {
+    final map = _unwrapMap(data);
+    final list = _extractList(map);
+    return list
+        .whereType<Map>()
+        .map((item) => Booking.fromJson(item.cast<String, dynamic>()))
+        .toList();
   }
 
   Map<String, dynamic> _unwrapMap(dynamic data) {
