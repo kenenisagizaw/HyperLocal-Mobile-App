@@ -5,11 +5,13 @@ import 'app.dart';
 import 'data/datasources/remote/booking_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
+import 'data/datasources/remote/review_api.dart';
 import 'data/repositories/booking_repository.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
+import 'data/repositories/review_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/bookings/providers/booking_provider.dart';
 import 'features/customer/providers/customer_directory_provider.dart';
@@ -28,6 +30,7 @@ void main() {
         Provider(create: (_) => RequestApi()),
         Provider(create: (_) => BookingApi()),
         Provider(create: (_) => QuoteApi()),
+        Provider(create: (_) => ReviewApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
         Provider(
@@ -38,6 +41,9 @@ void main() {
         ),
         Provider(
           create: (context) => QuoteRepository(context.read<QuoteApi>()),
+        ),
+        Provider(
+          create: (context) => ReviewRepository(context.read<ReviewApi>()),
         ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
@@ -73,7 +79,13 @@ void main() {
         ),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
-        ChangeNotifierProvider(create: (_) => ReviewProvider()),
+        ChangeNotifierProxyProvider<ReviewRepository, ReviewProvider>(
+          create: (context) =>
+              ReviewProvider(repository: context.read<ReviewRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? ReviewProvider(repository: repository);
+          },
+        ),
         ChangeNotifierProxyProvider<BookingRepository, BookingProvider>(
           create: (context) =>
               BookingProvider(repository: context.read<BookingRepository>()),
