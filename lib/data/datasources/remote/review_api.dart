@@ -17,11 +17,7 @@ class ReviewApi {
     final dio = await _dioFuture;
     final response = await dio.post(
       ApiConstants.reviews,
-      data: {
-        'bookingId': bookingId,
-        'rating': rating,
-        'comment': comment,
-      },
+      data: {'bookingId': bookingId, 'rating': rating, 'comment': comment},
     );
     final map = _unwrapMap(response.data);
     final reviewMap = _extractReviewMap(map);
@@ -78,8 +74,8 @@ class ReviewApi {
     final list = direct is List
         ? direct
         : direct is Map
-            ? (direct['items'] ?? direct['reviews'] ?? direct['data'])
-            : null;
+        ? (direct['items'] ?? direct['reviews'] ?? direct['data'])
+        : null;
     if (list is List) {
       return list
           .whereType<Map>()
