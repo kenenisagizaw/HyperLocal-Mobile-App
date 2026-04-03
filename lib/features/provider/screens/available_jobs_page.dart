@@ -72,6 +72,10 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
     }
 
     final filteredRequests = requests.where((request) {
+      final isOpen = request.status == RequestStatus.pending;
+      if (!isOpen) {
+        return false;
+      }
       final matchesCategory =
           _selectedCategory == 'All' || request.category == _selectedCategory;
       if (!matchesCategory) {
