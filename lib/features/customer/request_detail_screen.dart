@@ -32,6 +32,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<QuoteProvider>().loadQuotesForRequest(widget.request.id);
+      context.read<BookingProvider>().loadMyBookings();
     });
   }
 
@@ -418,6 +419,23 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                                         );
 
                                         if (!mounted) return;
+
+                                        final existingBooking = bookingProvider
+                                            .getBookingForRequest(request.id);
+                                        if (existingBooking != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  BookingDetailScreen(
+                                                    bookingId:
+                                                        existingBooking.id,
+                                                  ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
