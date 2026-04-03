@@ -29,6 +29,31 @@ class BookingProvider extends ChangeNotifier {
     return null;
   }
 
+  Future<List<Booking>> loadMyBookings({
+    String? status,
+    int? take,
+    int? skip,
+  }) async {
+    _setLoading(true);
+    _clearErrors();
+    try {
+      final bookings = await repository.fetchMyBookings(
+        status: status,
+        take: take,
+        skip: skip,
+      );
+      for (final booking in bookings) {
+        _bookings[booking.id] = booking;
+      }
+      return bookings;
+    } on DioException catch (error) {
+      _setError(error);
+      return const [];
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<Booking?> createBooking({
     required String serviceRequestId,
     required String quoteId,
