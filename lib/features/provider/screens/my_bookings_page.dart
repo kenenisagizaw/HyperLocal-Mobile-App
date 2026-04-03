@@ -16,6 +16,15 @@ class MyBookingsPage extends StatefulWidget {
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<BookingProvider>().loadMyBookings();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final bookingProvider = context.watch<BookingProvider>();
     final authProvider = context.watch<AuthProvider>();
@@ -34,7 +43,39 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Bookings')),
-      body: bookings.isEmpty
+      body: bookingProvider.isLoading && bookings.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : bookingProvider.errorMessage != null && bookings.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red.shade300,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      bookingProvider.errorMessage ?? 'Failed to load bookings',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade700),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        context.read<BookingProvider>().loadMyBookings();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : bookings.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -48,7 +89,10 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 ],
               ),
             )
-          : ListView.builder(
+            : RefreshIndicator(
+              onRefresh: () =>
+                context.read<BookingProvider>().loadMyBookings(),
+              child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: bookings.length,
               itemBuilder: (context, index) {
@@ -82,6 +126,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   ),
                 );
               },
+              ),
             ),
     );
   }
