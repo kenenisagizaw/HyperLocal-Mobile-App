@@ -24,6 +24,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<RequestProvider>().loadMyRequests();
+      context.read<BookingProvider>().loadMyBookings();
     });
   }
 
