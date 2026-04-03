@@ -16,4 +16,33 @@ class Review {
   final int rating;
   final String comment;
   final DateTime createdAt;
+
+  factory Review.fromJson(Map<String, dynamic> json) {
+    return Review(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      requestId: (json['requestId'] ?? json['serviceRequestId'] ?? '').toString(),
+      providerId: (json['providerId'] ?? json['provider']?['id'] ?? '').toString(),
+      reviewerId: (json['reviewerId'] ?? json['userId'] ?? '').toString(),
+      rating: _parseRating(json['rating']),
+      comment: (json['comment'] ?? json['message'] ?? '').toString(),
+      createdAt: _parseDate(json['createdAt']),
+    );
+  }
+
+  static int _parseRating(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static DateTime _parseDate(dynamic value) {
+    if (value == null) {
+      return DateTime.now();
+    }
+    return DateTime.tryParse(value.toString()) ?? DateTime.now();
+  }
 }
