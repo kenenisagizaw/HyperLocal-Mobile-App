@@ -89,43 +89,42 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 ],
               ),
             )
-            : RefreshIndicator(
-              onRefresh: () =>
-                context.read<BookingProvider>().loadMyBookings(),
+          : RefreshIndicator(
+              onRefresh: () => context.read<BookingProvider>().loadMyBookings(),
               child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: bookings.length,
-              itemBuilder: (context, index) {
-                final booking = bookings[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    title: Text('Booking #${_shortId(booking.id)}'),
-                    subtitle: Text('Status: ${_statusLabel(booking.status)}'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              BookingDetailScreen(bookingId: booking.id),
+                padding: const EdgeInsets.all(16),
+                itemCount: bookings.length,
+                itemBuilder: (context, index) {
+                  final booking = bookings[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                      );
-                    },
-                  ),
-                );
-              },
+                      ],
+                    ),
+                    child: ListTile(
+                      title: Text('Booking #${_shortId(booking.id)}'),
+                      subtitle: Text('Status: ${_statusLabel(booking.status)}'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                BookingDetailScreen(bookingId: booking.id),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
               ),
             ),
     );
