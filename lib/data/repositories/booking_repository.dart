@@ -49,4 +49,12 @@ class BookingRepository {
       date: date,
     );
   }
+
+  Future<List<Booking>> fetchMyBookings({
+    String? status,
+    int? take,
+    int? skip,
+  }) {
+    return api.getMyBookings(status: status, take: take, skip: skip);
+  }
 }
