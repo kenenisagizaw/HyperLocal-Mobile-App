@@ -89,6 +89,14 @@ class ApiClient {
     return dio;
   }
 
+  static Future<void> clearSession() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final cookieJar = PersistCookieJar(
+      storage: FileStorage('${directory.path}/.cookies/'),
+    );
+    await cookieJar.deleteAll();
+  }
+
   static Future<bool> _refreshAccessToken({
     required CookieJar cookieJar,
     required LocalStorage storage,
@@ -143,7 +151,6 @@ class ApiClient {
     return normalized == 'token revoked' ||
         normalized == 'refresh token revoked' ||
         normalized == 'access token revoked';
-    return false;
   }
 
   static String? _extractMessage(dynamic data) {
