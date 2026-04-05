@@ -8,9 +8,9 @@ import '../bookings/booking_creation_screen.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
+import '../provider/widgets/user_avatar.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
-import '../provider/widgets/user_avatar.dart';
 
 class RequestDetailScreen extends StatefulWidget {
   const RequestDetailScreen({
@@ -279,27 +279,18 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             const SizedBox(height: 10),
             Text(
               quote.message,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
             const SizedBox(height: 8),
             if (quote.estimatedDays != null)
               Text(
                 'ETA: ${quote.estimatedDays} days',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               )
             else if (quote.estimatedTime != null)
               Text(
                 'ETA: ${quote.estimatedTime} hours',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
             const SizedBox(height: 10),
             SizedBox(
@@ -331,9 +322,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => BookingDetailScreen(
-                                bookingId: booking.id,
-                              ),
+                              builder: (_) =>
+                                  BookingDetailScreen(bookingId: booking.id),
                             ),
                           );
                           return;
@@ -391,7 +381,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                         );
 
                         if (!accepted) {
-                          final message = quoteProvider.errorMessage ??
+                          final message =
+                              quoteProvider.errorMessage ??
                               'Failed to accept quote.';
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -412,8 +403,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
                         if (!mounted) return;
 
-                        final existingBooking =
-                            bookingProvider.getBookingForRequest(request.id);
+                        final existingBooking = bookingProvider
+                            .getBookingForRequest(request.id);
                         if (existingBooking != null) {
                           Navigator.push(
                             context,
@@ -512,7 +503,11 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       ),
       child: Text(
         text,
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
@@ -598,4 +593,3 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-
