@@ -54,15 +54,15 @@ class Quote {
       providerId: _asString(
         provider?['id'] ?? provider?['userId'] ?? json['providerId'],
       ),
-      providerPhone: _asString(
-        json['providerPhone'] ?? provider?['phone'],
-      ),
+      providerPhone: _asString(json['providerPhone'] ?? provider?['phone']),
       providerLocation: _asString(
         json['providerLocation'] ?? provider?['location'],
       ),
       providerCity: _asString(provider?['city']),
       providerImage: _asString(
-        json['providerImage'] ?? provider?['avatarUrl'] ?? provider?['profilePicture'],
+        json['providerImage'] ??
+            provider?['avatarUrl'] ??
+            provider?['profilePicture'],
       ),
       status: _parseStatus(statusValue),
       rating: _parseDouble(json['rating'], fallback: 4.5),
