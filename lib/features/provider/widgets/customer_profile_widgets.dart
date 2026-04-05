@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
+import '../../customer/providers/provider_directory_provider.dart';
 import 'user_avatar.dart';
 
 class CustomerProfileCard extends StatelessWidget {
@@ -260,6 +262,317 @@ class CustomerProfileDetailScreen extends StatelessWidget {
   String _formatJoinDate(DateTime? date) {
     if (date == null) return 'Recently';
     return '${date.month}/${date.year}';
+  }
+}
+
+class ProviderProfileDetailScreen extends StatefulWidget {
+  const ProviderProfileDetailScreen({
+    super.key,
+    required this.providerId,
+    this.initialProvider,
+  });
+
+  final String providerId;
+  final UserModel? initialProvider;
+
+  @override
+  State<ProviderProfileDetailScreen> createState() =>
+      _ProviderProfileDetailScreenState();
+}
+
+class _ProviderProfileDetailScreenState
+    extends State<ProviderProfileDetailScreen> {
+  UserModel? _provider;
+  bool _isLoading = true;
+
+  static const _primaryBlue = Color(0xFF2563EB);
+  static const _primaryGreen = Color(0xFF059669);
+
+  @override
+  void initState() {
+    super.initState();
+    _provider = widget.initialProvider;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final directory = context.read<ProviderDirectoryProvider>();
+      final cached = directory.getProviderById(widget.providerId);
+      if (cached != null) {
+        setState(() {
+          _provider = cached;
+          _isLoading = false;
+        });
+        return;
+      }
+      final fetched = await directory.fetchProviderById(widget.providerId);
+      if (!mounted) return;
+      setState(() {
+        _provider = fetched;
+        _isLoading = false;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading && _provider == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_provider == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Provider Profile'),
+          elevation: 0,
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black87,
+        ),
+        body: Center(
+          child: Text(
+            'Provider profile not available.',
+            style: TextStyle(color: Colors.grey.shade600),
+          ),
+        ),
+      );
+    }
+
+    final provider = _provider!;
+    final hasLocation =
+      provider.latitude != null && provider.longitude != null;
+    final hasProviderProfile = _hasProviderProfile(provider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Provider Profile'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _primaryBlue.withValues(alpha: 0.1),
+                    _primaryGreen.withValues(alpha: 0.05),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                children: [
+                  UserAvatar(
+                    name: provider.name,
+                    imagePath: provider.profilePicture,
+                    radius: 42,
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                provider.name,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            if (provider.isVerified)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _primaryGreen.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'Verified',
+                                  style: TextStyle(
+                                    color: _primaryGreen,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          provider.bio ?? 'No bio provided',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            _InfoSection(
+              title: 'Contact Information',
+              children: [
+                _InfoRow(
+                  icon: Icons.phone_rounded,
+                  label: 'Phone',
+                  value: provider.phone,
+                ),
+                _InfoRow(
+                  icon: Icons.email_rounded,
+                  label: 'Email',
+                  value: provider.email ?? 'Not shared',
+                ),
+                _InfoRow(
+                  icon: Icons.location_city_rounded,
+                  label: 'City',
+                  value: provider.city ?? 'Not shared',
+                ),
+                _InfoRow(
+                  icon: Icons.location_on_rounded,
+                  label: 'Location',
+                  value: provider.address ?? provider.location ?? 'Not shared',
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (!hasProviderProfile)
+              _InfoSection(
+                title: 'Provider Details',
+                children: [
+                  _InfoRow(
+                    icon: Icons.info_outline_rounded,
+                    label: 'Status',
+                    value: 'Provider profile not completed yet',
+                  ),
+                ],
+              )
+            else ...[
+              _InfoSection(
+                title: 'Provider Details',
+                children: [
+                  _InfoRow(
+                    icon: Icons.business_center_rounded,
+                    label: 'Business',
+                    value: provider.businessName ?? 'Not shared',
+                  ),
+                  _InfoRow(
+                    icon: Icons.category_rounded,
+                    label: 'Service',
+                    value: provider.serviceCategory ?? 'Not shared',
+                  ),
+                  _InfoRow(
+                    icon: Icons.attach_money_rounded,
+                    label: 'Hourly Rate',
+                    value: provider.hourlyRate == null
+                        ? 'Not set'
+                        : '\$${provider.hourlyRate!.toStringAsFixed(0)}',
+                  ),
+                  _InfoRow(
+                    icon: Icons.star_rounded,
+                    label: 'Rating',
+                    value: provider.rating == null
+                        ? 'Not rated'
+                        : provider.rating!.toStringAsFixed(1),
+                  ),
+                  _InfoRow(
+                    icon: Icons.rate_review_rounded,
+                    label: 'Reviews',
+                    value: provider.totalReviews?.toString() ?? '0',
+                  ),
+                  _InfoRow(
+                    icon: Icons.task_alt_rounded,
+                    label: 'Completed Jobs',
+                    value: provider.completedJobs?.toString() ?? '0',
+                  ),
+                ],
+              ),
+            ],
+            if (hasProviderProfile && hasLocation) ...[
+              const SizedBox(height: 20),
+              const Text(
+                'Location',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 220,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                clipBehavior: Clip.hardEdge,
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: LatLng(
+                      provider.latitude!,
+                      provider.longitude!,
+                    ),
+                    initialZoom: 14,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
+                    ),
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.my_first_app',
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: LatLng(
+                            provider.latitude!,
+                            provider.longitude!,
+                          ),
+                          width: 40,
+                          height: 40,
+                          child: const Icon(
+                            Icons.location_on_rounded,
+                            color: Colors.red,
+                            size: 40,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _hasProviderProfile(UserModel provider) {
+    return (provider.businessName?.isNotEmpty ?? false) ||
+        (provider.serviceCategory?.isNotEmpty ?? false) ||
+        provider.hourlyRate != null ||
+        provider.portfolioUrls.isNotEmpty ||
+        provider.certificationsUrls.isNotEmpty;
   }
 }
 
