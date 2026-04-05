@@ -10,10 +10,12 @@ class Quote {
   final String? providerId;
   final String? providerPhone;
   final String? providerLocation;
+  final String? providerCity;
   final String? providerImage;
   final double rating;
   final DateTime createdAt;
   final QuoteStatus status;
+  final int? estimatedDays;
 
   Quote({
     required this.id,
@@ -22,9 +24,11 @@ class Quote {
     required this.price,
     required this.message,
     this.estimatedTime,
+    this.estimatedDays,
     this.providerId,
     this.providerPhone,
     this.providerLocation,
+    this.providerCity,
     this.providerImage,
     this.status = QuoteStatus.pending,
     double? rating,
@@ -36,24 +40,29 @@ class Quote {
 
   factory Quote.fromJson(Map<String, dynamic> json) {
     final statusValue = json['status'];
+    final provider = json['provider'];
     return Quote(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       requestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
           .toString(),
-      providerName: (json['providerName'] ?? json['provider']?['name'] ?? '')
+      providerName: (json['providerName'] ?? provider?['name'] ?? '')
           .toString(),
       price: _parseDouble(json['price'] ?? json['amount']),
       message: (json['message'] ?? json['notes'] ?? '').toString(),
       estimatedTime: _parseInt(json['estimatedTime'] ?? json['eta']),
-      providerId: _asString(json['providerId'] ?? json['provider']?['id']),
+      estimatedDays: _parseInt(json['estimatedDays']),
+      providerId: _asString(
+        provider?['id'] ?? provider?['userId'] ?? json['providerId'],
+      ),
       providerPhone: _asString(
-        json['providerPhone'] ?? json['provider']?['phone'],
+        json['providerPhone'] ?? provider?['phone'],
       ),
       providerLocation: _asString(
-        json['providerLocation'] ?? json['provider']?['location'],
+        json['providerLocation'] ?? provider?['location'],
       ),
+      providerCity: _asString(provider?['city']),
       providerImage: _asString(
-        json['providerImage'] ?? json['provider']?['profilePicture'],
+        json['providerImage'] ?? provider?['avatarUrl'] ?? provider?['profilePicture'],
       ),
       status: _parseStatus(statusValue),
       rating: _parseDouble(json['rating'], fallback: 4.5),
@@ -69,9 +78,11 @@ class Quote {
       'price': price,
       'message': message,
       'estimatedTime': estimatedTime,
+      'estimatedDays': estimatedDays,
       'providerId': providerId,
       'providerPhone': providerPhone,
       'providerLocation': providerLocation,
+      'providerCity': providerCity,
       'providerImage': providerImage,
       'status': status.name.toUpperCase(),
       'rating': rating,
