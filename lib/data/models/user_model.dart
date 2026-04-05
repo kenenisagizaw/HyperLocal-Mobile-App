@@ -65,7 +65,8 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final roleValue = json['role'];
-    final providerProfile = json['providerProfile'] ?? json['provider']?['providerProfile'];
+    final providerProfile =
+        json['providerProfile'] ?? json['provider']?['providerProfile'];
     UserRole role = UserRole.customer;
 
     if (roleValue is String) {
@@ -104,22 +105,24 @@ class UserModel {
       name: (json['name'] ?? '').toString(),
       phone: (json['phone'] ?? '').toString(),
       email: json['email']?.toString(),
-        profilePicture: avatarUrl?.toString(),
-        city: cityValue?.toString(),
+      profilePicture: avatarUrl?.toString(),
+      city: cityValue?.toString(),
       address: json['address']?.toString(),
       bio: json['bio']?.toString(),
-        rating: ratingValue is num ? ratingValue.toDouble() : null,
-        totalReviews: totalReviewsValue is num ? totalReviewsValue.toInt() : null,
-        completedJobs:
-          completedJobsValue is num ? completedJobsValue.toInt() : null,
-        businessName: providerProfile?['businessName']?.toString(),
-        hourlyRate: providerProfile?['hourlyRate'] is num
+      rating: ratingValue is num ? ratingValue.toDouble() : null,
+      totalReviews: totalReviewsValue is num ? totalReviewsValue.toInt() : null,
+      completedJobs: completedJobsValue is num
+          ? completedJobsValue.toInt()
+          : null,
+      businessName: providerProfile?['businessName']?.toString(),
+      hourlyRate: providerProfile?['hourlyRate'] is num
           ? (providerProfile?['hourlyRate'] as num).toDouble()
           : null,
-        serviceCategory: providerProfile?['serviceCategory']?.toString(),
-        portfolioUrls: _parseStringList(providerProfile?['portfolioUrls']),
-        certificationsUrls:
-          _parseStringList(providerProfile?['certificationsUrls']),
+      serviceCategory: providerProfile?['serviceCategory']?.toString(),
+      portfolioUrls: _parseStringList(providerProfile?['portfolioUrls']),
+      certificationsUrls: _parseStringList(
+        providerProfile?['certificationsUrls'],
+      ),
       nationalId: json['nationalId']?.toString(),
       businessLicense: json['businessLicense']?.toString(),
       educationDocument: json['educationDocument']?.toString(),
