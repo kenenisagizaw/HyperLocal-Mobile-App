@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/api_constants.dart';
+
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
     super.key,
@@ -18,11 +20,12 @@ class UserAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasImage = imagePath != null && imagePath!.isNotEmpty;
     final initials = _getInitials(name);
+    final imageProvider = hasImage ? _resolveImage(imagePath!) : null;
 
     return CircleAvatar(
       radius: radius,
       backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.1),
-      backgroundImage: hasImage ? FileImage(File(imagePath!)) : null,
+      backgroundImage: imageProvider,
       child: hasImage
           ? null
           : Text(
@@ -34,6 +37,21 @@ class UserAvatar extends StatelessWidget {
               ),
             ),
     );
+  }
+
+  ImageProvider? _resolveImage(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    final uri = Uri.tryParse(trimmed);
+    if (uri != null && uri.hasScheme) {
+      return NetworkImage(trimmed);
+    }
+    if (trimmed.startsWith('/')) {
+      return NetworkImage('${ApiConstants.baseUrl}$trimmed');
+    }
+    return FileImage(File(trimmed));
   }
 }
 
