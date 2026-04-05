@@ -73,27 +73,37 @@ class CustomerProfileCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.phone_rounded,
-                            size: 14, color: Colors.grey.shade500),
+                        Icon(
+                          Icons.phone_rounded,
+                          size: 14,
+                          color: Colors.grey.shade500,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           customer!.phone,
                           style: TextStyle(
-                              color: Colors.grey.shade600, fontSize: 13),
+                            color: Colors.grey.shade600,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        Icon(Icons.location_on_rounded,
-                            size: 14, color: Colors.grey.shade500),
+                        Icon(
+                          Icons.location_on_rounded,
+                          size: 14,
+                          color: Colors.grey.shade500,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             customer!.address ?? 'Address not set',
                             style: TextStyle(
-                                color: Colors.grey.shade600, fontSize: 13),
+                              color: Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -181,17 +191,20 @@ class CustomerProfileDetailScreen extends StatelessWidget {
               title: 'Contact Information',
               children: [
                 _InfoRow(
-                    icon: Icons.phone_rounded,
-                    label: 'Phone',
-                    value: customer.phone),
+                  icon: Icons.phone_rounded,
+                  label: 'Phone',
+                  value: customer.phone,
+                ),
                 _InfoRow(
-                    icon: Icons.email_rounded,
-                    label: 'Email',
-                    value: customer.email ?? 'Not shared'),
+                  icon: Icons.email_rounded,
+                  label: 'Email',
+                  value: customer.email ?? 'Not shared',
+                ),
                 _InfoRow(
-                    icon: Icons.location_on_rounded,
-                    label: 'Address',
-                    value: customer.address ?? 'Not shared'),
+                  icon: Icons.location_on_rounded,
+                  label: 'Address',
+                  value: customer.address ?? 'Not shared',
+                ),
               ],
             ),
             if (hasLocation) ...[
@@ -315,9 +328,7 @@ class _ProviderProfileDetailScreenState
   @override
   Widget build(BuildContext context) {
     if (_isLoading && _provider == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (_provider == null) {
@@ -338,8 +349,7 @@ class _ProviderProfileDetailScreenState
     }
 
     final provider = _provider!;
-    final hasLocation =
-      provider.latitude != null && provider.longitude != null;
+    final hasLocation = provider.latitude != null && provider.longitude != null;
     final hasProviderProfile = _hasProviderProfile(provider);
 
     return Scaffold(
@@ -577,10 +587,7 @@ class _ProviderProfileDetailScreenState
 }
 
 class _InfoSection extends StatelessWidget {
-  const _InfoSection({
-    required this.title,
-    required this.children,
-  });
+  const _InfoSection({required this.title, required this.children});
 
   final String title;
   final List<Widget> children;
