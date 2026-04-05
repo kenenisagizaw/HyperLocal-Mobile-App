@@ -42,6 +42,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login({required String email, required String password}) async {
     return _runAuthAction(() async {
       await _ensureRepository();
+      await ApiClient.clearSession();
       final user = await _repository!.login(email: email, password: password);
       await _ensureTokenStored();
       currentUser = user;
@@ -59,6 +60,7 @@ class AuthProvider extends ChangeNotifier {
   }) async {
     return _runAuthAction(() async {
       await _ensureRepository();
+      await ApiClient.clearSession();
       final user = await _repository!.register(
         name: name,
         email: email,
@@ -76,6 +78,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     await _ensureRepository();
     await _repository!.logout();
+    await ApiClient.clearSession();
     currentUser = null;
     notifyListeners();
   }
@@ -150,6 +153,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> loginWithGoogle({required String idToken, String? role}) async {
     return _runAuthAction(() async {
       await _ensureRepository();
+      await ApiClient.clearSession();
       final user = await _repository!.loginWithGoogle(
         idToken: idToken,
         role: role,
