@@ -7,9 +7,10 @@ import '../../data/models/service_request_model.dart';
 import '../bookings/booking_creation_screen.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
-import 'providers/provider_directory_provider.dart';
+import '../provider/widgets/customer_profile_widgets.dart';
 import 'providers/quote_provider.dart';
 import 'providers/request_provider.dart';
+import '../provider/widgets/user_avatar.dart';
 
 class RequestDetailScreen extends StatefulWidget {
   const RequestDetailScreen({
@@ -38,482 +39,521 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final providerDirectory = context.watch<ProviderDirectoryProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
     final requestProvider = context.watch<RequestProvider>();
     final bookingProvider = context.watch<BookingProvider>();
-    final quotes = quoteProvider.getQuotesForRequest(widget.request.id);
+
     final request = widget.request;
-    final booking = bookingProvider.getBookingForRequest(widget.request.id);
+    final booking = bookingProvider.getBookingForRequest(request.id);
+    final quotes = quoteProvider.getQuotesForRequest(request.id);
+    final effectiveQuotes = quotes.isEmpty ? widget.initialQuotes : quotes;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF1E3A8A), // Deep blue
         title: const Text(
           'Request Details',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 22),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade600, Colors.green.shade600],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
+        elevation: 0,
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.white, Colors.green.shade50],
+        decoration: _buildBackgroundGradient(),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildRequestSummaryCard(request),
+                const SizedBox(height: 18),
+                Text(
+                  'Quotes (${effectiveQuotes.length})',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (quoteProvider.isLoading && effectiveQuotes.isEmpty)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.blue.shade600,
+                        ),
+                      ),
+                    ),
+                  )
+                else if (effectiveQuotes.isEmpty)
+                  _buildEmptyQuotes()
+                else
+                  Column(
+                    children: effectiveQuotes
+                        .map(
+                          (quote) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildQuoteCard(
+                              context,
+                              quote,
+                              request: request,
+                              booking: booking,
+                              quoteProvider: quoteProvider,
+                              requestProvider: requestProvider,
+                              bookingProvider: bookingProvider,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+              ],
+            ),
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+  }
+
+  Widget _buildRequestSummaryCard(ServiceRequest request) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1E3A8A).withOpacity(0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // Category Header with Gradient
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF1E3A8A),
-                      Color(0xFF2563EB),
-                    ], // Blue gradient
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF1E3A8A).withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      request.title,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      request.category,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              Text(
-                request.description,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Details Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _DetailRow(
-                      label: '📍 Location',
-                      value: request.location,
-                      icon: Icons.location_on,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(height: 1, color: Colors.grey),
-                    ),
-                    _DetailRow(
-                      label: '💰 Budget',
-                      value: request.budget == null
-                          ? 'Not set'
-                          : '\$${request.budget!.toStringAsFixed(0)}',
-                      icon: Icons.attach_money,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 20),
-              if (booking != null) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              BookingDetailScreen(bookingId: booking.id),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.calendar_month),
-                    label: const Text('View Booking'),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Quotes Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.format_quote,
-                      color: Colors.green.shade700,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Quotes',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Color(0xFF1E3A8A),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Quotes List
               Expanded(
-                child: quoteProvider.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : quotes.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inbox,
-                              size: 60,
-                              color: Colors.green.shade200,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'No quotes yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: quotes.length,
-                        padding: const EdgeInsets.only(bottom: 20),
-                        itemBuilder: (context, index) {
-                          final quote = quotes[index];
-                          final provider = quote.providerId == null
-                              ? null
-                              : providerDirectory.getProviderById(
-                                  quote.providerId!,
-                                );
-                          final providerName =
-                              provider?.name ?? quote.providerName;
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.white, Colors.green.shade50],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(16),
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.green.shade100,
-                                child: Text(
-                                  providerName.isNotEmpty
-                                      ? providerName[0].toUpperCase()
-                                      : '?',
-                                  style: TextStyle(
-                                    color: Colors.green.shade700,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                providerName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Color(0xFF1E3A8A),
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    quote.message,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (quote.estimatedTime != null)
-                                    Text(
-                                      'ETA: ${quote.estimatedTime} hours',
-                                      style: TextStyle(
-                                        color: Colors.grey.shade600,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  if (quote.estimatedTime != null)
-                                    const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.shade100,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      '\$${quote.price.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green.shade700,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              trailing: quote.status == QuoteStatus.accepted
-                                  ? OutlinedButton.icon(
-                                      onPressed: () {
-                                        if (booking != null) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  BookingDetailScreen(
-                                                    bookingId: booking.id,
-                                                  ),
-                                            ),
-                                          );
-                                          return;
-                                        }
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                BookingCreationScreen(
-                                                  request: request,
-                                                  quote: quote,
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.calendar_month,
-                                        size: 16,
-                                      ),
-                                      label: Text(
-                                        booking == null
-                                            ? 'Schedule'
-                                            : 'Booking',
-                                      ),
-                                    )
-                                  : ElevatedButton(
-                                      onPressed: () async {
-                                        if (request.status ==
-                                                RequestStatus.accepted ||
-                                            request.status ==
-                                                RequestStatus.completed ||
-                                            request.status ==
-                                                RequestStatus.cancelled) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: const Text(
-                                                'This request can no longer accept quotes.',
-                                              ),
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          );
-                                          return;
-                                        }
-
-                                        if (quote.status !=
-                                            QuoteStatus.pending) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: const Text(
-                                                'Only pending quotes can be accepted.',
-                                              ),
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          );
-                                          return;
-                                        }
-
-                                        final accepted = await quoteProvider
-                                            .acceptQuote(
-                                              requestId: request.id,
-                                              quoteId: quote.id,
-                                            );
-
-                                        if (!accepted) {
-                                          final message =
-                                              quoteProvider.errorMessage ??
-                                              'Failed to accept quote.';
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(message),
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                            ),
-                                          );
-                                          return;
-                                        }
-
-                                        requestProvider.updateStatus(
-                                          request.id,
-                                          RequestStatus.accepted,
-                                        );
-
-                                        if (!mounted) return;
-
-                                        final existingBooking = bookingProvider
-                                            .getBookingForRequest(request.id);
-                                        if (existingBooking != null) {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  BookingDetailScreen(
-                                                    bookingId:
-                                                        existingBooking.id,
-                                                  ),
-                                            ),
-                                          );
-                                          return;
-                                        }
-
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                BookingCreationScreen(
-                                                  request: request,
-                                                  quote: quote,
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF1E3A8A,
-                                        ), // Deep blue
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text('Accept'),
-                                          SizedBox(width: 4),
-                                          Icon(Icons.arrow_forward, size: 16),
-                                        ],
-                                      ),
-                                    ),
-                            ),
-                          );
-                        },
-                      ),
+                child: Text(
+                  request.title,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E3A8A),
+                  ),
+                ),
               ),
+              const SizedBox(width: 8),
+              _buildStatusPill(request.status),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            request.description,
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          _DetailRow(
+            label: 'Category',
+            value: request.category.isEmpty ? 'N/A' : request.category,
+            icon: Icons.category_outlined,
+          ),
+          const SizedBox(height: 10),
+          _DetailRow(
+            label: 'Location',
+            value: request.location.isEmpty ? 'N/A' : request.location,
+            icon: Icons.location_on_outlined,
+          ),
+          const SizedBox(height: 10),
+          _DetailRow(
+            label: 'Budget',
+            value: request.budget == null
+                ? 'Not set'
+                : '\$${request.budget!.toStringAsFixed(2)}',
+            icon: Icons.attach_money,
+          ),
+          const SizedBox(height: 10),
+          _DetailRow(
+            label: 'Created',
+            value: _formatDate(request.createdAt),
+            icon: Icons.schedule,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuoteCard(
+    BuildContext context,
+    Quote quote, {
+    required ServiceRequest request,
+    required BookingProvider bookingProvider,
+    required QuoteProvider quoteProvider,
+    required RequestProvider requestProvider,
+    required dynamic booking,
+  }) {
+    final providerName = quote.providerName.isEmpty
+        ? 'Service Provider'
+        : quote.providerName;
+    final providerCity = quote.providerCity;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                UserAvatar(
+                  name: providerName,
+                  imagePath: quote.providerImage,
+                  radius: 26,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        providerName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF1E3A8A),
+                        ),
+                      ),
+                      if (providerCity != null && providerCity.isNotEmpty)
+                        Text(
+                          providerCity,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '\$${quote.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              quote.message,
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (quote.estimatedDays != null)
+              Text(
+                'ETA: ${quote.estimatedDays} days',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+              )
+            else if (quote.estimatedTime != null)
+              Text(
+                'ETA: ${quote.estimatedTime} hours',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                ),
+              ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: quote.providerId == null
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProviderProfileDetailScreen(
+                              providerId: quote.providerId!,
+                            ),
+                          ),
+                        );
+                      },
+                icon: const Icon(Icons.person_outline),
+                label: const Text('View Provider Profile'),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: quote.status == QuoteStatus.accepted
+                  ? OutlinedButton.icon(
+                      onPressed: () {
+                        if (booking != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookingDetailScreen(
+                                bookingId: booking.id,
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingCreationScreen(
+                              request: request,
+                              quote: quote,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_month, size: 16),
+                      label: Text(booking == null ? 'Schedule' : 'Booking'),
+                    )
+                  : ElevatedButton(
+                      onPressed: () async {
+                        if (request.status == RequestStatus.accepted ||
+                            request.status == RequestStatus.completed ||
+                            request.status == RequestStatus.cancelled) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'This request can no longer accept quotes.',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        if (quote.status != QuoteStatus.pending) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'Only pending quotes can be accepted.',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final accepted = await quoteProvider.acceptQuote(
+                          requestId: request.id,
+                          quoteId: quote.id,
+                        );
+
+                        if (!accepted) {
+                          final message = quoteProvider.errorMessage ??
+                              'Failed to accept quote.';
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(message),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        requestProvider.updateStatus(
+                          request.id,
+                          RequestStatus.accepted,
+                        );
+
+                        if (!mounted) return;
+
+                        final existingBooking =
+                            bookingProvider.getBookingForRequest(request.id);
+                        if (existingBooking != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookingDetailScreen(
+                                bookingId: existingBooking.id,
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingCreationScreen(
+                              request: request,
+                              quote: quote,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E3A8A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Accept'),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward, size: 16),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyQuotes() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.request_quote, color: Colors.blue.shade400),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'No quotes yet. Providers will respond soon.',
+              style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusPill(RequestStatus status) {
+    final color = _getStatusColor(status);
+    final text = _getStatusText(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color),
+      ),
+    );
+  }
+
+  Color _getStatusColor(RequestStatus status) {
+    switch (status) {
+      case RequestStatus.pending:
+        return Colors.orange.shade600;
+      case RequestStatus.quoted:
+        return Colors.purple.shade600;
+      case RequestStatus.accepted:
+        return Colors.blue.shade600;
+      case RequestStatus.completed:
+        return Colors.green.shade600;
+      case RequestStatus.cancelled:
+        return Colors.red.shade600;
+    }
+  }
+
+  String _getStatusText(RequestStatus status) {
+    return status
+        .toString()
+        .split('.')
+        .last
+        .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
+        .trim();
+  }
+
+  String _formatDate(DateTime value) {
+    final date = value.toLocal();
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  BoxDecoration _buildBackgroundGradient() {
+    return BoxDecoration(
+      gradient: LinearGradient(
+        colors: [Colors.blue.shade50, Colors.green.shade50],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
       ),
     );
   }
@@ -559,23 +599,3 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-Widget _buildAcceptedBadge() {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    decoration: BoxDecoration(
-      color: Colors.green.shade600,
-      borderRadius: BorderRadius.circular(30),
-    ),
-    child: const Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.check_circle, color: Colors.white, size: 16),
-        SizedBox(width: 6),
-        Text(
-          'Accepted',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        ),
-      ],
-    ),
-  );
-}
