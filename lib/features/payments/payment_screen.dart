@@ -145,15 +145,15 @@ class PaymentSuccessScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: quote.providerId == null
+                onPressed: quote.providerId == null || bookingId == null
                     ? null
                     : () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => ReviewScreen(
-                              request: request,
                               providerId: quote.providerId!,
+                              bookingId: bookingId!,
                             ),
                           ),
                         );
