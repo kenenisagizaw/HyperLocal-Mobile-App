@@ -33,7 +33,9 @@ class Booking {
       quoteId: (json['quoteId'] ?? '').toString(),
       customerId: _asString(json['customerId'] ?? json['userId']),
       providerId: _asString(
-        json['provider']?['id'] ?? json['provider']?['userId'] ?? json['providerId'],
+        json['provider']?['id'] ??
+            json['provider']?['userId'] ??
+            json['providerId'],
       ),
       address: _asString(json['address'] ?? json['location']),
       scheduledAt: _parseDateOrNull(
