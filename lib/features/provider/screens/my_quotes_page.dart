@@ -490,6 +490,17 @@ class QuoteDetailScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       _buildDetailItem(
+                        icon: Icons.title_rounded,
+                        label: 'Title',
+                        value: request!.title.isEmpty
+                            ? request!.category
+                            : request!.title,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                      ),
+                      _buildDetailItem(
                         icon: Icons.work_outline_rounded,
                         label: 'Category',
                         value: request!.category,
@@ -598,7 +609,10 @@ class QuoteDetailScreen extends StatelessWidget {
             _buildSection(
               title: 'Customer',
               icon: Icons.person_outline_rounded,
-              child: CustomerProfileCard(customer: customer),
+              child: CustomerProfileCard(
+                customer: customer,
+                customerId: request?.customerId,
+              ),
             ),
             const SizedBox(height: 20),
             if (quote.status == QuoteStatus.pending)
