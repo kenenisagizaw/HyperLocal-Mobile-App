@@ -123,10 +123,10 @@ class UserModel {
           ? (providerProfile?['hourlyRate'] as num).toDouble()
           : null,
       serviceCategory: providerProfile?['serviceCategory']?.toString(),
-        serviceRadius: providerProfile?['serviceRadius'] is num
+      serviceRadius: providerProfile?['serviceRadius'] is num
           ? (providerProfile?['serviceRadius'] as num).toDouble()
           : null,
-        availabilityStatus: providerProfile?['availabilityStatus']?.toString(),
+      availabilityStatus: providerProfile?['availabilityStatus']?.toString(),
       portfolioUrls: _parseStringList(providerProfile?['portfolioUrls']),
       certificationsUrls: _parseStringList(
         providerProfile?['certificationsUrls'],
