@@ -181,7 +181,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    request.category,
+                    request.title.isEmpty ? request.category : request.title,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -278,7 +278,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            CustomerProfileCard(customer: customer),
+            CustomerProfileCard(
+              customer: customer,
+              customerId: request.customerId,
+            ),
             const SizedBox(height: 20),
             const Text(
               'Send Quote',
