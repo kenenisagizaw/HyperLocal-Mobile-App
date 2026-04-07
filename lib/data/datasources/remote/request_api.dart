@@ -3,12 +3,14 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_client.dart';
+import '../local/local_storage.dart';
 import '../../models/service_request_model.dart';
 
 class RequestApi {
   RequestApi() : _dioFuture = ApiClient.create();
 
   final Future<Dio> _dioFuture;
+  final LocalStorage _storage = LocalStorage();
 
   Future<ServiceRequest> createRequest({
     required String title,
@@ -48,6 +50,7 @@ class RequestApi {
       final response = await dio.post(
         ApiConstants.serviceRequests,
         data: formData,
+        options: await _authOptions(),
       );
       return _parseRequest(response.data);
     }
@@ -55,6 +58,7 @@ class RequestApi {
     final response = await dio.post(
       ApiConstants.serviceRequests,
       data: payload,
+      options: await _authOptions(),
     );
     return _parseRequest(response.data);
   }
@@ -69,6 +73,7 @@ class RequestApi {
     final dio = await _dioFuture;
     final response = await dio.get(
       ApiConstants.serviceRequests,
+      options: await _authOptions(),
       queryParameters: {
         if (category != null && category.isNotEmpty) 'category': category,
         if (city != null && city.isNotEmpty) 'city': city,
@@ -82,14 +87,28 @@ class RequestApi {
 
   Future<List<ServiceRequest>> getMyRequests() async {
     final dio = await _dioFuture;
-    final response = await dio.get(ApiConstants.serviceRequestsMine);
+    final response = await dio.get(
+      ApiConstants.serviceRequestsMine,
+      options: await _authOptions(),
+    );
     return _parseRequestList(response.data);
   }
 
   Future<ServiceRequest> getRequestById(String id) async {
     final dio = await _dioFuture;
-    final response = await dio.get('${ApiConstants.serviceRequests}/$id');
+    final response = await dio.get(
+      '${ApiConstants.serviceRequests}/$id',
+      options: await _authOptions(),
+    );
     return _parseRequest(response.data);
+  }
+
+  Future<Options?> _authOptions() async {
+    final token = await _storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   ServiceRequest _parseRequest(dynamic data) {
