@@ -9,11 +9,7 @@ import '../../customer/providers/provider_directory_provider.dart';
 import 'user_avatar.dart';
 
 class CustomerProfileCard extends StatefulWidget {
-  const CustomerProfileCard({
-    super.key,
-    this.customer,
-    this.customerId,
-  });
+  const CustomerProfileCard({super.key, this.customer, this.customerId});
 
   final UserModel? customer;
   final String? customerId;
