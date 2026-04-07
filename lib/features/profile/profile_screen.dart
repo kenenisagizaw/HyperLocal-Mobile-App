@@ -280,14 +280,15 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         _hourlyRateController.text.trim().isNotEmpty ||
         _serviceRadiusController.text.trim().isNotEmpty ||
         _availabilityController.text.trim().isNotEmpty ||
-      _addressController.text.trim().isNotEmpty ||
+        _addressController.text.trim().isNotEmpty ||
         portfolioUrls.isNotEmpty ||
         certificationUrls.isNotEmpty;
 
     if (needsProviderUpdate) {
       final hourlyRate = double.tryParse(_hourlyRateController.text.trim());
-      final serviceRadius =
-          double.tryParse(_serviceRadiusController.text.trim());
+      final serviceRadius = double.tryParse(
+        _serviceRadiusController.text.trim(),
+      );
       final providerSuccess = await authProvider.updateProviderProfileRemote(
         businessName: _businessNameController.text.trim().isEmpty
             ? null
@@ -301,8 +302,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             ? null
             : _availabilityController.text.trim(),
         address: _addressController.text.trim().isEmpty
-          ? null
-          : _addressController.text.trim(),
+            ? null
+            : _addressController.text.trim(),
         latitude: _providerLocation?.latitude,
         longitude: _providerLocation?.longitude,
         portfolioUrls: portfolioUrls.isNotEmpty ? portfolioUrls : null,
@@ -416,10 +417,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         value: value,
         items: _availabilityOptions
             .map(
-              (option) => DropdownMenuItem(
-                value: option,
-                child: Text(option),
-              ),
+              (option) => DropdownMenuItem(value: option, child: Text(option)),
             )
             .toList(),
         onChanged: enabled
@@ -476,8 +474,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     _addressController.text = user.address ?? '';
     _businessNameController.text = user.businessName ?? '';
     _serviceCategoryController.text = user.serviceCategory ?? '';
-    _hourlyRateController.text =
-        user.hourlyRate == null ? '' : user.hourlyRate!.toStringAsFixed(0);
+    _hourlyRateController.text = user.hourlyRate == null
+        ? ''
+        : user.hourlyRate!.toStringAsFixed(0);
     _serviceRadiusController.text = user.serviceRadius == null
         ? ''
         : user.serviceRadius!.toStringAsFixed(0);
