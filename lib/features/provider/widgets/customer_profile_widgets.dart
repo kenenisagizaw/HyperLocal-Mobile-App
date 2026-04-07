@@ -4,17 +4,73 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
+import '../../customer/providers/customer_directory_provider.dart';
 import '../../customer/providers/provider_directory_provider.dart';
 import 'user_avatar.dart';
 
-class CustomerProfileCard extends StatelessWidget {
-  const CustomerProfileCard({super.key, required this.customer});
+class CustomerProfileCard extends StatefulWidget {
+  const CustomerProfileCard({
+    super.key,
+    this.customer,
+    this.customerId,
+  });
 
   final UserModel? customer;
+  final String? customerId;
+
+  @override
+  State<CustomerProfileCard> createState() => _CustomerProfileCardState();
+}
+
+class _CustomerProfileCardState extends State<CustomerProfileCard> {
+  UserModel? _customer;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _customer = widget.customer;
+    _isLoading = widget.customer == null && widget.customerId != null;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || widget.customer != null || widget.customerId == null) {
+        if (mounted && _isLoading) {
+          setState(() => _isLoading = false);
+        }
+        return;
+      }
+      final directory = context.read<CustomerDirectoryProvider>();
+      final cached = directory.getCustomerById(widget.customerId!);
+      if (cached != null) {
+        setState(() {
+          _customer = cached;
+          _isLoading = false;
+        });
+        return;
+      }
+      final fetched = await directory.fetchCustomerById(widget.customerId!);
+      if (!mounted) return;
+      setState(() {
+        _customer = fetched;
+        _isLoading = false;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (customer == null) {
+    if (_isLoading && _customer == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_customer == null) {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -25,6 +81,8 @@ class CustomerProfileCard extends StatelessWidget {
         child: const Text('Customer profile not available.'),
       );
     }
+
+    final customer = _customer!;
 
     return Container(
       decoration: BoxDecoration(
@@ -44,7 +102,7 @@ class CustomerProfileCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => CustomerProfileDetailScreen(customer: customer!),
+              builder: (_) => CustomerProfileDetailScreen(customer: customer),
             ),
           );
         },
@@ -54,8 +112,8 @@ class CustomerProfileCard extends StatelessWidget {
           child: Row(
             children: [
               UserAvatar(
-                name: customer!.name,
-                imagePath: customer!.profilePicture,
+                name: customer.name,
+                imagePath: customer.profilePicture,
                 radius: 30,
               ),
               const SizedBox(width: 16),
@@ -64,7 +122,7 @@ class CustomerProfileCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      customer!.name,
+                      customer.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -80,7 +138,7 @@ class CustomerProfileCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          customer!.phone,
+                          customer.phone,
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 13,
@@ -99,7 +157,7 @@ class CustomerProfileCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            customer!.address ?? 'Address not set',
+                            customer.address ?? 'Address not set',
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 13,
@@ -493,6 +551,18 @@ class _ProviderProfileDetailScreenState
                         : '\$${provider.hourlyRate!.toStringAsFixed(0)}',
                   ),
                   _InfoRow(
+                    icon: Icons.place_rounded,
+                    label: 'Service Radius',
+                    value: provider.serviceRadius == null
+                        ? 'Not set'
+                        : '${provider.serviceRadius!.toStringAsFixed(0)} km',
+                  ),
+                  _InfoRow(
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Availability',
+                    value: provider.availabilityStatus ?? 'Not shared',
+                  ),
+                  _InfoRow(
                     icon: Icons.star_rounded,
                     label: 'Rating',
                     value: provider.rating == null
@@ -581,6 +651,8 @@ class _ProviderProfileDetailScreenState
     return (provider.businessName?.isNotEmpty ?? false) ||
         (provider.serviceCategory?.isNotEmpty ?? false) ||
         provider.hourlyRate != null ||
+        provider.serviceRadius != null ||
+        (provider.availabilityStatus?.isNotEmpty ?? false) ||
         provider.portfolioUrls.isNotEmpty ||
         provider.certificationsUrls.isNotEmpty;
   }
