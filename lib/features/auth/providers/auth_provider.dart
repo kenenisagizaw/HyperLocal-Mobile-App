@@ -226,6 +226,7 @@ class AuthProvider extends ChangeNotifier {
     num? hourlyRate,
     num? serviceRadius,
     String? availabilityStatus,
+    String? address,
     double? latitude,
     double? longitude,
     List<String>? portfolioUrls,
@@ -242,6 +243,7 @@ class AuthProvider extends ChangeNotifier {
         if (serviceRadius != null) 'serviceRadius': serviceRadius,
         if (availabilityStatus != null && availabilityStatus.isNotEmpty)
           'availabilityStatus': availabilityStatus,
+        if (address != null && address.isNotEmpty) 'address': address,
         if (latitude != null) 'latitude': latitude,
         if (longitude != null) 'longitude': longitude,
         if (portfolioUrls != null && portfolioUrls.isNotEmpty)
