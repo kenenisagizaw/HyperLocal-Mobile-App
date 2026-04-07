@@ -2,12 +2,14 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_client.dart';
+import '../local/local_storage.dart';
 import '../../models/booking_model.dart';
 
 class BookingApi {
   BookingApi() : _dioFuture = ApiClient.create();
 
   final Future<Dio> _dioFuture;
+  final LocalStorage _storage = LocalStorage();
 
   Future<Booking> createBooking({
     required String serviceRequestId,
@@ -24,13 +26,17 @@ class BookingApi {
         if (scheduledAt != null) 'scheduledAt': scheduledAt.toIso8601String(),
         if (address != null && address.isNotEmpty) 'address': address,
       },
+      options: await _authOptions(),
     );
     return _parseBooking(response.data);
   }
 
   Future<Booking> getBookingById(String id) async {
     final dio = await _dioFuture;
-    final response = await dio.get('${ApiConstants.bookings}/$id');
+    final response = await dio.get(
+      '${ApiConstants.bookings}/$id',
+      options: await _authOptions(),
+    );
     return _parseBooking(response.data);
   }
 
@@ -42,6 +48,7 @@ class BookingApi {
     final dio = await _dioFuture;
     final response = await dio.get(
       ApiConstants.bookingsMine,
+      options: await _authOptions(),
       queryParameters: {
         if (status != null && status.isNotEmpty) 'status': status,
         if (take != null) 'take': take,
@@ -59,6 +66,7 @@ class BookingApi {
     final response = await dio.patch(
       '${ApiConstants.bookings}/$bookingId/status',
       data: {'status': status},
+      options: await _authOptions(),
     );
     return _tryParseBooking(response.data);
   }
@@ -71,6 +79,7 @@ class BookingApi {
     final response = await dio.patch(
       '${ApiConstants.bookings}/$bookingId/cancel',
       data: {'reason': reason},
+      options: await _authOptions(),
     );
     return _tryParseBooking(response.data);
   }
@@ -83,6 +92,7 @@ class BookingApi {
     final dio = await _dioFuture;
     final response = await dio.get(
       ApiConstants.bookingSlots,
+      options: await _authOptions(),
       queryParameters: {
         if (providerId != null) 'providerId': providerId,
         if (serviceId != null) 'serviceId': serviceId,
@@ -154,6 +164,14 @@ class BookingApi {
       return data.cast<String, dynamic>();
     }
     return <String, dynamic>{};
+  }
+
+  Future<Options?> _authOptions() async {
+    final token = await _storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   String _formatDate(DateTime date) {
