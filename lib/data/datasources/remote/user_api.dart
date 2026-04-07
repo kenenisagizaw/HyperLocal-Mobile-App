@@ -45,6 +45,11 @@ class UserApi {
     return _asMap(response.data);
   }
 
+  Future<Map<String, dynamic>> getUserById(String id) async {
+    final response = await _dio.get('${ApiConstants.users}/$id');
+    return _asMap(response.data);
+  }
+
   Map<String, String> _authHeaders(String token) {
     return {'Authorization': 'Bearer $token'};
   }
