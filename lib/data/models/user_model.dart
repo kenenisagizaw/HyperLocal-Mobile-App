@@ -20,6 +20,8 @@ class UserModel {
   final String? businessName;
   final double? hourlyRate;
   final String? serviceCategory;
+  final double? serviceRadius;
+  final String? availabilityStatus;
   final List<String> portfolioUrls;
   final List<String> certificationsUrls;
 
@@ -51,6 +53,8 @@ class UserModel {
     this.businessName,
     this.hourlyRate,
     this.serviceCategory,
+    this.serviceRadius,
+    this.availabilityStatus,
     this.portfolioUrls = const [],
     this.certificationsUrls = const [],
     this.nationalId,
@@ -103,7 +107,7 @@ class UserModel {
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       role: role,
       name: (json['name'] ?? '').toString(),
-      phone: (json['phone'] ?? '').toString(),
+      phone: (json['phone'] ?? json['phoneNumber'] ?? '').toString(),
       email: json['email']?.toString(),
       profilePicture: avatarUrl?.toString(),
       city: cityValue?.toString(),
@@ -119,6 +123,10 @@ class UserModel {
           ? (providerProfile?['hourlyRate'] as num).toDouble()
           : null,
       serviceCategory: providerProfile?['serviceCategory']?.toString(),
+        serviceRadius: providerProfile?['serviceRadius'] is num
+          ? (providerProfile?['serviceRadius'] as num).toDouble()
+          : null,
+        availabilityStatus: providerProfile?['availabilityStatus']?.toString(),
       portfolioUrls: _parseStringList(providerProfile?['portfolioUrls']),
       certificationsUrls: _parseStringList(
         providerProfile?['certificationsUrls'],
@@ -153,6 +161,8 @@ class UserModel {
       'businessName': businessName,
       'hourlyRate': hourlyRate,
       'serviceCategory': serviceCategory,
+      'serviceRadius': serviceRadius,
+      'availabilityStatus': availabilityStatus,
       'portfolioUrls': portfolioUrls,
       'certificationsUrls': certificationsUrls,
       'nationalId': nationalId,
@@ -181,6 +191,8 @@ class UserModel {
     String? businessName,
     double? hourlyRate,
     String? serviceCategory,
+    double? serviceRadius,
+    String? availabilityStatus,
     List<String>? portfolioUrls,
     List<String>? certificationsUrls,
     String? nationalId,
@@ -208,6 +220,8 @@ class UserModel {
       businessName: businessName ?? this.businessName,
       hourlyRate: hourlyRate ?? this.hourlyRate,
       serviceCategory: serviceCategory ?? this.serviceCategory,
+      serviceRadius: serviceRadius ?? this.serviceRadius,
+      availabilityStatus: availabilityStatus ?? this.availabilityStatus,
       portfolioUrls: portfolioUrls ?? this.portfolioUrls,
       certificationsUrls: certificationsUrls ?? this.certificationsUrls,
       nationalId: nationalId ?? this.nationalId,
