@@ -31,12 +31,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     final user = authProvider.currentUser;
 
     final allBookings = bookingProvider.bookings;
-    final bookings = user == null
-        ? <Booking>[]
-        : allBookings
-            .where((b) => b.providerId == user.id)
-            .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final bookings =
+        user == null
+              ? <Booking>[]
+              : allBookings.where((b) => b.providerId == user.id).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
       appBar: AppBar(title: const Text('My Bookings')),
