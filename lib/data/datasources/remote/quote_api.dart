@@ -2,12 +2,14 @@ import 'package:dio/dio.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_client.dart';
+import '../local/local_storage.dart';
 import '../../models/quote_model.dart';
 
 class QuoteApi {
   QuoteApi() : _dioFuture = ApiClient.create();
 
   final Future<Dio> _dioFuture;
+  final LocalStorage _storage = LocalStorage();
 
   Future<Quote> submitQuote({
     required String serviceRequestId,
@@ -24,6 +26,7 @@ class QuoteApi {
         'message': message,
         'estimatedTime': estimatedTime,
       },
+      options: await _authOptions(),
     );
     return _parseQuote(response.data);
   }
@@ -32,6 +35,7 @@ class QuoteApi {
     final dio = await _dioFuture;
     final response = await dio.get(
       ApiConstants.quotesMine,
+      options: await _authOptions(),
       queryParameters: {
         if (take != null) 'take': take,
         if (skip != null) 'skip': skip,
@@ -44,6 +48,7 @@ class QuoteApi {
     final dio = await _dioFuture;
     final response = await dio.get(
       '${ApiConstants.quotesForRequest}/$serviceRequestId',
+      options: await _authOptions(),
     );
     return _parseQuoteList(response.data);
   }
@@ -56,6 +61,7 @@ class QuoteApi {
     final response = await dio.post(
       '${ApiConstants.quotesAccept}/$requestId/accept',
       data: {'quoteId': quoteId},
+      options: await _authOptions(),
     );
     return _tryParseQuote(response.data);
   }
@@ -68,8 +74,17 @@ class QuoteApi {
     final response = await dio.post(
       '${ApiConstants.quotes}/$quoteId/withdraw',
       data: {'reason': reason},
+      options: await _authOptions(),
     );
     return _tryParseQuote(response.data);
+  }
+
+  Future<Options?> _authOptions() async {
+    final token = await _storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+    return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
   Quote _parseQuote(dynamic data) {
