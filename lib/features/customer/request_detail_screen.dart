@@ -7,6 +7,7 @@ import '../../data/models/service_request_model.dart';
 import '../bookings/booking_creation_screen.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
+import '../customer/providers/provider_directory_provider.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import '../provider/widgets/user_avatar.dart';
 import 'providers/quote_provider.dart';
@@ -27,6 +28,7 @@ class RequestDetailScreen extends StatefulWidget {
 }
 
 class _RequestDetailScreenState extends State<RequestDetailScreen> {
+  final Set<String> _requestedProviderIds = {};
   @override
   void initState() {
     super.initState();
@@ -42,11 +44,14 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     final quoteProvider = context.watch<QuoteProvider>();
     final requestProvider = context.watch<RequestProvider>();
     final bookingProvider = context.watch<BookingProvider>();
+    final providerDirectory = context.watch<ProviderDirectoryProvider>();
 
     final request = widget.request;
     final booking = bookingProvider.getBookingForRequest(request.id);
     final quotes = quoteProvider.getQuotesForRequest(request.id);
     final effectiveQuotes = quotes.isEmpty ? widget.initialQuotes : quotes;
+
+    _prefetchProviders(providerDirectory, effectiveQuotes);
 
     return Scaffold(
       appBar: AppBar(
@@ -123,6 +128,28 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         ),
       ),
     );
+  }
+
+  void _prefetchProviders(
+    ProviderDirectoryProvider providerDirectory,
+    List<Quote> quotes,
+  ) {
+    for (final quote in quotes) {
+      final providerId = quote.providerId;
+      if (providerId == null || providerId.isEmpty) {
+        continue;
+      }
+      if (_requestedProviderIds.contains(providerId)) {
+        continue;
+      }
+      final cached = providerDirectory.getProviderById(providerId);
+      if (cached != null) {
+        _requestedProviderIds.add(providerId);
+        continue;
+      }
+      _requestedProviderIds.add(providerId);
+      providerDirectory.fetchProviderById(providerId);
+    }
   }
 
   Widget _buildRequestSummaryCard(ServiceRequest request) {
