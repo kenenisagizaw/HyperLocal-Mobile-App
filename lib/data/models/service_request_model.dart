@@ -34,23 +34,24 @@ class ServiceRequest {
     final status = _parseStatus(statusValue);
     final latValue = json['latitude'] ?? json['locationLat'] ?? json['lat'];
     final lngValue = json['longitude'] ?? json['locationLng'] ?? json['lng'];
-      final budgetValue = json['budget'] ?? json['budgetMin'];
+    final budgetValue = json['budget'] ?? json['budgetMin'];
     final imagesValue = json['images'] ?? json['photoPaths'] ?? json['photos'];
 
     return ServiceRequest(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
-        customerId: (json['customerId'] ??
-                json['userId'] ??
-                json['customer']?['id'] ??
-                json['customer']?['userId'] ??
-                json['requester']?['id'] ??
-                json['requester']?['userId'] ??
-                json['requestedBy']?['id'] ??
-                json['requestedBy']?['userId'] ??
-                json['user']?['id'] ??
-                json['user']?['userId'] ??
-                '')
-            .toString(),
+      customerId:
+          (json['customerId'] ??
+                  json['userId'] ??
+                  json['customer']?['id'] ??
+                  json['customer']?['userId'] ??
+                  json['requester']?['id'] ??
+                  json['requester']?['userId'] ??
+                  json['requestedBy']?['id'] ??
+                  json['requestedBy']?['userId'] ??
+                  json['user']?['id'] ??
+                  json['user']?['userId'] ??
+                  '')
+              .toString(),
       title: (json['title'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
       category: (json['serviceCategory'] ?? json['category'] ?? '').toString(),
