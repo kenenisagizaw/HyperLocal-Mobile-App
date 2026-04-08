@@ -70,10 +70,11 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final base = _extractBase(json);
     final roleValue = base['role'] ?? json['role'];
-    final providerProfile = base['providerProfile'] ??
-      base['provider']?['providerProfile'] ??
-      json['providerProfile'] ??
-      json['provider']?['providerProfile'];
+    final providerProfile =
+        base['providerProfile'] ??
+        base['provider']?['providerProfile'] ??
+        json['providerProfile'] ??
+        json['provider']?['providerProfile'];
     UserRole role = UserRole.customer;
 
     if (roleValue is String) {
@@ -99,33 +100,40 @@ class UserModel {
     }
 
     final latitudeValue =
-      base['latitude'] ?? providerProfile?['latitude'] ?? json['latitude'];
+        base['latitude'] ?? providerProfile?['latitude'] ?? json['latitude'];
     final longitudeValue =
-      base['longitude'] ?? providerProfile?['longitude'] ?? json['longitude'];
+        base['longitude'] ?? providerProfile?['longitude'] ?? json['longitude'];
     final ratingValue =
-      base['rating'] ?? base['avgRating'] ?? json['rating'] ?? json['avgRating'];
-    final totalReviewsValue = base['totalReviews'] ??
-      base['reviewsCount'] ??
-      json['totalReviews'] ??
-      json['reviewsCount'];
-    final completedJobsValue = base['completedJobs'] ??
-      base['jobsCompleted'] ??
-      json['completedJobs'] ??
-      json['jobsCompleted'];
+        base['rating'] ??
+        base['avgRating'] ??
+        json['rating'] ??
+        json['avgRating'];
+    final totalReviewsValue =
+        base['totalReviews'] ??
+        base['reviewsCount'] ??
+        json['totalReviews'] ??
+        json['reviewsCount'];
+    final completedJobsValue =
+        base['completedJobs'] ??
+        base['jobsCompleted'] ??
+        json['completedJobs'] ??
+        json['jobsCompleted'];
     final avatarUrl = base['avatarUrl'] ?? base['profilePicture'];
     final cityValue = base['city'] ?? providerProfile?['city'];
-    final phoneValue = base['phone'] ??
-      base['phoneNumber'] ??
-      json['phone'] ??
-      json['phoneNumber'] ??
-      json['provider']?['phone'] ??
-      json['provider']?['phoneNumber'] ??
-      json['user']?['phone'] ??
-      json['user']?['phoneNumber'];
+    final phoneValue =
+        base['phone'] ??
+        base['phoneNumber'] ??
+        json['phone'] ??
+        json['phoneNumber'] ??
+        json['provider']?['phone'] ??
+        json['provider']?['phoneNumber'] ??
+        json['user']?['phone'] ??
+        json['user']?['phoneNumber'];
     final emailValue = base['email'] ?? json['email'];
 
     return UserModel(
-      id: (base['id'] ?? base['_id'] ?? json['id'] ?? json['_id'] ?? '').toString(),
+      id: (base['id'] ?? base['_id'] ?? json['id'] ?? json['_id'] ?? '')
+          .toString(),
       role: role,
       name: (base['name'] ?? json['name'] ?? '').toString(),
       phone: (phoneValue ?? '').toString(),
