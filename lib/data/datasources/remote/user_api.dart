@@ -50,6 +50,17 @@ class UserApi {
     return _asMap(response.data);
   }
 
+  Future<Map<String, dynamic>> getPublicProfile({
+    required String id,
+    required String accessToken,
+  }) async {
+    final response = await _dio.get(
+      '${ApiConstants.userPublicProfile}/$id/public-profile',
+      options: Options(headers: _authHeaders(accessToken)),
+    );
+    return _asMap(response.data);
+  }
+
   Map<String, String> _authHeaders(String token) {
     return {'Authorization': 'Bearer $token'};
   }
