@@ -61,7 +61,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                     .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-            _prefetchCustomers(customerDirectory, requestProvider, quotes);
+    _prefetchCustomers(customerDirectory, requestProvider, quotes);
 
     Widget body;
     if (quoteProvider.isLoading && quotes.isEmpty) {
