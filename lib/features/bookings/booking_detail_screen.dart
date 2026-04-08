@@ -25,6 +25,8 @@ class BookingDetailScreen extends StatefulWidget {
 
 class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isSharingLocation = false;
+  String? _requestedProviderId;
+  String? _requestedCustomerId;
 
   @override
   void initState() {
@@ -71,6 +73,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final customerUser = booking.customerId == null
         ? null
         : customerDirectory.getCustomerById(booking.customerId!);
+
+    if (booking.providerId != null && providerUser == null) {
+      _requestProviderProfile(providerDirectory, booking.providerId!);
+    }
+    if (booking.customerId != null && customerUser == null) {
+      _requestCustomerProfile(customerDirectory, booking.customerId!);
+    }
 
     final address = booking.address ?? request?.location ?? 'Not set';
     final priceLabel = quote == null
@@ -153,6 +162,28 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         ),
       ),
     );
+  }
+
+  void _requestProviderProfile(
+    ProviderDirectoryProvider providerDirectory,
+    String providerId,
+  ) {
+    if (_requestedProviderId == providerId) {
+      return;
+    }
+    _requestedProviderId = providerId;
+    providerDirectory.fetchProviderById(providerId);
+  }
+
+  void _requestCustomerProfile(
+    CustomerDirectoryProvider customerDirectory,
+    String customerId,
+  ) {
+    if (_requestedCustomerId == customerId) {
+      return;
+    }
+    _requestedCustomerId = customerId;
+    customerDirectory.fetchCustomerById(customerId);
   }
 
   Widget _buildCustomerActions(
