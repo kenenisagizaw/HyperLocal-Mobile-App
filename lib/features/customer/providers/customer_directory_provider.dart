@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/utils/api_client.dart';
 import '../../../data/datasources/remote/user_api.dart';
+import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/customer_repository.dart';
 
@@ -50,7 +51,10 @@ class CustomerDirectoryProvider extends ChangeNotifier {
     try {
       final dio = await ApiClient.create();
       final api = UserApi(dio);
-      final response = await api.getUserById(id);
+      final token = await LocalStorage().getAccessToken();
+      final response = token != null && token.isNotEmpty
+          ? await api.getPublicProfile(id: id, accessToken: token)
+          : await api.getUserById(id);
       final payload = _unwrapData(response);
       final userJson = _extractUser(payload) ?? _extractUser(response);
       if (userJson == null) {
