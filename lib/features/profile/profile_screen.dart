@@ -506,10 +506,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         value: value,
         items: _serviceCategoryOptions
             .map(
-              (option) => DropdownMenuItem(
-                value: option,
-                child: Text(option),
-              ),
+              (option) => DropdownMenuItem(value: option, child: Text(option)),
             )
             .toList(),
         onChanged: enabled
