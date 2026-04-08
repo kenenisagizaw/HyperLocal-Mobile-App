@@ -21,6 +21,7 @@ class AvailableJobsPage extends StatefulWidget {
 class _AvailableJobsPageState extends State<AvailableJobsPage> {
   String _selectedCategory = 'All';
   double _maxDistanceKm = 25;
+  final Set<String> _requestedCustomerIds = {};
 
   static const _primaryBlue = Color(0xFF2563EB);
   static const _primaryGreen = Color(0xFF059669);
@@ -94,6 +95,8 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
 
       return distanceKm <= _maxDistanceKm;
     }).toList();
+
+    _prefetchCustomers(customerDirectory, filteredRequests);
 
     Widget body;
     if (requests.isEmpty) {
@@ -417,6 +420,28 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       child: body,
     );
+  }
+
+  void _prefetchCustomers(
+    CustomerDirectoryProvider customerDirectory,
+    List<ServiceRequest> requests,
+  ) {
+    for (final request in requests) {
+      final customerId = request.customerId;
+      if (customerId.isEmpty) {
+        continue;
+      }
+      if (_requestedCustomerIds.contains(customerId)) {
+        continue;
+      }
+      final cached = customerDirectory.getCustomerById(customerId);
+      if (cached != null) {
+        _requestedCustomerIds.add(customerId);
+        continue;
+      }
+      _requestedCustomerIds.add(customerId);
+      customerDirectory.fetchCustomerById(customerId);
+    }
   }
 
   void _openJobDetail(
