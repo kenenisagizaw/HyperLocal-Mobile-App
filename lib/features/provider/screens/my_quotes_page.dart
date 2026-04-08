@@ -28,6 +28,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
   static const _surfaceColor = Color(0xFFF8FAFC);
   static const _textPrimary = Color(0xFF1E293B);
   static const _textSecondary = Color(0xFF64748B);
+  final Set<String> _requestedCustomerIds = {};
 
   @override
   void initState() {
@@ -59,6 +60,8 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                     )
                     .toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            _prefetchCustomers(customerDirectory, requestProvider, quotes);
 
     Widget body;
     if (quoteProvider.isLoading && quotes.isEmpty) {
@@ -259,6 +262,33 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
       backgroundColor: _surfaceColor,
       body: body,
     );
+  }
+
+  void _prefetchCustomers(
+    CustomerDirectoryProvider customerDirectory,
+    RequestProvider requestProvider,
+    List<Quote> quotes,
+  ) {
+    for (final quote in quotes) {
+      final request = requestProvider.requests
+          .where((r) => r.id == quote.requestId)
+          .cast<ServiceRequest?>()
+          .firstWhere((r) => r != null, orElse: () => null);
+      final customerId = request?.customerId;
+      if (customerId == null || customerId.isEmpty) {
+        continue;
+      }
+      if (_requestedCustomerIds.contains(customerId)) {
+        continue;
+      }
+      final cached = customerDirectory.getCustomerById(customerId);
+      if (cached != null) {
+        _requestedCustomerIds.add(customerId);
+        continue;
+      }
+      _requestedCustomerIds.add(customerId);
+      customerDirectory.fetchCustomerById(customerId);
+    }
   }
 
   Widget _buildInfoChip({required IconData icon, required String label}) {
