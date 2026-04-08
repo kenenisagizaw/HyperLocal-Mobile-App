@@ -68,9 +68,12 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    final roleValue = json['role'];
-    final providerProfile =
-        json['providerProfile'] ?? json['provider']?['providerProfile'];
+    final base = _extractBase(json);
+    final roleValue = base['role'] ?? json['role'];
+    final providerProfile = base['providerProfile'] ??
+      base['provider']?['providerProfile'] ??
+      json['providerProfile'] ??
+      json['provider']?['providerProfile'];
     UserRole role = UserRole.customer;
 
     if (roleValue is String) {
@@ -95,24 +98,42 @@ class UserModel {
       role = UserRole.provider;
     }
 
-    final latitudeValue = json['latitude'] ?? providerProfile?['latitude'];
-    final longitudeValue = json['longitude'] ?? providerProfile?['longitude'];
-    final ratingValue = json['rating'] ?? json['avgRating'];
-    final totalReviewsValue = json['totalReviews'] ?? json['reviewsCount'];
-    final completedJobsValue = json['completedJobs'] ?? json['jobsCompleted'];
-    final avatarUrl = json['avatarUrl'] ?? json['profilePicture'];
-    final cityValue = json['city'] ?? providerProfile?['city'];
+    final latitudeValue =
+      base['latitude'] ?? providerProfile?['latitude'] ?? json['latitude'];
+    final longitudeValue =
+      base['longitude'] ?? providerProfile?['longitude'] ?? json['longitude'];
+    final ratingValue =
+      base['rating'] ?? base['avgRating'] ?? json['rating'] ?? json['avgRating'];
+    final totalReviewsValue = base['totalReviews'] ??
+      base['reviewsCount'] ??
+      json['totalReviews'] ??
+      json['reviewsCount'];
+    final completedJobsValue = base['completedJobs'] ??
+      base['jobsCompleted'] ??
+      json['completedJobs'] ??
+      json['jobsCompleted'];
+    final avatarUrl = base['avatarUrl'] ?? base['profilePicture'];
+    final cityValue = base['city'] ?? providerProfile?['city'];
+    final phoneValue = base['phone'] ??
+      base['phoneNumber'] ??
+      json['phone'] ??
+      json['phoneNumber'] ??
+      json['provider']?['phone'] ??
+      json['provider']?['phoneNumber'] ??
+      json['user']?['phone'] ??
+      json['user']?['phoneNumber'];
+    final emailValue = base['email'] ?? json['email'];
 
     return UserModel(
-      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      id: (base['id'] ?? base['_id'] ?? json['id'] ?? json['_id'] ?? '').toString(),
       role: role,
-      name: (json['name'] ?? '').toString(),
-      phone: (json['phone'] ?? json['phoneNumber'] ?? '').toString(),
-      email: json['email']?.toString(),
+      name: (base['name'] ?? json['name'] ?? '').toString(),
+      phone: (phoneValue ?? '').toString(),
+      email: emailValue?.toString(),
       profilePicture: avatarUrl?.toString(),
       city: cityValue?.toString(),
-      address: json['address']?.toString(),
-      bio: json['bio']?.toString(),
+      address: base['address']?.toString(),
+      bio: base['bio']?.toString(),
       rating: ratingValue is num ? ratingValue.toDouble() : null,
       totalReviews: totalReviewsValue is num ? totalReviewsValue.toInt() : null,
       completedJobs: completedJobsValue is num
@@ -131,17 +152,29 @@ class UserModel {
       certificationsUrls: _parseStringList(
         providerProfile?['certificationsUrls'],
       ),
-      nationalId: json['nationalId']?.toString(),
-      businessLicense: json['businessLicense']?.toString(),
-      educationDocument: json['educationDocument']?.toString(),
-      location: json['location']?.toString(),
+      nationalId: base['nationalId']?.toString(),
+      businessLicense: base['businessLicense']?.toString(),
+      educationDocument: base['educationDocument']?.toString(),
+      location: base['location']?.toString(),
       latitude: latitudeValue is num ? latitudeValue.toDouble() : null,
       longitude: longitudeValue is num ? longitudeValue.toDouble() : null,
-      isVerified: json['isVerified'] == true,
-      createdAt: json['createdAt'] != null
-          ? DateTime.tryParse(json['createdAt'].toString())
+      isVerified: base['isVerified'] == true,
+      createdAt: base['createdAt'] != null
+          ? DateTime.tryParse(base['createdAt'].toString())
           : null,
     );
+  }
+
+  static Map<String, dynamic> _extractBase(Map<String, dynamic> json) {
+    final user = json['user'];
+    if (user is Map) {
+      return user.cast<String, dynamic>();
+    }
+    final provider = json['provider'];
+    if (provider is Map) {
+      return provider.cast<String, dynamic>();
+    }
+    return json;
   }
 
   Map<String, dynamic> toJson() {
