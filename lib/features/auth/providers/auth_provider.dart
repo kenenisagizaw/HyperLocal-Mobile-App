@@ -221,6 +221,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<bool> updateProviderProfileRemote({
+    String? phoneNumber,
     String? businessName,
     String? serviceCategory,
     num? hourlyRate,
@@ -235,6 +236,8 @@ class AuthProvider extends ChangeNotifier {
     return _runAuthAction(() async {
       await _ensureProfileRepository();
       final payload = <String, dynamic>{
+        if (phoneNumber != null && phoneNumber.isNotEmpty)
+          'phoneNumber': phoneNumber,
         if (businessName != null && businessName.isNotEmpty)
           'businessName': businessName,
         if (serviceCategory != null && serviceCategory.isNotEmpty)
