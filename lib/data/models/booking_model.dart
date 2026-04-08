@@ -31,7 +31,14 @@ class Booking {
       serviceRequestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
           .toString(),
       quoteId: (json['quoteId'] ?? '').toString(),
-      customerId: _asString(json['customerId'] ?? json['userId']),
+      customerId: _asString(
+        json['customerId'] ??
+        json['userId'] ??
+        json['customer']?['id'] ??
+        json['customer']?['userId'] ??
+        json['user']?['id'] ??
+        json['user']?['userId'],
+      ),
       providerId: _asString(
         json['provider']?['id'] ??
             json['provider']?['userId'] ??
