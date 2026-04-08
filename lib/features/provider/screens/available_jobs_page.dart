@@ -343,39 +343,46 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.person_outline_rounded,
-                                          size: 16,
-                                          color: Colors.grey.shade500,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          customer?.name ?? req.customerId,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: 13,
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.person_outline_rounded,
+                                            size: 16,
+                                            color: Colors.grey.shade500,
                                           ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Icon(
-                                          Icons.attach_money_rounded,
-                                          size: 16,
-                                          color: Colors.grey.shade500,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          req.budget == null
-                                              ? 'Not set'
-                                              : '\$${req.budget!.toStringAsFixed(0)}',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: 13,
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              customer?.name ?? req.customerId,
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 13,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 12),
+                                          Icon(
+                                            Icons.attach_money_rounded,
+                                            size: 16,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            req.budget == null
+                                                ? 'Not set'
+                                                : '\$${req.budget!.toStringAsFixed(0)}',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                    const SizedBox(width: 8),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: isDisabled
