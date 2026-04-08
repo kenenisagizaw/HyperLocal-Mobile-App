@@ -48,6 +48,9 @@ class CustomerDirectoryProvider extends ChangeNotifier {
   }
 
   Future<UserModel?> fetchCustomerById(String id) async {
+    if (id.trim().isEmpty) {
+      return null;
+    }
     try {
       final dio = await ApiClient.create();
       final api = UserApi(dio);
