@@ -30,6 +30,14 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     'INACTIVE',
     'SUSPENDED',
   ];
+  static const List<String> _serviceCategoryOptions = [
+    'Plumbing',
+    'Electrical',
+    'Painting',
+    'Carpentry',
+    'Cleaning',
+    'Other',
+  ];
 
   // Controllers
   final _nameController = TextEditingController();
@@ -290,6 +298,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         _serviceRadiusController.text.trim(),
       );
       final providerSuccess = await authProvider.updateProviderProfileRemote(
+        phoneNumber: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
         businessName: _businessNameController.text.trim().isEmpty
             ? null
             : _businessNameController.text.trim(),
@@ -468,7 +479,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
 
   void _applyProviderToControllers(UserModel user) {
     _nameController.text = user.name;
-    _phoneController.text = user.phone;
+    if (user.phone.trim().isNotEmpty || _phoneController.text.trim().isEmpty) {
+      _phoneController.text = user.phone;
+    }
     _emailController.text = user.email ?? '';
     _bioController.text = user.bio ?? '';
     _addressController.text = user.address ?? '';
@@ -481,6 +494,54 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         ? ''
         : user.serviceRadius!.toStringAsFixed(0);
     _availabilityController.text = user.availabilityStatus ?? '';
+  }
+
+  Widget _buildServiceCategoryDropdown({required bool enabled}) {
+    final current = _serviceCategoryController.text.trim();
+    final value = _serviceCategoryOptions.contains(current) ? current : null;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        items: _serviceCategoryOptions
+            .map(
+              (option) => DropdownMenuItem(
+                value: option,
+                child: Text(option),
+              ),
+            )
+            .toList(),
+        onChanged: enabled
+            ? (next) {
+                _serviceCategoryController.text = next ?? '';
+              }
+            : null,
+        decoration: InputDecoration(
+          prefixIcon: const Icon(Icons.category, color: Colors.blue),
+          labelText: 'Service Category',
+          labelStyle: const TextStyle(color: Colors.grey),
+          filled: true,
+          fillColor: Colors.grey.shade50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.blue, width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+      ),
+    );
   }
 
   // ---------------- Build ----------------
@@ -696,12 +757,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       Icons.business_center,
                       enabled: _isEditing,
                     ),
-                    _buildTextField(
-                      _serviceCategoryController,
-                      'Service Category',
-                      Icons.category,
-                      enabled: _isEditing,
-                    ),
+                    _buildServiceCategoryDropdown(enabled: _isEditing),
                     _buildTextField(
                       _hourlyRateController,
                       'Hourly Rate',
