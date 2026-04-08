@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/api_client.dart';
-import '../../../data/datasources/remote/user_api.dart';
 import '../../../data/datasources/local/local_storage.dart';
+import '../../../data/datasources/remote/user_api.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/repositories/customer_repository.dart';
 
