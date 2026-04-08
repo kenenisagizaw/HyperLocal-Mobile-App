@@ -39,14 +39,15 @@ class ServiceRequest {
 
     return ServiceRequest(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
-        customerId: (json['customerId'] ??
-            json['userId'] ??
-            json['customer']?['id'] ??
-            json['customer']?['userId'] ??
-            json['user']?['id'] ??
-            json['user']?['userId'] ??
-            '')
-          .toString(),
+      customerId:
+          (json['customerId'] ??
+                  json['userId'] ??
+                  json['customer']?['id'] ??
+                  json['customer']?['userId'] ??
+                  json['user']?['id'] ??
+                  json['user']?['userId'] ??
+                  '')
+              .toString(),
       title: (json['title'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
       category: (json['serviceCategory'] ?? json['category'] ?? '').toString(),
