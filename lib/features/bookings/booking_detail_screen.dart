@@ -66,6 +66,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
 
     final request = _findRequest(requestProvider.requests, booking);
+    if (request == null && booking.serviceRequestId.isNotEmpty) {
+      requestProvider.fetchRequestById(booking.serviceRequestId);
+    }
     final quote = quoteProvider.getQuoteById(booking.quoteId);
     final providerUser = booking.providerId == null
         ? null
