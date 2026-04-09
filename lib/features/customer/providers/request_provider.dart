@@ -102,6 +102,31 @@ class RequestProvider extends ChangeNotifier {
     }
   }
 
+  Future<ServiceRequest?> fetchRequestById(String id) async {
+    if (id.isEmpty) return null;
+    _isLoading = true;
+    errorMessage = null;
+    lastStatusCode = null;
+    notifyListeners();
+    try {
+      final request = await repository.fetchRequestById(id);
+      final index = _requests.indexWhere((r) => r.id == id);
+      if (index == -1) {
+        _requests = [request, ..._requests];
+      } else {
+        _requests[index] = request;
+      }
+      return request;
+    } on DioException catch (error) {
+      lastStatusCode = error.response?.statusCode;
+      errorMessage = _extractErrorMessage(error);
+      return null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   String? _extractErrorMessage(DioException error) {
     final data = error.response?.data;
     if (data is Map<String, dynamic>) {
