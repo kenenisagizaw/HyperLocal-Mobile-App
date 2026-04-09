@@ -33,6 +33,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   final TextEditingController _estimatedTimeController =
       TextEditingController();
 
+  ServiceRequest? _detailRequest;
+
   static const _primaryBlue = Color(0xFF2563EB);
   static const _primaryGreen = Color(0xFF059669);
 
@@ -42,6 +44,23 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     _notesController.dispose();
     _estimatedTimeController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _detailRequest = widget.request;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final requestProvider = context.read<RequestProvider>();
+      final refreshed = await requestProvider.fetchRequestById(
+        widget.request.id,
+      );
+      if (!mounted || refreshed == null) return;
+      setState(() {
+        _detailRequest = refreshed;
+      });
+    });
   }
 
   Future<void> _submitQuote() async {
@@ -147,7 +166,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final request = widget.request;
+    final request = _detailRequest ?? widget.request;
     final customer = widget.customer;
     final hasLocation =
         request.locationLat != null && request.locationLng != null;
