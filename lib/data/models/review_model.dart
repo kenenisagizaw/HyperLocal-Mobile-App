@@ -27,34 +27,37 @@ class Review {
 
     return Review(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
-      requestId: (json['requestId'] ??
-          json['serviceRequestId'] ??
-          json['bookingId'] ??
-          booking?['requestId'] ??
-          booking?['serviceRequestId'] ??
-          '')
-        .toString(),
-      providerId: (json['providerId'] ??
-          json['providerUserId'] ??
-          json['receiverId'] ??
-          provider?['id'] ??
-          provider?['_id'] ??
-          provider?['providerId'] ??
-          provider?['userId'] ??
-          providerUser?['id'] ??
-          providerUser?['_id'] ??
-          providerUser?['userId'] ??
-          '')
-        .toString(),
-      reviewerId: (json['reviewerId'] ??
-          json['userId'] ??
-          json['customerId'] ??
-          json['authorId'] ??
-          reviewer?['id'] ??
-          reviewer?['_id'] ??
-          reviewer?['userId'] ??
-          '')
-        .toString(),
+      requestId:
+          (json['requestId'] ??
+                  json['serviceRequestId'] ??
+                  json['bookingId'] ??
+                  booking?['requestId'] ??
+                  booking?['serviceRequestId'] ??
+                  '')
+              .toString(),
+      providerId:
+          (json['providerId'] ??
+                  json['providerUserId'] ??
+                  json['receiverId'] ??
+                  provider?['id'] ??
+                  provider?['_id'] ??
+                  provider?['providerId'] ??
+                  provider?['userId'] ??
+                  providerUser?['id'] ??
+                  providerUser?['_id'] ??
+                  providerUser?['userId'] ??
+                  '')
+              .toString(),
+      reviewerId:
+          (json['reviewerId'] ??
+                  json['userId'] ??
+                  json['customerId'] ??
+                  json['authorId'] ??
+                  reviewer?['id'] ??
+                  reviewer?['_id'] ??
+                  reviewer?['userId'] ??
+                  '')
+              .toString(),
       rating: _parseRating(json['rating']),
       comment: (json['comment'] ?? json['message'] ?? '').toString(),
       createdAt: _parseDate(json['createdAt']),
