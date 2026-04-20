@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'data/datasources/remote/booking_api.dart';
+import 'data/datasources/remote/message_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
 import 'data/repositories/booking_repository.dart';
 import 'data/repositories/customer_repository.dart';
+import 'data/repositories/message_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
@@ -31,6 +33,7 @@ void main() {
         Provider(create: (_) => BookingApi()),
         Provider(create: (_) => QuoteApi()),
         Provider(create: (_) => ReviewApi()),
+        Provider(create: (_) => MessageApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
         Provider(
@@ -44,6 +47,10 @@ void main() {
         ),
         Provider(
           create: (context) => ReviewRepository(context.read<ReviewApi>()),
+        ),
+        Provider(
+          create: (context) =>
+              MessageRepository(context.read<MessageApi>()),
         ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
@@ -77,7 +84,13 @@ void main() {
                 CustomerDirectoryProvider(repository: repository);
           },
         ),
-        ChangeNotifierProvider(create: (_) => MessageProvider()),
+        ChangeNotifierProxyProvider<MessageRepository, MessageProvider>(
+          create: (context) =>
+              MessageProvider(repository: context.read<MessageRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? MessageProvider(repository: repository);
+          },
+        ),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProxyProvider<ReviewRepository, ReviewProvider>(
           create: (context) =>
