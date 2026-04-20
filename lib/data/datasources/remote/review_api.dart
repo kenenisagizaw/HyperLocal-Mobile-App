@@ -71,16 +71,16 @@ class ReviewApi {
 
   List<Review> _extractReviewList(Map<String, dynamic> map) {
     final data = map['data'] is Map<String, dynamic>
-      ? map['data'] as Map<String, dynamic>
-      : map['data'] is Map
-      ? (map['data'] as Map).cast<String, dynamic>()
-      : null;
+        ? map['data'] as Map<String, dynamic>
+        : map['data'] is Map
+        ? (map['data'] as Map).cast<String, dynamic>()
+        : null;
     final direct = map['reviews'] ?? map['items'] ?? map['data'];
     final list = direct is List
-      ? direct
-      : direct is Map
-      ? (direct['items'] ?? direct['reviews'] ?? direct['data'])
-      : data?['reviews'] ?? data?['items'] ?? data?['data'];
+        ? direct
+        : direct is Map
+        ? (direct['items'] ?? direct['reviews'] ?? direct['data'])
+        : data?['reviews'] ?? data?['items'] ?? data?['data'];
     if (list is List) {
       return list
           .whereType<Map>()
@@ -96,7 +96,8 @@ class ReviewApi {
         : map['data'] is Map
         ? (map['data'] as Map).cast<String, dynamic>()
         : null;
-    final value = map['averageRating'] ??
+    final value =
+        map['averageRating'] ??
         map['avgRating'] ??
         map['rating'] ??
         data?['averageRating'] ??
@@ -114,7 +115,8 @@ class ReviewApi {
         : map['data'] is Map
         ? (map['data'] as Map).cast<String, dynamic>()
         : null;
-    final pagination = map['pagination'] ??
+    final pagination =
+        map['pagination'] ??
         map['meta'] ??
         map['page'] ??
         data?['pagination'] ??
