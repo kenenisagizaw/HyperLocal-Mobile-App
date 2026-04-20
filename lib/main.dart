@@ -49,8 +49,7 @@ void main() {
           create: (context) => ReviewRepository(context.read<ReviewApi>()),
         ),
         Provider(
-          create: (context) =>
-              MessageRepository(context.read<MessageApi>()),
+          create: (context) => MessageRepository(context.read<MessageApi>()),
         ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
