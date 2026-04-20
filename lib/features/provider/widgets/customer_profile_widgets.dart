@@ -4,8 +4,12 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/user_model.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/customer_directory_provider.dart';
 import '../../customer/providers/provider_directory_provider.dart';
+import '../../messages/messages_screen.dart';
+import '../../reviews/provider_reviews_screen.dart';
+import '../../reviews/providers/review_provider.dart';
 import 'user_avatar.dart';
 
 class CustomerProfileCard extends StatefulWidget {
@@ -186,6 +190,9 @@ class CustomerProfileDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasLocation = customer.latitude != null && customer.longitude != null;
+    final currentUser = context.read<AuthProvider>().currentUser;
+    final canMessage =
+        currentUser != null && currentUser.id != customer.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -240,6 +247,37 @@ class CustomerProfileDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
+            if (canMessage) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MessageThreadScreen(
+                          conversationId: null,
+                          otherUserId: customer.id,
+                          otherUserName: customer.name,
+                          otherUser: customer,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline_rounded),
+                  label: const Text('Message'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: _primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             _InfoSection(
               title: 'Contact Information',
@@ -361,6 +399,10 @@ class _ProviderProfileDetailScreenState
     _provider = widget.initialProvider;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      context.read<ReviewProvider>().loadProviderReviews(
+        providerId: widget.providerId,
+        take: 10,
+      );
       final directory = context.read<ProviderDirectoryProvider>();
       final cached = directory.getProviderById(widget.providerId);
       if (cached != null) {
@@ -405,6 +447,12 @@ class _ProviderProfileDetailScreenState
     final provider = _provider!;
     final hasLocation = provider.latitude != null && provider.longitude != null;
     final hasProviderProfile = _hasProviderProfile(provider);
+    final reviewProvider = context.watch<ReviewProvider>();
+    final reviews = reviewProvider.getReviewsForProvider(provider.id);
+    final averageRating = reviewProvider.averageRating;
+    final currentUser = context.read<AuthProvider>().currentUser;
+    final canMessage =
+      currentUser != null && currentUser.id != provider.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -488,6 +536,37 @@ class _ProviderProfileDetailScreenState
               ),
             ),
             const SizedBox(height: 20),
+            if (canMessage) ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MessageThreadScreen(
+                          conversationId: null,
+                          otherUserId: provider.id,
+                          otherUserName: provider.name,
+                          otherUser: provider,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline_rounded),
+                  label: const Text('Message'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: _primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
             _InfoSection(
               title: 'Contact Information',
               children: [
@@ -561,14 +640,16 @@ class _ProviderProfileDetailScreenState
                   _InfoRow(
                     icon: Icons.star_rounded,
                     label: 'Rating',
-                    value: provider.rating == null
+                    value: reviews.isEmpty
                         ? 'Not rated'
-                        : provider.rating!.toStringAsFixed(1),
+                        : averageRating.toStringAsFixed(1),
                   ),
                   _InfoRow(
                     icon: Icons.rate_review_rounded,
                     label: 'Reviews',
-                    value: provider.totalReviews?.toString() ?? '0',
+                    value: reviews.isEmpty
+                        ? '0'
+                        : reviews.length.toString(),
                   ),
                   _InfoRow(
                     icon: Icons.task_alt_rounded,
@@ -578,6 +659,59 @@ class _ProviderProfileDetailScreenState
                 ],
               ),
             ],
+            const SizedBox(height: 20),
+            _InfoSection(
+              title: 'Recent Reviews',
+              children: reviews.isEmpty
+                  ? [
+                      const Text('No reviews yet.'),
+                    ]
+                  : reviews
+                      .take(5)
+                      .map(
+                        (review) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.star,
+                                size: 16,
+                                color: Colors.amber.shade600,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${review.rating}/5 - ${review.comment}',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: reviews.isEmpty
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProviderReviewsScreen(
+                              providerId: provider.id,
+                              providerName: provider.name,
+                            ),
+                          ),
+                        );
+                      },
+                icon: const Icon(Icons.list_alt_rounded),
+                label: const Text('See all reviews'),
+              ),
+            ),
             if (hasProviderProfile && hasLocation) ...[
               const SizedBox(height: 20),
               const Text(
