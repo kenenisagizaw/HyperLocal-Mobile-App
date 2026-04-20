@@ -21,7 +21,8 @@ class Conversation {
     final updatedAt = _parseDate(json['updatedAt'] ?? json['lastMessageAt']);
 
     return Conversation(
-      id: (json['id'] ?? json['_id'] ?? json['conversationId'] ?? '').toString(),
+      id: (json['id'] ?? json['_id'] ?? json['conversationId'] ?? '')
+          .toString(),
       participantIds: participants,
       lastMessage: lastMessage,
       unreadCount: _parseInt(
@@ -42,7 +43,10 @@ class Conversation {
 
   static List<String> _extractParticipants(Map<String, dynamic> json) {
     final raw =
-        json['participants'] ?? json['members'] ?? json['users'] ?? json['user'];
+        json['participants'] ??
+        json['members'] ??
+        json['users'] ??
+        json['user'];
     if (raw is List) {
       return raw
           .map((item) {
@@ -59,7 +63,8 @@ class Conversation {
   }
 
   static Message? _extractLastMessage(Map<String, dynamic> json) {
-    final data = json['lastMessage'] ?? json['message'] ?? json['latestMessage'];
+    final data =
+        json['lastMessage'] ?? json['message'] ?? json['latestMessage'];
     if (data is Map<String, dynamic>) {
       return Message.fromJson(data);
     }
