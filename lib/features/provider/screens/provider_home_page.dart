@@ -8,6 +8,7 @@ import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
+import '../../reviews/provider_reviews_screen.dart';
 import '../../reviews/providers/review_provider.dart';
 import '../utils/formatters.dart';
 
@@ -83,14 +84,8 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final providerReviews = currentUser?.id == null
         ? <Review>[]
         : reviewProvider.getReviewsForProvider(currentUser!.id);
-    final rating = providerReviews.isNotEmpty
-        ? reviewProvider.averageRating
-        : (providerQuotes.isEmpty
-              ? 4.7
-              : providerQuotes
-                        .map((q) => q.rating)
-                        .fold<double>(0, (sum, value) => sum + value) /
-                    providerQuotes.length);
+    final rating = reviewProvider.averageRating;
+    final reviewCount = providerReviews.length;
     final unreadNotificationsCount = _notifications
         .where((n) => !n.isRead)
         .length;
@@ -120,6 +115,22 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     );
 
     final activeJobsPreview = activeJobs.take(2).toList();
+    final providerId = currentUser?.id;
+
+    void openReviews() {
+      if (providerId == null || providerId.isEmpty) {
+        return;
+      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProviderReviewsScreen(
+            providerId: providerId,
+            providerName: providerName,
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
@@ -307,9 +318,10 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                     ),
                     SummaryCard(
                       icon: Icons.star_border_rounded,
-                      label: 'Rating',
+                      label: 'Rating ($reviewCount)',
                       value: '${rating.toStringAsFixed(1)} ⭐',
                       gradientColors: const [_gradientStart, _gradientEnd],
+                      onTap: providerId == null ? null : openReviews,
                     ),
                     SummaryCard(
                       icon: Icons.attach_money_rounded,
@@ -578,69 +590,78 @@ class SummaryCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.gradientColors,
+    this.onTap,
   });
 
   final IconData icon;
   final String label;
   final String value;
   final List<Color> gradientColors;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: Colors.white, size: 18),
+            ],
           ),
-          const SizedBox(height: 8),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: gradientColors,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
               ),
-            ),
+              const SizedBox(height: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
