@@ -44,9 +44,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final currentUser = authProvider.currentUser;
     if (currentUser == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Messages'),
-        ),
+        appBar: AppBar(title: const Text('Messages')),
         body: const Center(child: Text('No user logged in')),
       );
     }
@@ -62,9 +60,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     if (conversations.isEmpty) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Messages'),
-        ),
+        appBar: AppBar(title: const Text('Messages')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -90,9 +86,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Messages'),
-      ),
+      appBar: AppBar(title: const Text('Messages')),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -283,9 +277,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     super.dispose();
   }
 
-  Future<void> _sendMessage({
-    required MessageProvider messageProvider,
-  }) async {
+  Future<void> _sendMessage({required MessageProvider messageProvider}) async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -331,11 +323,11 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
     final conversationId = _conversationId ?? '';
     final threadMessages = conversationId.isEmpty
-      ? <Message>[]
-      : messageProvider.getMessages(conversationId);
+        ? <Message>[]
+        : messageProvider.getMessages(conversationId);
     final nextCursor = conversationId.isEmpty
-      ? null
-      : messageProvider.getNextCursor(conversationId);
+        ? null
+        : messageProvider.getNextCursor(conversationId);
     final hasMore = nextCursor != null && nextCursor.isNotEmpty;
 
     return Scaffold(
@@ -402,69 +394,75 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                         }
                         final message =
                             threadMessages[index - (hasMore ? 1 : 0)];
-                  final isMine = message.senderId == currentUser.id;
+                        final isMine = message.senderId == currentUser.id;
 
-                  return Align(
-                    alignment: isMine
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.7,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: isMine
-                            ? const LinearGradient(
-                                colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : LinearGradient(
-                                colors: [Colors.white, Colors.green.shade50],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            message.content,
-                            style: TextStyle(
-                              color: isMine
-                                  ? Colors.white
-                                  : const Color(0xFF1E3A8A),
-                              fontSize: 15,
-                              height: 1.3,
+                        return Align(
+                          alignment: isMine
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            constraints: BoxConstraints(
+                              maxWidth: MediaQuery.of(context).size.width * 0.7,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: isMine
+                                  ? const LinearGradient(
+                                      colors: [
+                                        Color(0xFF1E3A8A),
+                                        Color(0xFF2563EB),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : LinearGradient(
+                                      colors: [
+                                        Colors.white,
+                                        Colors.green.shade50,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  message.content,
+                                  style: TextStyle(
+                                    color: isMine
+                                        ? Colors.white
+                                        : const Color(0xFF1E3A8A),
+                                    fontSize: 15,
+                                    height: 1.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _formatMessageTime(message.createdAt),
+                                  style: TextStyle(
+                                    color: isMine
+                                        ? Colors.white70
+                                        : Colors.grey.shade500,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _formatMessageTime(message.createdAt),
-                            style: TextStyle(
-                              color: isMine
-                                  ? Colors.white70
-                                  : Colors.grey.shade500,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+                        );
                       },
                     ),
             ),
@@ -520,9 +518,8 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                       ],
                     ),
                     child: IconButton(
-                      onPressed: () => _sendMessage(
-                        messageProvider: messageProvider,
-                      ),
+                      onPressed: () =>
+                          _sendMessage(messageProvider: messageProvider),
                       icon: const Icon(Icons.send, color: Colors.white),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.transparent,
