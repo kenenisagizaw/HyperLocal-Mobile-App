@@ -191,8 +191,7 @@ class CustomerProfileDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasLocation = customer.latitude != null && customer.longitude != null;
     final currentUser = context.read<AuthProvider>().currentUser;
-    final canMessage =
-        currentUser != null && currentUser.id != customer.id;
+    final canMessage = currentUser != null && currentUser.id != customer.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -451,8 +450,7 @@ class _ProviderProfileDetailScreenState
     final reviews = reviewProvider.getReviewsForProvider(provider.id);
     final averageRating = reviewProvider.averageRating;
     final currentUser = context.read<AuthProvider>().currentUser;
-    final canMessage =
-      currentUser != null && currentUser.id != provider.id;
+    final canMessage = currentUser != null && currentUser.id != provider.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -647,9 +645,7 @@ class _ProviderProfileDetailScreenState
                   _InfoRow(
                     icon: Icons.rate_review_rounded,
                     label: 'Reviews',
-                    value: reviews.isEmpty
-                        ? '0'
-                        : reviews.length.toString(),
+                    value: reviews.isEmpty ? '0' : reviews.length.toString(),
                   ),
                   _InfoRow(
                     icon: Icons.task_alt_rounded,
@@ -663,34 +659,32 @@ class _ProviderProfileDetailScreenState
             _InfoSection(
               title: 'Recent Reviews',
               children: reviews.isEmpty
-                  ? [
-                      const Text('No reviews yet.'),
-                    ]
+                  ? [const Text('No reviews yet.')]
                   : reviews
-                      .take(5)
-                      .map(
-                        (review) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.star,
-                                size: 16,
-                                color: Colors.amber.shade600,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '${review.rating}/5 - ${review.comment}',
-                                  style: const TextStyle(fontSize: 13),
+                        .take(5)
+                        .map(
+                          (review) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Colors.amber.shade600,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${review.rating}/5 - ${review.comment}',
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
+                        )
+                        .toList(),
             ),
             Align(
               alignment: Alignment.centerLeft,
