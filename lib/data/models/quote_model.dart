@@ -41,28 +41,56 @@ class Quote {
   factory Quote.fromJson(Map<String, dynamic> json) {
     final statusValue = json['status'];
     final provider = json['provider'];
+    final providerMap = provider is Map ? provider : null;
+    final providerUserRaw = providerMap is Map ? providerMap['user'] : null;
+    final providerUser = providerUserRaw is Map ? providerUserRaw : null;
     return Quote(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       requestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
           .toString(),
-      providerName: (json['providerName'] ?? provider?['name'] ?? '')
+      providerName: (json['providerName'] ??
+              providerMap?['name'] ??
+              providerMap?['businessName'] ??
+              providerUser?['name'] ??
+              '')
           .toString(),
       price: _parseDouble(json['price'] ?? json['amount']),
       message: (json['message'] ?? json['notes'] ?? '').toString(),
       estimatedTime: _parseInt(json['estimatedTime'] ?? json['eta']),
       estimatedDays: _parseInt(json['estimatedDays']),
       providerId: _asString(
-        provider?['id'] ?? provider?['userId'] ?? json['providerId'],
+        json['providerId'] ??
+            json['providerUserId'] ??
+            providerMap?['id'] ??
+            providerMap?['_id'] ??
+            providerMap?['userId'] ??
+            providerUser?['id'] ??
+            providerUser?['_id'] ??
+            providerUser?['userId'],
       ),
-      providerPhone: _asString(json['providerPhone'] ?? provider?['phone']),
+      providerPhone: _asString(
+        json['providerPhone'] ??
+            providerMap?['phone'] ??
+            providerUser?['phone'] ??
+            providerUser?['phoneNumber'],
+      ),
       providerLocation: _asString(
-        json['providerLocation'] ?? provider?['location'],
+        json['providerLocation'] ??
+            providerMap?['location'] ??
+            providerMap?['address'] ??
+            providerUser?['address'],
       ),
-      providerCity: _asString(provider?['city']),
+      providerCity: _asString(
+        providerMap?['city'] ??
+            providerMap?['locationCity'] ??
+            providerUser?['city'],
+      ),
       providerImage: _asString(
         json['providerImage'] ??
-            provider?['avatarUrl'] ??
-            provider?['profilePicture'],
+            providerMap?['avatarUrl'] ??
+            providerMap?['profilePicture'] ??
+            providerUser?['avatarUrl'] ??
+            providerUser?['profilePicture'],
       ),
       status: _parseStatus(statusValue),
       rating: _parseDouble(json['rating'], fallback: 4.5),
