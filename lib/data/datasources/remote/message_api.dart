@@ -115,16 +115,14 @@ class MessageApi {
     final data = map['data'] is Map<String, dynamic>
         ? map['data'] as Map<String, dynamic>
         : map['data'] is Map
-            ? (map['data'] as Map).cast<String, dynamic>()
-            : null;
+        ? (map['data'] as Map).cast<String, dynamic>()
+        : null;
     final direct = map['items'] ?? map['messages'] ?? map['conversations'];
     final list = direct is List
         ? direct
         : direct is Map
-            ? (direct['items'] ??
-                direct['messages'] ??
-                direct['conversations'])
-            : data?['items'] ?? data?['messages'] ?? data?['conversations'];
+        ? (direct['items'] ?? direct['messages'] ?? direct['conversations'])
+        : data?['items'] ?? data?['messages'] ?? data?['conversations'];
     if (list is List) {
       return list;
     }
@@ -135,9 +133,10 @@ class MessageApi {
     final data = map['data'] is Map<String, dynamic>
         ? map['data'] as Map<String, dynamic>
         : map['data'] is Map
-            ? (map['data'] as Map).cast<String, dynamic>()
-            : null;
-    final value = map['cursor'] ??
+        ? (map['data'] as Map).cast<String, dynamic>()
+        : null;
+    final value =
+        map['cursor'] ??
         map['nextCursor'] ??
         map['next'] ??
         data?['cursor'] ??
