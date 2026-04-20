@@ -129,6 +129,10 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       context.read<RequestProvider>().loadMyRequests();
       context.read<ProviderDirectoryProvider>().loadProviders();
+      final currentUser = context.read<AuthProvider>().currentUser;
+      if (currentUser != null) {
+        context.read<MessageProvider>().loadConversations();
+      }
     });
   }
 
