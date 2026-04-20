@@ -48,12 +48,13 @@ class Quote {
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       requestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
           .toString(),
-      providerName: (json['providerName'] ??
-              providerMap?['name'] ??
-              providerMap?['businessName'] ??
-              providerUser?['name'] ??
-              '')
-          .toString(),
+      providerName:
+          (json['providerName'] ??
+                  providerMap?['name'] ??
+                  providerMap?['businessName'] ??
+                  providerUser?['name'] ??
+                  '')
+              .toString(),
       price: _parseDouble(json['price'] ?? json['amount']),
       message: (json['message'] ?? json['notes'] ?? '').toString(),
       estimatedTime: _parseInt(json['estimatedTime'] ?? json['eta']),
