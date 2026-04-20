@@ -5,7 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/models/message_model.dart';
 import '../../data/models/user_model.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/customer_directory_provider.dart';
@@ -26,6 +25,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final currentUser = context.read<AuthProvider>().currentUser;
+      if (currentUser != null) {
+        context.read<MessageProvider>().loadConversations();
+      }
       context.read<ProviderDirectoryProvider>().loadProviders();
       context.read<CustomerDirectoryProvider>().loadCustomers();
     });
@@ -48,10 +51,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
       );
     }
 
-    final conversations = _buildConversations(
-      messageProvider.messages,
-      currentUser.id,
-    );
+    final conversations = messageProvider.conversations;
+
+    if (messageProvider.isLoading && conversations.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Messages')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     if (conversations.isEmpty) {
       return Scaffold(
@@ -100,7 +107,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final convo = conversations[index];
-            final otherId = convo.otherUserId;
+            final otherId = convo.otherUserId(currentUser.id);
             final displayName = _resolveDisplayName(
               otherId,
               providerDirectory,
@@ -154,7 +161,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    convo.lastMessage.content,
+                    convo.lastMessage?.content ?? 'No messages yet',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -165,7 +172,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      _formatMessageTime(convo.lastMessage.createdAt),
+                      _formatMessageTime(
+                        convo.lastMessage?.createdAt ?? DateTime.now(),
+                      ),
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 12,
@@ -206,11 +215,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ],
                 ),
                 onTap: () {
-                  messageProvider.markThreadAsRead(currentUser.id, otherId);
+                  messageProvider.markThreadAsRead(convo.id);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => MessageThreadScreen(
+                        conversationId: convo.id,
                         otherUserId: otherId,
                         otherUserName: displayName,
                         otherUser: otherUser,
@@ -230,11 +240,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
 class MessageThreadScreen extends StatefulWidget {
   const MessageThreadScreen({
     super.key,
+    this.conversationId,
     required this.otherUserId,
     required this.otherUserName,
     required this.otherUser,
   });
 
+  final String? conversationId;
   final String otherUserId;
   final String otherUserName;
   final UserModel? otherUser;
@@ -246,6 +258,23 @@ class MessageThreadScreen extends StatefulWidget {
 class _MessageThreadScreenState extends State<MessageThreadScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  String? _conversationId;
+
+  @override
+  void initState() {
+    super.initState();
+    _conversationId = widget.conversationId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_conversationId == null || _conversationId!.isEmpty) {
+        return;
+      }
+      context.read<MessageProvider>().loadMessages(
+        conversationId: _conversationId!,
+        take: 20,
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -254,22 +283,29 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     super.dispose();
   }
 
-  void _sendMessage({
+  Future<void> _sendMessage({
     required MessageProvider messageProvider,
-    required String currentUserId,
-  }) {
+  }) async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    messageProvider.addMessage(
-      Message(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        senderId: currentUserId,
-        receiverId: widget.otherUserId,
-        content: text,
-        createdAt: DateTime.now(),
-      ),
+    final sent = await messageProvider.sendMessage(
+      otherUserId: widget.otherUserId,
+      content: text,
     );
+    if (!mounted) return;
+
+    if ((_conversationId == null || _conversationId!.isEmpty) &&
+        sent != null &&
+        sent.conversationId.isNotEmpty) {
+      setState(() {
+        _conversationId = sent.conversationId;
+      });
+      await messageProvider.loadMessages(
+        conversationId: sent.conversationId,
+        take: 20,
+      );
+    }
 
     _controller.clear();
     Future.microtask(() {
@@ -293,17 +329,14 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       return const Scaffold(body: Center(child: Text('No user logged in')));
     }
 
-    final threadMessages =
-        messageProvider.messages
-            .where(
-              (m) =>
-                  (m.senderId == currentUser.id &&
-                      m.receiverId == widget.otherUserId) ||
-                  (m.senderId == widget.otherUserId &&
-                      m.receiverId == currentUser.id),
-            )
-            .toList()
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final conversationId = _conversationId ?? '';
+    final threadMessages = conversationId.isEmpty
+      ? <Message>[]
+      : messageProvider.getMessages(conversationId);
+    final nextCursor = conversationId.isEmpty
+      ? null
+      : messageProvider.getNextCursor(conversationId);
+    final hasMore = nextCursor != null && nextCursor.isNotEmpty;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -345,12 +378,30 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: threadMessages.length,
-                itemBuilder: (context, index) {
-                  final message = threadMessages[index];
+              child: messageProvider.isLoading && threadMessages.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: threadMessages.length + (hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (hasMore && index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: OutlinedButton(
+                              onPressed: () {
+                                messageProvider.loadMessages(
+                                  conversationId: conversationId,
+                                  take: 20,
+                                  cursor: nextCursor,
+                                );
+                              },
+                              child: const Text('Load older messages'),
+                            ),
+                          );
+                        }
+                        final message =
+                            threadMessages[index - (hasMore ? 1 : 0)];
                   final isMine = message.senderId == currentUser.id;
 
                   return Align(
@@ -414,8 +465,8 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                       ),
                     ),
                   );
-                },
-              ),
+                      },
+                    ),
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -471,7 +522,6 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                     child: IconButton(
                       onPressed: () => _sendMessage(
                         messageProvider: messageProvider,
-                        currentUserId: currentUser.id,
                       ),
                       icon: const Icon(Icons.send, color: Colors.white),
                       style: IconButton.styleFrom(
@@ -488,18 +538,6 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
       ),
     );
   }
-}
-
-class _ConversationSummary {
-  _ConversationSummary({
-    required this.otherUserId,
-    required this.lastMessage,
-    required this.unreadCount,
-  });
-
-  final String otherUserId;
-  final Message lastMessage;
-  final int unreadCount;
 }
 
 class UserProfileDetailScreen extends StatelessWidget {
@@ -907,39 +945,6 @@ String _getInitials(String name) {
   if (parts.isEmpty) return 'U';
   if (parts.length == 1) return parts.first[0].toUpperCase();
   return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-}
-
-List<_ConversationSummary> _buildConversations(
-  List<Message> messages,
-  String currentUserId,
-) {
-  final Map<String, List<Message>> grouped = {};
-
-  for (final msg in messages) {
-    final otherUserId = msg.senderId == currentUserId
-        ? msg.receiverId
-        : msg.senderId;
-    grouped.putIfAbsent(otherUserId, () => []).add(msg);
-  }
-
-  final summaries = grouped.entries.map((entry) {
-    final sorted = entry.value
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    final unread = sorted
-        .where((m) => m.receiverId == currentUserId && !m.isRead)
-        .length;
-
-    return _ConversationSummary(
-      otherUserId: entry.key,
-      lastMessage: sorted.first,
-      unreadCount: unread,
-    );
-  }).toList();
-
-  summaries.sort(
-    (a, b) => b.lastMessage.createdAt.compareTo(a.lastMessage.createdAt),
-  );
-  return summaries;
 }
 
 String _formatMessageTime(DateTime dateTime) {
