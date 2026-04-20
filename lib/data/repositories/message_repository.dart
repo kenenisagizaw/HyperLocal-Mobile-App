@@ -42,10 +42,7 @@ class MessageRepository {
     return api.editMessage(messageId: messageId, content: content);
   }
 
-  Future<void> deleteMessage({
-    required String messageId,
-    String scope = 'me',
-  }) {
+  Future<void> deleteMessage({required String messageId, String scope = 'me'}) {
     return api.deleteMessage(messageId: messageId, scope: scope);
   }
 }
