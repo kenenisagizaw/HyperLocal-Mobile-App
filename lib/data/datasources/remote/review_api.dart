@@ -70,12 +70,17 @@ class ReviewApi {
   }
 
   List<Review> _extractReviewList(Map<String, dynamic> map) {
-    final direct = map['reviews'] ?? map['data'] ?? map['items'];
+    final data = map['data'] is Map<String, dynamic>
+      ? map['data'] as Map<String, dynamic>
+      : map['data'] is Map
+      ? (map['data'] as Map).cast<String, dynamic>()
+      : null;
+    final direct = map['reviews'] ?? map['items'] ?? map['data'];
     final list = direct is List
-        ? direct
-        : direct is Map
-        ? (direct['items'] ?? direct['reviews'] ?? direct['data'])
-        : null;
+      ? direct
+      : direct is Map
+      ? (direct['items'] ?? direct['reviews'] ?? direct['data'])
+      : data?['reviews'] ?? data?['items'] ?? data?['data'];
     if (list is List) {
       return list
           .whereType<Map>()
@@ -86,7 +91,17 @@ class ReviewApi {
   }
 
   double _extractAverageRating(Map<String, dynamic> map) {
-    final value = map['averageRating'] ?? map['avgRating'] ?? map['rating'];
+    final data = map['data'] is Map<String, dynamic>
+        ? map['data'] as Map<String, dynamic>
+        : map['data'] is Map
+        ? (map['data'] as Map).cast<String, dynamic>()
+        : null;
+    final value = map['averageRating'] ??
+        map['avgRating'] ??
+        map['rating'] ??
+        data?['averageRating'] ??
+        data?['avgRating'] ??
+        data?['rating'];
     if (value is num) {
       return value.toDouble();
     }
@@ -94,7 +109,17 @@ class ReviewApi {
   }
 
   Map<String, dynamic>? _extractPagination(Map<String, dynamic> map) {
-    final pagination = map['pagination'] ?? map['meta'] ?? map['page'];
+    final data = map['data'] is Map<String, dynamic>
+        ? map['data'] as Map<String, dynamic>
+        : map['data'] is Map
+        ? (map['data'] as Map).cast<String, dynamic>()
+        : null;
+    final pagination = map['pagination'] ??
+        map['meta'] ??
+        map['page'] ??
+        data?['pagination'] ??
+        data?['meta'] ??
+        data?['page'];
     if (pagination is Map<String, dynamic>) {
       return pagination;
     }
