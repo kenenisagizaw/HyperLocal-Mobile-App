@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 child: Text(
                   'Forgot password?',
-                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+                  style: GoogleFonts.dmSans(fontWeight: FontWeight.w600, color: const Color(0xFF2196F3)),
                 ),
               ),
             ),
@@ -172,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: authProvider.isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFF1F2A44),
+                backgroundColor: const Color(0xFF4CAF50),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
@@ -197,16 +197,16 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: authProvider.isLoading ? null : _handleGoogleSignIn,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                foregroundColor: const Color(0xFF1F2A44),
-                side: const BorderSide(color: Color(0xFF1F2A44)),
+                foregroundColor: const Color(0xFF4CAF50),
+                side: const BorderSide(color: Color(0xFF4CAF50)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
               ),
-              icon: const Icon(Icons.g_mobiledata, size: 28),
+              icon: const Icon(Icons.g_mobiledata, size: 28, color: Color(0xFF4CAF50)),
               label: Text(
                 'Continue with Google',
-                style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+                style: GoogleFonts.dmSans(fontWeight: FontWeight.w600, color: const Color(0xFF4CAF50)),
               ),
             ),
           ],
@@ -222,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
           child: Text(
             'New here? Create an account',
-            style: GoogleFonts.dmSans(fontWeight: FontWeight.w600),
+            style: GoogleFonts.dmSans(fontWeight: FontWeight.w600, color: const Color(0xFF2196F3)),
           ),
         ),
       ),
