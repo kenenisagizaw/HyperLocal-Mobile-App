@@ -17,11 +17,7 @@ class NotificationApi {
     final dio = await _dioFuture;
     final response = await dio.get(
       ApiConstants.notifications,
-      queryParameters: {
-        'take': take,
-        'skip': skip,
-        'unreadOnly': unreadOnly,
-      },
+      queryParameters: {'take': take, 'skip': skip, 'unreadOnly': unreadOnly},
     );
     final map = _unwrapMap(response.data);
     final list = _extractList(map);
@@ -74,14 +70,14 @@ class NotificationApi {
     final data = map['data'] is Map<String, dynamic>
         ? map['data'] as Map<String, dynamic>
         : map['data'] is Map
-            ? (map['data'] as Map).cast<String, dynamic>()
-            : null;
+        ? (map['data'] as Map).cast<String, dynamic>()
+        : null;
     final direct = map['notifications'] ?? map['items'] ?? map['data'];
     final list = direct is List
         ? direct
         : direct is Map
-            ? (direct['notifications'] ?? direct['items'] ?? direct['data'])
-            : data?['notifications'] ?? data?['items'] ?? data?['data'];
+        ? (direct['notifications'] ?? direct['items'] ?? direct['data'])
+        : data?['notifications'] ?? data?['items'] ?? data?['data'];
     if (list is List) {
       return list;
     }
