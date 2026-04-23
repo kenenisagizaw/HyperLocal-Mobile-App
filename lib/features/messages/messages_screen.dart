@@ -189,16 +189,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           ),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF1E3A8A),
-                                Color(0xFF2563EB)
-                              ],
+                              colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
                             ),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF1E3A8A)
-                                    .withOpacity(0.3),
+                                color: const Color(0xFF1E3A8A).withOpacity(0.3),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -338,7 +334,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     if (text.isEmpty) return;
     if (widget.otherUserId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot send message: missing recipient.')),
+        const SnackBar(
+          content: Text('Cannot send message: missing recipient.'),
+        ),
       );
       return;
     }
@@ -351,9 +349,9 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
     if (sent == null) {
       final error = messageProvider.errorMessage ?? 'Message failed to send.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 
@@ -397,7 +395,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
     final conversationId = _conversationId ?? '';
     final threadMessages = conversationId.isEmpty
-      ? <message_models.Message>[]
+        ? <message_models.Message>[]
         : messageProvider.getMessages(conversationId);
     final nextCursor = conversationId.isEmpty
         ? null
@@ -548,7 +546,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                               ),
                             ),
                           );
-                      },
+                        },
                       ),
                     ),
             ),
