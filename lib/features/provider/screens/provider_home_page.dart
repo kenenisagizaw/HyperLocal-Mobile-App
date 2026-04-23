@@ -8,6 +8,7 @@ import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
+import '../../notifications/providers/notification_provider.dart';
 import '../../reviews/provider_reviews_screen.dart';
 import '../../reviews/providers/review_provider.dart';
 import '../utils/formatters.dart';
@@ -22,28 +23,6 @@ class ProviderHomePage extends StatefulWidget {
 }
 
 class _ProviderHomePageState extends State<ProviderHomePage> {
-  final List<AppNotification> _notifications = [
-    AppNotification(
-      id: 'p1',
-      title: 'New request received',
-      message: 'A new request is available in your area.',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 40)),
-    ),
-    AppNotification(
-      id: 'p2',
-      title: 'Quote accepted',
-      message: 'John accepted your quote.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-    ),
-    AppNotification(
-      id: 'p3',
-      title: 'New review',
-      message: 'You received a new review.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-    ),
-  ];
-
   bool _isOnline = true;
 
   static const _primaryBlue = Color(0xFF2563EB);
@@ -57,6 +36,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<RequestProvider>().loadRequests();
+      context.read<NotificationProvider>().loadNotifications();
       final providerId = context.read<AuthProvider>().currentUser?.id;
       if (providerId != null && providerId.isNotEmpty) {
         context.read<ReviewProvider>().loadProviderReviews(
@@ -73,6 +53,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
     final requestProvider = context.watch<RequestProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
     final reviewProvider = context.watch<ReviewProvider>();
+    final notificationProvider = context.watch<NotificationProvider>();
 
     final currentUser = authProvider.currentUser;
     final providerName = currentUser?.name ?? 'Provider';
@@ -86,9 +67,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
         : reviewProvider.getReviewsForProvider(currentUser!.id);
     final rating = reviewProvider.averageRating;
     final reviewCount = providerReviews.length;
-    final unreadNotificationsCount = _notifications
-        .where((n) => !n.isRead)
-        .length;
+    final unreadNotificationsCount = notificationProvider.unreadCount;
 
     final activeJobs = requestProvider.requests
         .where((r) => r.status == RequestStatus.accepted)
@@ -211,9 +190,7 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
                         final navigator = Navigator.of(context);
                         await navigator.push(
                           MaterialPageRoute(
-                            builder: (_) => NotificationListScreen(
-                              notifications: _notifications,
-                            ),
+                            builder: (_) => const NotificationListScreen(),
                           ),
                         );
                         if (!mounted) return;
@@ -761,25 +738,29 @@ class NotificationBell extends StatelessWidget {
   }
 }
 
-class NotificationListScreen extends StatefulWidget {
-  const NotificationListScreen({super.key, required this.notifications});
+class NotificationListScreen extends StatelessWidget {
+  const NotificationListScreen({super.key});
 
-  final List<AppNotification> notifications;
-
-  @override
-  State<NotificationListScreen> createState() => _NotificationListScreenState();
-}
-
-class _NotificationListScreenState extends State<NotificationListScreen> {
   static const _primaryBlue = Color(0xFF2563EB);
 
   @override
   Widget build(BuildContext context) {
-    final notifications = widget.notifications.toList()
+    final notificationProvider = context.watch<NotificationProvider>();
+    final notifications = notificationProvider.notifications.toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        actions: [
+          IconButton(
+            onPressed: notificationProvider.unreadCount == 0
+                ? null
+                : () => context.read<NotificationProvider>().markAllRead(),
+            icon: const Icon(Icons.done_all),
+          ),
+        ],
+      ),
       body: notifications.isEmpty
           ? Center(
               child: Column(
@@ -847,7 +828,7 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 4),
-                        Text(notification.message),
+                        Text(notification.body),
                         const SizedBox(height: 4),
                         Text(
                           formatNotificationTime(notification.createdAt),
@@ -863,7 +844,10 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
                       color: Colors.grey.shade400,
                     ),
                     onTap: () async {
-                      setState(() => notification.isRead = true);
+                      await context
+                          .read<NotificationProvider>()
+                          .markRead(notification.id);
+                      if (!context.mounted) return;
                       await Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -919,7 +903,7 @@ class NotificationDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    notification.message,
+                    notification.body,
                     style: const TextStyle(fontSize: 16),
                   ),
                 ],
