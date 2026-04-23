@@ -34,10 +34,21 @@ class Conversation {
 
   String otherUserId(String currentUserId) {
     for (final id in participantIds) {
-      if (id != currentUserId) {
+      if (id != currentUserId && id.isNotEmpty) {
         return id;
       }
     }
+
+    final senderId = lastMessage?.senderId ?? '';
+    if (senderId.isNotEmpty && senderId != currentUserId) {
+      return senderId;
+    }
+
+    final receiverId = lastMessage?.receiverId ?? '';
+    if (receiverId.isNotEmpty && receiverId != currentUserId) {
+      return receiverId;
+    }
+
     return participantIds.isNotEmpty ? participantIds.first : '';
   }
 
@@ -51,6 +62,11 @@ class Conversation {
       return raw
           .map((item) {
             if (item is Map) {
+              final user = item['user'];
+              if (user is Map) {
+                return (user['id'] ?? user['_id'] ?? user['userId'] ?? '')
+                    .toString();
+              }
               return (item['id'] ?? item['_id'] ?? item['userId'] ?? '')
                   .toString();
             }
