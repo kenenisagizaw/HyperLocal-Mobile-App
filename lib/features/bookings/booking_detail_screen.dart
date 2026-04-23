@@ -11,6 +11,7 @@ import '../customer/providers/customer_directory_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../customer/providers/quote_provider.dart';
 import '../customer/providers/request_provider.dart';
+import '../messages/messages_screen.dart';
 import '../reviews/review_screen.dart';
 import 'providers/booking_provider.dart';
 
@@ -152,7 +153,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             if (user?.role == UserRole.customer)
               _buildCustomerActions(context, booking, request, providerUser),
             if (user?.role == UserRole.provider)
-              _buildProviderActions(context, booking),
+              _buildProviderActions(context, booking, customerUser),
             if (booking.status == BookingStatus.completed &&
                 user?.role == UserRole.provider)
               _DetailCard(
@@ -226,6 +227,31 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       );
     }
 
+    if (providerUser?.id != null) {
+      actions.add(
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MessageThreadScreen(
+                    conversationId: null,
+                    otherUserId: providerUser!.id,
+                    otherUserName: providerUser.name,
+                    otherUser: providerUser,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.chat_bubble_outline_rounded),
+            label: const Text('Message Provider'),
+          ),
+        ),
+      );
+    }
+
     if (booking.status == BookingStatus.completed &&
         request != null &&
         providerUser?.id != null) {
@@ -271,7 +297,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  Widget _buildProviderActions(BuildContext context, dynamic booking) {
+  Widget _buildProviderActions(
+    BuildContext context,
+    dynamic booking,
+    UserModel? customerUser,
+  ) {
     final bookingProvider = context.read<BookingProvider>();
     final actions = <Widget>[];
 
@@ -335,6 +365,28 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           },
           icon: const Icon(Icons.check_circle),
           label: const Text('Mark Completed'),
+        ),
+      );
+    }
+
+    if (customerUser?.id != null) {
+      actions.add(
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => MessageThreadScreen(
+                  conversationId: null,
+                  otherUserId: customerUser!.id,
+                  otherUserName: customerUser.name,
+                  otherUser: customerUser,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.chat_bubble_outline_rounded),
+          label: const Text('Message Customer'),
         ),
       );
     }
