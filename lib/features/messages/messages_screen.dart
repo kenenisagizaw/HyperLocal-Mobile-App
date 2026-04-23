@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/models/message_model.dart' as message_models;
 import '../../data/models/user_model.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/customer_directory_provider.dart';
@@ -95,136 +96,146 @@ class _MessagesScreenState extends State<MessagesScreen> {
             colors: [Colors.white, Colors.green.shade50],
           ),
         ),
-        child: ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: conversations.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final convo = conversations[index];
-            final otherId = convo.otherUserId(currentUser.id);
-            final displayName = _resolveDisplayName(
-              otherId,
-              providerDirectory,
-              customerDirectory,
-            );
+        child: RefreshIndicator(
+          onRefresh: () => context.read<MessageProvider>().loadConversations(),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: conversations.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final convo = conversations[index];
+              final otherId = convo.otherUserId(currentUser.id);
+              final displayName = _resolveDisplayName(
+                otherId,
+                providerDirectory,
+                customerDirectory,
+              );
 
-            final otherUser = _resolveUser(
-              otherId,
-              providerDirectory,
-              customerDirectory,
-            );
+              final otherUser = _resolveUser(
+                otherId,
+                providerDirectory,
+                customerDirectory,
+              );
 
-            return Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  leading: GestureDetector(
+                    onTap: () {
+                      if (otherUser == null) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              UserProfileDetailScreen(user: otherUser),
+                        ),
+                      );
+                    },
+                    child: _UserAvatar(
+                      user: otherUser,
+                      nameFallback: displayName,
+                    ),
                   ),
-                ],
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                leading: GestureDetector(
+                  title: Text(
+                    displayName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Color(0xFF1E3A8A),
+                    ),
+                  ),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      convo.lastMessage?.content ?? 'No messages yet',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        _formatMessageTime(
+                          convo.lastMessage?.createdAt ?? DateTime.now(),
+                        ),
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (convo.unreadCount > 0) ...[
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF1E3A8A),
+                                Color(0xFF2563EB)
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF1E3A8A)
+                                    .withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            convo.unreadCount > 99
+                                ? '99+'
+                                : convo.unreadCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   onTap: () {
-                    if (otherUser == null) return;
+                    messageProvider.markThreadAsRead(convo.id);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            UserProfileDetailScreen(user: otherUser),
+                        builder: (_) => MessageThreadScreen(
+                          conversationId: convo.id,
+                          otherUserId: otherId,
+                          otherUserName: displayName,
+                          otherUser: otherUser,
+                        ),
                       ),
                     );
                   },
-                  child: _UserAvatar(
-                    user: otherUser,
-                    nameFallback: displayName,
-                  ),
                 ),
-                title: Text(
-                  displayName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Color(0xFF1E3A8A),
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Text(
-                    convo.lastMessage?.content ?? 'No messages yet',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _formatMessageTime(
-                        convo.lastMessage?.createdAt ?? DateTime.now(),
-                      ),
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (convo.unreadCount > 0) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF1E3A8A).withOpacity(0.3),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          convo.unreadCount > 99
-                              ? '99+'
-                              : convo.unreadCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                onTap: () {
-                  messageProvider.markThreadAsRead(convo.id);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MessageThreadScreen(
-                        conversationId: convo.id,
-                        otherUserId: otherId,
-                        otherUserName: displayName,
-                        otherUser: otherUser,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
@@ -258,16 +269,61 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   void initState() {
     super.initState();
     _conversationId = widget.conversationId;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
+      await _loadOtherUserProfile();
+      final authUser = context.read<AuthProvider>().currentUser;
+      final messageProvider = context.read<MessageProvider>();
+
+      if ((_conversationId == null || _conversationId!.isEmpty) &&
+          authUser != null) {
+        if (messageProvider.conversations.isEmpty) {
+          await messageProvider.loadConversations();
+        }
+        String? existingId;
+        for (final convo in messageProvider.conversations) {
+          if (convo.otherUserId(authUser.id) == widget.otherUserId) {
+            existingId = convo.id;
+            break;
+          }
+        }
+        if (existingId != null) {
+          setState(() {
+            _conversationId = existingId;
+          });
+        }
+      }
+
       if (_conversationId == null || _conversationId!.isEmpty) {
         return;
       }
-      context.read<MessageProvider>().loadMessages(
+      await messageProvider.loadMessages(
         conversationId: _conversationId!,
         take: 20,
       );
     });
+  }
+
+  Future<void> _loadOtherUserProfile() async {
+    if (widget.otherUser != null || widget.otherUserId.trim().isEmpty) {
+      return;
+    }
+    final providerDirectory = context.read<ProviderDirectoryProvider>();
+    final customerDirectory = context.read<CustomerDirectoryProvider>();
+
+    final provider = providerDirectory.getProviderById(widget.otherUserId);
+    if (provider != null) {
+      return;
+    }
+    final customer = customerDirectory.getCustomerById(widget.otherUserId);
+    if (customer != null) {
+      return;
+    }
+
+    await Future.wait([
+      providerDirectory.fetchProviderById(widget.otherUserId),
+      customerDirectory.fetchCustomerById(widget.otherUserId),
+    ]);
   }
 
   @override
@@ -280,6 +336,12 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   Future<void> _sendMessage({required MessageProvider messageProvider}) async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+    if (widget.otherUserId.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot send message: missing recipient.')),
+      );
+      return;
+    }
 
     final sent = await messageProvider.sendMessage(
       otherUserId: widget.otherUserId,
@@ -287,14 +349,26 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     );
     if (!mounted) return;
 
+    if (sent == null) {
+      final error = messageProvider.errorMessage ?? 'Message failed to send.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+      return;
+    }
+
     if ((_conversationId == null || _conversationId!.isEmpty) &&
-        sent != null &&
         sent.conversationId.isNotEmpty) {
       setState(() {
         _conversationId = sent.conversationId;
       });
       await messageProvider.loadMessages(
         conversationId: sent.conversationId,
+        take: 20,
+      );
+    } else if (_conversationId != null && _conversationId!.isNotEmpty) {
+      await messageProvider.loadMessages(
+        conversationId: _conversationId!,
         take: 20,
       );
     }
@@ -323,7 +397,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
     final conversationId = _conversationId ?? '';
     final threadMessages = conversationId.isEmpty
-        ? <Message>[]
+      ? <message_models.Message>[]
         : messageProvider.getMessages(conversationId);
     final nextCursor = conversationId.isEmpty
         ? null
@@ -372,98 +446,110 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
             Expanded(
               child: messageProvider.isLoading && threadMessages.isEmpty
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: threadMessages.length + (hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (hasMore && index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: OutlinedButton(
-                              onPressed: () {
-                                messageProvider.loadMessages(
-                                  conversationId: conversationId,
-                                  take: 20,
-                                  cursor: nextCursor,
-                                );
-                              },
-                              child: const Text('Load older messages'),
-                            ),
-                          );
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        if (conversationId.isEmpty) {
+                          return;
                         }
-                        final message =
-                            threadMessages[index - (hasMore ? 1 : 0)];
-                        final isMine = message.senderId == currentUser.id;
-
-                        return Align(
-                          alignment: isMine
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.7,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: isMine
-                                  ? const LinearGradient(
-                                      colors: [
-                                        Color(0xFF1E3A8A),
-                                        Color(0xFF2563EB),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                  : LinearGradient(
-                                      colors: [
-                                        Colors.white,
-                                        Colors.green.shade50,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  message.content,
-                                  style: TextStyle(
-                                    color: isMine
-                                        ? Colors.white
-                                        : const Color(0xFF1E3A8A),
-                                    fontSize: 15,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _formatMessageTime(message.createdAt),
-                                  style: TextStyle(
-                                    color: isMine
-                                        ? Colors.white70
-                                        : Colors.grey.shade500,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        await messageProvider.loadMessages(
+                          conversationId: conversationId,
+                          take: 20,
                         );
                       },
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: threadMessages.length + (hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (hasMore && index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  messageProvider.loadMessages(
+                                    conversationId: conversationId,
+                                    take: 20,
+                                    cursor: nextCursor,
+                                  );
+                                },
+                                child: const Text('Load older messages'),
+                              ),
+                            );
+                          }
+                          final message =
+                              threadMessages[index - (hasMore ? 1 : 0)];
+                          final isMine = message.senderId == currentUser.id;
+
+                          return Align(
+                            alignment: isMine
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.7,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: isMine
+                                    ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF1E3A8A),
+                                          Color(0xFF2563EB),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: [
+                                          Colors.white,
+                                          Colors.green.shade50,
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    message.content,
+                                    style: TextStyle(
+                                      color: isMine
+                                          ? Colors.white
+                                          : const Color(0xFF1E3A8A),
+                                      fontSize: 15,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _formatMessageTime(message.createdAt),
+                                    style: TextStyle(
+                                      color: isMine
+                                          ? Colors.white70
+                                          : Colors.grey.shade500,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                      },
+                      ),
                     ),
             ),
             Container(
