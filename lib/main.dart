@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'data/datasources/remote/booking_api.dart';
 import 'data/datasources/remote/message_api.dart';
+import 'data/datasources/remote/notification_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
 import 'data/repositories/booking_repository.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/message_repository.dart';
+import 'data/repositories/notification_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
@@ -21,6 +23,7 @@ import 'features/customer/providers/provider_directory_provider.dart';
 import 'features/customer/providers/quote_provider.dart';
 import 'features/customer/providers/request_provider.dart';
 import 'features/messages/providers/message_provider.dart';
+import 'features/notifications/providers/notification_provider.dart';
 import 'features/payments/providers/payment_provider.dart';
 import 'features/reviews/providers/review_provider.dart';
 
@@ -34,6 +37,7 @@ void main() {
         Provider(create: (_) => QuoteApi()),
         Provider(create: (_) => ReviewApi()),
         Provider(create: (_) => MessageApi()),
+        Provider(create: (_) => NotificationApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
         Provider(
@@ -50,6 +54,10 @@ void main() {
         ),
         Provider(
           create: (context) => MessageRepository(context.read<MessageApi>()),
+        ),
+        Provider(
+          create: (context) =>
+              NotificationRepository(context.read<NotificationApi>()),
         ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
@@ -88,6 +96,17 @@ void main() {
               MessageProvider(repository: context.read<MessageRepository>()),
           update: (context, repository, previous) {
             return previous ?? MessageProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProxyProvider<
+          NotificationRepository,
+          NotificationProvider
+        >(
+          create: (context) => NotificationProvider(
+            repository: context.read<NotificationRepository>(),
+          ),
+          update: (context, repository, previous) {
+            return previous ?? NotificationProvider(repository: repository);
           },
         ),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
