@@ -587,9 +587,9 @@ class _HomePageState extends State<HomePage> {
                         text: n.title,
                         isUnread: !n.isRead,
                         onTap: () async {
-                          await context
-                              .read<NotificationProvider>()
-                              .markRead(n.id);
+                          await context.read<NotificationProvider>().markRead(
+                            n.id,
+                          );
                           final navigator = Navigator.of(context);
                           await navigator.push(
                             MaterialPageRoute(
