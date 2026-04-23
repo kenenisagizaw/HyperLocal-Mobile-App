@@ -8,6 +8,7 @@ import '../../data/models/service_request_model.dart';
 import '../auth/providers/auth_provider.dart';
 import '../messages/messages_screen.dart';
 import '../messages/providers/message_provider.dart';
+import '../notifications/providers/notification_provider.dart';
 import '../payments/providers/payment_provider.dart';
 import 'customer_profile_screen.dart';
 import 'my_requests_screen.dart';
@@ -100,28 +101,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<AppNotification> _notifications = [
-    AppNotification(
-      id: 'n1',
-      title: 'New quote received',
-      message: 'John sent a quote for your request.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-    ),
-    AppNotification(
-      id: 'n2',
-      title: 'Job started',
-      message: 'Your job has started and is in progress.',
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-    AppNotification(
-      id: 'n3',
-      title: 'Payment confirmed',
-      message: 'Payment confirmed for Electrical Repair.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      isRead: true,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -129,6 +108,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       context.read<RequestProvider>().loadMyRequests();
       context.read<ProviderDirectoryProvider>().loadProviders();
+      context.read<NotificationProvider>().loadNotifications();
       final currentUser = context.read<AuthProvider>().currentUser;
       if (currentUser != null) {
         context.read<MessageProvider>().loadConversations();
@@ -142,6 +122,7 @@ class _HomePageState extends State<HomePage> {
     final messageProvider = context.watch<MessageProvider>();
     final requestProvider = context.watch<RequestProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
+    final notificationProvider = context.watch<NotificationProvider>();
 
     final currentUser = authProvider.currentUser;
     final customerName = currentUser?.name ?? 'Customer';
@@ -174,9 +155,7 @@ class _HomePageState extends State<HomePage> {
     final unreadMessagesCount = currentUser == null
         ? 0
         : messageProvider.getUnreadCountForUser(currentUser.id);
-    final unreadNotificationsCount = _notifications
-        .where((n) => !n.isRead)
-        .length;
+    final unreadNotificationsCount = notificationProvider.unreadCount;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Home')),
@@ -234,9 +213,7 @@ class _HomePageState extends State<HomePage> {
                       final navigator = Navigator.of(context);
                       await navigator.push(
                         MaterialPageRoute(
-                          builder: (_) => NotificationListScreen(
-                            notifications: _notifications,
-                          ),
+                          builder: (_) => const NotificationListScreen(),
                         ),
                       );
                       if (!mounted) return;
@@ -589,7 +566,7 @@ class _HomePageState extends State<HomePage> {
               /// Notifications Section
               const _SectionHeader(title: 'Notifications'),
               const SizedBox(height: 8),
-              ..._notifications
+              ...notificationProvider.notifications
                   .take(3)
                   .map(
                     (n) => Container(
@@ -610,7 +587,9 @@ class _HomePageState extends State<HomePage> {
                         text: n.title,
                         isUnread: !n.isRead,
                         onTap: () async {
-                          n.isRead = true;
+                          await context
+                              .read<NotificationProvider>()
+                              .markRead(n.id);
                           final navigator = Navigator.of(context);
                           await navigator.push(
                             MaterialPageRoute(
@@ -969,13 +948,24 @@ class PaymentsPage extends StatelessWidget {
 }
 
 class NotificationListScreen extends StatelessWidget {
-  final List<AppNotification> notifications;
-  const NotificationListScreen({super.key, required this.notifications});
+  const NotificationListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final notificationProvider = context.watch<NotificationProvider>();
+    final notifications = notificationProvider.notifications;
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        actions: [
+          IconButton(
+            onPressed: notificationProvider.unreadCount == 0
+                ? null
+                : () => context.read<NotificationProvider>().markAllRead(),
+            icon: const Icon(Icons.done_all),
+          ),
+        ],
+      ),
       backgroundColor: const Color(0xFFF8FAFF),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -1019,7 +1009,7 @@ class NotificationListScreen extends StatelessWidget {
                   fontWeight: n.isRead ? FontWeight.normal : FontWeight.w600,
                 ),
               ),
-              subtitle: Text(n.message),
+              subtitle: Text(n.body),
               trailing: n.isRead
                   ? null
                   : Container(
@@ -1030,7 +1020,9 @@ class NotificationListScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-              onTap: () {
+              onTap: () async {
+                await context.read<NotificationProvider>().markRead(n.id);
+                if (!context.mounted) return;
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -1105,7 +1097,7 @@ class NotificationDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      notification.message,
+                      notification.body,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color(0xFF4A4E69),
