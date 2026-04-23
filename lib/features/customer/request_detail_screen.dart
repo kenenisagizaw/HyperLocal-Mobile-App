@@ -8,6 +8,7 @@ import '../bookings/booking_creation_screen.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
+import '../messages/messages_screen.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import '../provider/widgets/user_avatar.dart';
 import 'providers/quote_provider.dart';
@@ -339,6 +340,29 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 label: const Text('View Provider Profile'),
               ),
             ),
+            if (quote.providerId != null) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MessageThreadScreen(
+                          conversationId: null,
+                          otherUserId: quote.providerId!,
+                          otherUserName: providerName,
+                          otherUser: null,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline_rounded),
+                  label: const Text('Message Provider'),
+                ),
+              ),
+            ],
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
