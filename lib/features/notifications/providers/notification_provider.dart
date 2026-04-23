@@ -17,8 +17,7 @@ class NotificationProvider extends ChangeNotifier {
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
   bool get isLoading => _isLoading;
 
-  int get unreadCount =>
-      _notifications.where((n) => n.readAt == null).length;
+  int get unreadCount => _notifications.where((n) => n.readAt == null).length;
 
   Future<void> loadNotifications({
     int take = 20,
