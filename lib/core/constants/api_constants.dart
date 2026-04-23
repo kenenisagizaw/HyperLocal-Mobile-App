@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.43.14:5000';
+  static const String baseUrl = 'http://192.168.137.176:5000';
 
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
@@ -46,4 +46,8 @@ class ApiConstants {
   static const String messages = '/api/messages';
   static const String messageConversations = '/api/messages/conversations';
   static const String messageStream = '/api/messages/stream';
+
+  static const String notifications = '/api/notifications';
+  static const String notificationsReadAll = '/api/notifications/read-all';
+  static const String notificationsStream = '/api/notifications/stream';
 }
