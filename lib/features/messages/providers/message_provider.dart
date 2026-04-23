@@ -82,6 +82,11 @@ class MessageProvider extends ChangeNotifier {
     required String content,
     List<String> attachmentPaths = const [],
   }) async {
+    if (otherUserId.trim().isEmpty) {
+      errorMessage = 'Unable to send message: missing recipient.';
+      notifyListeners();
+      return null;
+    }
     _setLoading(true);
     _clearErrors();
     try {
