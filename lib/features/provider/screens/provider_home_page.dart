@@ -844,9 +844,9 @@ class NotificationListScreen extends StatelessWidget {
                       color: Colors.grey.shade400,
                     ),
                     onTap: () async {
-                      await context
-                          .read<NotificationProvider>()
-                          .markRead(notification.id);
+                      await context.read<NotificationProvider>().markRead(
+                        notification.id,
+                      );
                       if (!context.mounted) return;
                       await Navigator.push(
                         context,
@@ -902,10 +902,7 @@ class NotificationDetailScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    notification.body,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  Text(notification.body, style: const TextStyle(fontSize: 16)),
                 ],
               ),
             ),
