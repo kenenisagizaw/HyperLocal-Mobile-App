@@ -26,11 +26,14 @@ class Booking {
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory Booking.fromJson(Map<String, dynamic> json) {
+    final serviceRequest = json['serviceRequest'] is Map
+        ? json['serviceRequest'] as Map
+        : null;
     return Booking(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       serviceRequestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
           .toString(),
-      quoteId: (json['quoteId'] ?? '').toString(),
+      quoteId: (json['acceptedQuoteId'] ?? json['quoteId'] ?? '').toString(),
       customerId: _asString(
         json['customerId'] ??
             json['userId'] ??
@@ -44,9 +47,14 @@ class Booking {
             json['provider']?['userId'] ??
             json['providerId'],
       ),
-      address: _asString(json['address'] ?? json['location']),
+      address: _asString(
+        json['address'] ??
+            json['location'] ??
+            serviceRequest?['address'] ??
+            serviceRequest?['location'],
+      ),
       scheduledAt: _parseDateOrNull(
-        json['scheduledAt'] ?? json['scheduledFor'],
+        json['scheduledAt'] ?? json['scheduledFor'] ?? json['startTime'],
       ),
       status: _parseStatus(json['status']),
       createdAt: _parseDate(json['createdAt']),
