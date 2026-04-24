@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/message_model.dart' as message_models;
@@ -391,7 +391,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     });
   }
 
-  Future<void> _pickMedia({required bool isVideo, required bool fromCamera}) async {
+  Future<void> _pickMedia({
+    required bool isVideo,
+    required bool fromCamera,
+  }) async {
     XFile? file;
     if (isVideo) {
       file = await _picker.pickVideo(
@@ -432,8 +435,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
         cleaned.endsWith('.3gp');
   }
 
-  Widget _buildAttachmentGallery(List<String> attachments,
-      {required bool isMine}) {
+  Widget _buildAttachmentGallery(
+    List<String> attachments, {
+    required bool isMine,
+  }) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -527,11 +532,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                 color: Colors.black54,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.close,
-                size: 14,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.close, size: 14, color: Colors.white),
             ),
           ),
         ),
@@ -808,8 +809,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF1E3A8A)
-                                  .withOpacity(0.3),
+                              color: const Color(0xFF1E3A8A).withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
