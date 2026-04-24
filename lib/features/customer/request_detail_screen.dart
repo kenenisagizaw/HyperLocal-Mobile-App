@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/utils/distance_utils.dart';
+import '../../core/widgets/resolved_address_text.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../bookings/booking_creation_screen.dart';
@@ -197,11 +201,25 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             value: request.category.isEmpty ? 'N/A' : request.category,
             icon: Icons.category_outlined,
           ),
+          if (request.photoPaths.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _buildPhotoGallery(request.photoPaths),
+          ],
           const SizedBox(height: 10),
           _DetailRow(
             label: 'Location',
             value: request.location.isEmpty ? 'N/A' : request.location,
             icon: Icons.location_on_outlined,
+            valueWidget: ResolvedAddressText(
+              lat: request.locationLat,
+              lng: request.locationLng,
+              fallback: request.location.isEmpty ? 'N/A' : request.location,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                color: Color(0xFF1E3A8A),
+              ),
+            ),
           ),
           const SizedBox(height: 10),
           _DetailRow(
@@ -231,10 +249,24 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     required RequestProvider requestProvider,
     required dynamic booking,
   }) {
+    final providerDirectory = context.read<ProviderDirectoryProvider>();
+    final provider = quote.providerId == null
+        ? null
+        : providerDirectory.getProviderById(quote.providerId!);
+    final distanceLabel = formatDistanceKm(
+      fromLat: request.locationLat,
+      fromLng: request.locationLng,
+      toLat: provider?.latitude,
+      toLng: provider?.longitude,
+    );
     final providerName = quote.providerName.isEmpty
         ? 'Service Provider'
         : quote.providerName;
     final providerCity = quote.providerCity;
+    final requestLocked =
+        request.status == RequestStatus.accepted ||
+        request.status == RequestStatus.completed ||
+        request.status == RequestStatus.cancelled;
 
     return Container(
       decoration: BoxDecoration(
@@ -320,6 +352,14 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 'ETA: ${quote.estimatedTime} hours',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
+            if (distanceLabel != 'N/A')
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Distance: $distanceLabel',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ),
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
@@ -392,25 +432,41 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                       icon: const Icon(Icons.calendar_month, size: 16),
                       label: Text(booking == null ? 'Schedule' : 'Booking'),
                     )
-                  : ElevatedButton(
-                      onPressed: () async {
-                        if (request.status == RequestStatus.accepted ||
-                            request.status == RequestStatus.completed ||
-                            request.status == RequestStatus.cancelled) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text(
-                                'This request can no longer accept quotes.',
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                  : requestLocked
+                  ? (request.status == RequestStatus.accepted && booking != null
+                        ? OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BookingDetailScreen(
+                                    bookingId: booking.id,
+                                  ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.calendar_month, size: 16),
+                            label: const Text('View Booking'),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              request.status == RequestStatus.accepted
+                                  ? 'Quote already accepted. Waiting for booking.'
+                                  : 'Request closed.',
+                              style: TextStyle(
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          );
-                          return;
-                        }
-
+                          ))
+                  : ElevatedButton(
+                      onPressed: () async {
                         if (quote.status != QuoteStatus.pending) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -594,6 +650,46 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     return '${date.year}-$month-$day';
   }
 
+  Widget _buildPhotoGallery(List<String> paths) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Photos',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E3A8A),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 90,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: paths.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final path = paths[index];
+              final isRemote = Uri.tryParse(path)?.hasAbsolutePath == true &&
+                  (path.startsWith('http://') || path.startsWith('https://'));
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 90,
+                  color: Colors.grey.shade100,
+                  child: isRemote
+                      ? Image.network(path, fit: BoxFit.cover)
+                      : Image.file(File(path), fit: BoxFit.cover),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   BoxDecoration _buildBackgroundGradient() {
     return BoxDecoration(
       gradient: LinearGradient(
@@ -610,11 +706,13 @@ class _DetailRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    this.valueWidget,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final Widget? valueWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -631,14 +729,16 @@ class _DetailRow extends StatelessWidget {
         ),
         Expanded(
           flex: 3,
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-              color: Color(0xFF1E3A8A),
-            ),
-          ),
+          child:
+              valueWidget ??
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  color: Color(0xFF1E3A8A),
+                ),
+              ),
         ),
       ],
     );
