@@ -65,13 +65,13 @@ class ServiceRequest {
       category: (json['serviceCategory'] ?? json['category'] ?? '').toString(),
       location: (json['location'] ?? json['address'] ?? json['city'] ?? '')
           .toString(),
-        city: (json['city'] ?? json['locationCity'] ?? json['addressCity'])
+      city: (json['city'] ?? json['locationCity'] ?? json['addressCity'])
           ?.toString(),
       locationLat: latValue is num ? latValue.toDouble() : null,
       locationLng: lngValue is num ? lngValue.toDouble() : null,
       budget: budgetValue is num ? budgetValue.toDouble() : null,
-        budgetMin: budgetMinValue is num ? budgetMinValue.toDouble() : null,
-        budgetMax: budgetMaxValue is num ? budgetMaxValue.toDouble() : null,
+      budgetMin: budgetMinValue is num ? budgetMinValue.toDouble() : null,
+      budgetMax: budgetMaxValue is num ? budgetMaxValue.toDouble() : null,
       photoPaths: _parseImages(imagesValue),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
