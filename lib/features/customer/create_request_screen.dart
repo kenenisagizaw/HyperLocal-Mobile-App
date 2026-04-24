@@ -55,6 +55,14 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     });
   }
 
+  Future<void> _takePhoto() async {
+    final file = await _picker.pickImage(source: ImageSource.camera);
+    if (file == null) return;
+    setState(() {
+      _photos.add(file);
+    });
+  }
+
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -601,6 +609,38 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                               ],
                             ),
                           ),
+                        ),
+                      ),
+                      Container(height: 1, color: Colors.grey.shade200),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _takePhoto,
+                                icon: const Icon(Icons.photo_camera),
+                                label: const Text('Take Photo'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.blue.shade700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: _pickPhotos,
+                                icon: const Icon(Icons.photo_library),
+                                label: const Text('Gallery'),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.green.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       if (_photos.isNotEmpty) ...[
