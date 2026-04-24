@@ -7,9 +7,12 @@ class ServiceRequest {
   final String description;
   final String category;
   final String location;
+  final String? city;
   final double? locationLat;
   final double? locationLng;
   final double? budget;
+  final double? budgetMin;
+  final double? budgetMax;
   final List<String> photoPaths;
   final DateTime createdAt;
   RequestStatus status;
@@ -21,9 +24,12 @@ class ServiceRequest {
     required this.description,
     required this.category,
     required this.location,
+    this.city,
     this.locationLat,
     this.locationLng,
     this.budget,
+    this.budgetMin,
+    this.budgetMax,
     this.photoPaths = const [],
     required this.createdAt,
     this.status = RequestStatus.pending,
@@ -35,6 +41,8 @@ class ServiceRequest {
     final latValue = json['latitude'] ?? json['locationLat'] ?? json['lat'];
     final lngValue = json['longitude'] ?? json['locationLng'] ?? json['lng'];
     final budgetValue = json['budget'] ?? json['budgetMin'];
+    final budgetMinValue = json['budgetMin'] ?? json['budget_min'];
+    final budgetMaxValue = json['budgetMax'] ?? json['budget_max'];
     final imagesValue = json['images'] ?? json['photoPaths'] ?? json['photos'];
 
     return ServiceRequest(
@@ -57,9 +65,13 @@ class ServiceRequest {
       category: (json['serviceCategory'] ?? json['category'] ?? '').toString(),
       location: (json['location'] ?? json['address'] ?? json['city'] ?? '')
           .toString(),
+        city: (json['city'] ?? json['locationCity'] ?? json['addressCity'])
+          ?.toString(),
       locationLat: latValue is num ? latValue.toDouble() : null,
       locationLng: lngValue is num ? lngValue.toDouble() : null,
       budget: budgetValue is num ? budgetValue.toDouble() : null,
+        budgetMin: budgetMinValue is num ? budgetMinValue.toDouble() : null,
+        budgetMax: budgetMaxValue is num ? budgetMaxValue.toDouble() : null,
       photoPaths: _parseImages(imagesValue),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
@@ -76,9 +88,12 @@ class ServiceRequest {
       'description': description,
       'serviceCategory': category,
       'location': location,
+      if (city != null) 'city': city,
       'latitude': locationLat,
       'longitude': locationLng,
       'budget': budget,
+      if (budgetMin != null) 'budgetMin': budgetMin,
+      if (budgetMax != null) 'budgetMax': budgetMax,
       'images': photoPaths,
       'createdAt': createdAt.toIso8601String(),
       'status': status.name.toUpperCase(),
