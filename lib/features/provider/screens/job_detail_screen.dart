@@ -528,10 +528,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           ),
           const SizedBox(height: 12),
           if (paths.isEmpty)
-            Text(
-              'No photos',
-              style: TextStyle(color: Colors.grey.shade600),
-            )
+            Text('No photos', style: TextStyle(color: Colors.grey.shade600))
           else
             _buildPhotoGallery(paths),
         ],
@@ -540,7 +537,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   }
 
   Widget _buildLocationSection(ServiceRequest request) {
-    final address = request.location.isEmpty ? 'Location not set' : request.location;
+    final address = request.location.isEmpty
+        ? 'Location not set'
+        : request.location;
     final city = (request.city ?? '').isEmpty ? null : request.city;
     return Container(
       padding: const EdgeInsets.all(20),
@@ -632,7 +631,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final path = paths[index];
-          final isRemote = Uri.tryParse(path)?.hasAbsolutePath == true &&
+          final isRemote =
+              Uri.tryParse(path)?.hasAbsolutePath == true &&
               (path.startsWith('http://') || path.startsWith('https://'));
           return ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -679,11 +679,7 @@ class InfoChip extends StatelessWidget {
           Icon(icon, size: 16, color: const Color(0xFF2563EB)),
           const SizedBox(width: 4),
           Flexible(
-            child: child ??
-                Text(
-                  label ?? '',
-                  overflow: TextOverflow.ellipsis,
-                ),
+            child: child ?? Text(label ?? '', overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
