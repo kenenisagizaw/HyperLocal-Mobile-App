@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/utils/distance_utils.dart';
+import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/models/service_request_model.dart';
 import '../../../data/models/user_model.dart';
@@ -119,12 +121,17 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
               .where((r) => r.id == q.requestId)
               .cast<ServiceRequest?>()
               .firstWhere((r) => r != null, orElse: () => null);
+          final distanceLabel = formatDistanceKm(
+            fromLat: currentUser?.latitude,
+            fromLng: currentUser?.longitude,
+            toLat: request?.locationLat,
+            toLng: request?.locationLng,
+          );
           final customer = request == null
               ? null
               : customerDirectory.getCustomerById(request.customerId);
 
           final statusConfig = _getQuoteStatusConfig(q.status);
-
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
@@ -229,6 +236,11 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                                   icon: Icons.access_time_rounded,
                                   label: formatNotificationTime(q.createdAt),
                                 ),
+                                if (distanceLabel != 'N/A')
+                                  _buildInfoChip(
+                                    icon: Icons.route_rounded,
+                                    label: distanceLabel,
+                                  ),
                               ],
                             ),
                           ],
@@ -380,6 +392,13 @@ class QuoteDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasLocation =
         request?.locationLat != null && request?.locationLng != null;
+    final currentUser = context.read<AuthProvider>().currentUser;
+    final distanceLabel = formatDistanceKm(
+      fromLat: currentUser?.latitude,
+      fromLng: currentUser?.longitude,
+      toLat: request?.locationLat,
+      toLng: request?.locationLng,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -557,7 +576,29 @@ class QuoteDetailScreen extends StatelessWidget {
                         icon: Icons.place_rounded,
                         label: 'Location',
                         value: request!.location,
+                        valueWidget: ResolvedAddressText(
+                          lat: request!.locationLat,
+                          lng: request!.locationLng,
+                          fallback: request!.location,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            color: _textPrimary,
+                            height: 1.3,
+                          ),
+                        ),
                       ),
+                      if (distanceLabel != 'N/A')
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(height: 1, color: Color(0xFFE2E8F0)),
+                        ),
+                      if (distanceLabel != 'N/A')
+                        _buildDetailItem(
+                          icon: Icons.route_rounded,
+                          label: 'Distance',
+                          value: distanceLabel,
+                        ),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Divider(height: 1, color: Color(0xFFE2E8F0)),
@@ -743,6 +784,7 @@ class QuoteDetailScreen extends StatelessWidget {
     required String label,
     required String value,
     Color? valueColor,
+    Widget? valueWidget,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -769,15 +811,18 @@ class QuoteDetailScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: valueColor ?? _textPrimary,
-                  height: 1.3,
+              if (valueWidget != null)
+                valueWidget
+              else
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: valueColor ?? _textPrimary,
+                    height: 1.3,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
