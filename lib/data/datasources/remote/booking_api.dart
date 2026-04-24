@@ -1,16 +1,22 @@
 import 'package:dio/dio.dart';
 
+// Deep Blue: Core constants and API client imports
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/api_client.dart';
-import '../local/local_storage.dart';
 import '../../models/booking_model.dart';
+// Deep Green: Local storage and models
+import '../local/local_storage.dart';
 
+// Deep Blue: Main API class for booking operations
 class BookingApi {
   BookingApi() : _dioFuture = ApiClient.create();
 
+  // Deep Green: DIO client future for async initialization
   final Future<Dio> _dioFuture;
+  // Deep Blue: Local storage instance for token management
   final LocalStorage _storage = LocalStorage();
 
+  // Deep Green: Create a new booking
   Future<Booking> createBooking({
     required String serviceRequestId,
     required String quoteId,
@@ -31,6 +37,7 @@ class BookingApi {
     return _parseBooking(response.data);
   }
 
+  // Deep Blue: Retrieve booking by ID
   Future<Booking> getBookingById(String id) async {
     final dio = await _dioFuture;
     final response = await dio.get(
@@ -40,6 +47,7 @@ class BookingApi {
     return _parseBooking(response.data);
   }
 
+  // Deep Green: Get user's bookings with optional filters
   Future<List<Booking>> getMyBookings({
     String? status,
     int? take,
@@ -58,6 +66,7 @@ class BookingApi {
     return _parseBookingList(response.data);
   }
 
+  // Deep Blue: Update booking status
   Future<Booking?> updateStatus({
     required String bookingId,
     required String status,
@@ -71,6 +80,7 @@ class BookingApi {
     return _tryParseBooking(response.data);
   }
 
+  // Deep Green: Cancel an existing booking
   Future<Booking?> cancelBooking({
     required String bookingId,
     required String reason,
@@ -84,6 +94,7 @@ class BookingApi {
     return _tryParseBooking(response.data);
   }
 
+  // Deep Blue: Get available time slots
   Future<List<dynamic>> getAvailableSlots({
     String? providerId,
     String? serviceId,
@@ -104,12 +115,14 @@ class BookingApi {
     return list;
   }
 
+  // Deep Green: Parse single booking from response
   Booking _parseBooking(dynamic data) {
     final map = _unwrapMap(data);
     final bookingMap = _extractBookingMap(map);
     return Booking.fromJson(bookingMap);
   }
 
+  // Deep Blue: Try to parse booking, return null if fails
   Booking? _tryParseBooking(dynamic data) {
     final map = _unwrapMap(data);
     final bookingMap = _extractBookingMap(map, allowEmpty: true);
@@ -119,6 +132,7 @@ class BookingApi {
     return Booking.fromJson(bookingMap);
   }
 
+  // Deep Green: Extract booking map from nested response structure
   Map<String, dynamic> _extractBookingMap(
     Map<String, dynamic> map, {
     bool allowEmpty = false,
@@ -133,13 +147,19 @@ class BookingApi {
     return allowEmpty ? map : <String, dynamic>{};
   }
 
+  // Deep Blue: Extract list from various response formats
   List<dynamic> _extractList(Map<String, dynamic> map) {
-    final direct = map['data'] ?? map['items'] ?? map['slots'];
+    final direct =
+        map['data'] ?? map['items'] ?? map['slots'] ?? map['bookings'];
     if (direct is List) {
       return direct;
     }
     if (direct is Map) {
-      final nested = direct['items'] ?? direct['slots'] ?? direct['data'];
+      final nested =
+          direct['bookings'] ??
+          direct['items'] ??
+          direct['slots'] ??
+          direct['data'];
       if (nested is List) {
         return nested;
       }
@@ -147,6 +167,7 @@ class BookingApi {
     return const [];
   }
 
+  // Deep Green: Parse list of bookings from response
   List<Booking> _parseBookingList(dynamic data) {
     final map = _unwrapMap(data);
     final list = _extractList(map);
@@ -156,6 +177,7 @@ class BookingApi {
         .toList();
   }
 
+  // Deep Blue: Unwrap response data to map
   Map<String, dynamic> _unwrapMap(dynamic data) {
     if (data is Map<String, dynamic>) {
       return data;
@@ -166,6 +188,7 @@ class BookingApi {
     return <String, dynamic>{};
   }
 
+  // Deep Green: Prepare authentication headers
   Future<Options?> _authOptions() async {
     final token = await _storage.getAccessToken();
     if (token == null || token.isEmpty) {
@@ -174,6 +197,7 @@ class BookingApi {
     return Options(headers: {'Authorization': 'Bearer $token'});
   }
 
+  // Deep Blue: Format date for API requests
   String _formatDate(DateTime date) {
     final year = date.year.toString().padLeft(4, '0');
     final month = date.month.toString().padLeft(2, '0');
