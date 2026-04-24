@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/message_model.dart' as message_models;
@@ -260,6 +261,8 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _conversationId;
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _pendingAttachments = [];
 
   @override
   void initState() {
@@ -331,7 +334,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
 
   Future<void> _sendMessage({required MessageProvider messageProvider}) async {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _pendingAttachments.isEmpty) return;
     if (widget.otherUserId.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -344,6 +347,7 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     final sent = await messageProvider.sendMessage(
       otherUserId: widget.otherUserId,
       content: text,
+      attachmentPaths: _pendingAttachments.map((file) => file.path).toList(),
     );
     if (!mounted) return;
 
@@ -372,6 +376,10 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     }
 
     _controller.clear();
+    _pendingAttachments.clear();
+    if (mounted) {
+      setState(() {});
+    }
     Future.microtask(() {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -381,6 +389,154 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
         );
       }
     });
+  }
+
+  Future<void> _pickMedia({required bool isVideo, required bool fromCamera}) async {
+    XFile? file;
+    if (isVideo) {
+      file = await _picker.pickVideo(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+      );
+    } else {
+      file = await _picker.pickImage(
+        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
+      );
+    }
+    if (file == null) return;
+    setState(() {
+      _pendingAttachments.add(file!);
+    });
+  }
+
+  void _removePendingAttachment(XFile file) {
+    setState(() {
+      _pendingAttachments.remove(file);
+    });
+  }
+
+  bool _isImagePath(String path) {
+    final cleaned = path.toLowerCase().split('?').first;
+    return cleaned.endsWith('.png') ||
+        cleaned.endsWith('.jpg') ||
+        cleaned.endsWith('.jpeg') ||
+        cleaned.endsWith('.gif') ||
+        cleaned.endsWith('.webp');
+  }
+
+  bool _isVideoPath(String path) {
+    final cleaned = path.toLowerCase().split('?').first;
+    return cleaned.endsWith('.mp4') ||
+        cleaned.endsWith('.mov') ||
+        cleaned.endsWith('.avi') ||
+        cleaned.endsWith('.mkv') ||
+        cleaned.endsWith('.3gp');
+  }
+
+  Widget _buildAttachmentGallery(List<String> attachments,
+      {required bool isMine}) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: attachments.map((path) {
+        final isImage = _isImagePath(path);
+        final isVideo = _isVideoPath(path);
+        final isRemote =
+            path.startsWith('http://') || path.startsWith('https://');
+        if (isImage) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: 120,
+              height: 90,
+              child: isRemote
+                  ? Image.network(path, fit: BoxFit.cover)
+                  : Image.file(File(path), fit: BoxFit.cover),
+            ),
+          );
+        }
+        if (isVideo) {
+          return Container(
+            width: 120,
+            height: 90,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isMine ? Colors.white24 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.videocam,
+                  color: isMine ? Colors.white : Colors.grey.shade700,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Video',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isMine ? Colors.white : Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: isMine ? Colors.white24 : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            'Attachment',
+            style: TextStyle(
+              fontSize: 12,
+              color: isMine ? Colors.white : Colors.grey.shade700,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildPendingAttachmentTile(XFile file) {
+    final path = file.path;
+    final isImage = _isImagePath(path);
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 74,
+            height: 74,
+            color: Colors.grey.shade200,
+            child: isImage
+                ? Image.file(File(path), fit: BoxFit.cover)
+                : const Icon(Icons.videocam, color: Colors.black54),
+          ),
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: () => _removePendingAttachment(file),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close,
+                size: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -532,6 +688,13 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                                       height: 1.3,
                                     ),
                                   ),
+                                  if (message.attachments.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    _buildAttachmentGallery(
+                                      message.attachments,
+                                      isMine: isMine,
+                                    ),
+                                  ],
                                   const SizedBox(height: 8),
                                   Text(
                                     _formatMessageTime(message.createdAt),
@@ -565,51 +728,104 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message',
-                        hintStyle: TextStyle(color: Colors.grey.shade400),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(25),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 14,
-                        ),
+                  if (_pendingAttachments.isNotEmpty) ...[
+                    SizedBox(
+                      height: 74,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _pendingAttachments.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final file = _pendingAttachments[index];
+                          return _buildPendingAttachmentTile(file);
+                        },
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                    const SizedBox(height: 10),
+                  ],
+                  Row(
+                    children: [
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onSelected: (value) {
+                          if (value == 'camera_photo') {
+                            _pickMedia(isVideo: false, fromCamera: true);
+                          } else if (value == 'gallery_photo') {
+                            _pickMedia(isVideo: false, fromCamera: false);
+                          } else if (value == 'camera_video') {
+                            _pickMedia(isVideo: true, fromCamera: true);
+                          } else if (value == 'gallery_video') {
+                            _pickMedia(isVideo: true, fromCamera: false);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'camera_photo',
+                            child: Text('Take Photo'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'gallery_photo',
+                            child: Text('Photo from Gallery'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'camera_video',
+                            child: Text('Record Video'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'gallery_video',
+                            child: Text('Video from Gallery'),
+                          ),
+                        ],
                       ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF1E3A8A).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          decoration: InputDecoration(
+                            hintText: 'Type a message',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(25),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 14,
+                            ),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: () =>
-                          _sendMessage(messageProvider: messageProvider),
-                      icon: const Icon(Icons.send, color: Colors.white),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: Colors.white,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1E3A8A), Color(0xFF2563EB)],
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1E3A8A)
+                                  .withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: () =>
+                              _sendMessage(messageProvider: messageProvider),
+                          icon: const Icon(Icons.send, color: Colors.white),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
