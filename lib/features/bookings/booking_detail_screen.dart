@@ -1,20 +1,30 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+// Deep Blue: Core constants and models
 import '../../core/constants/enums.dart';
+import '../../core/utils/distance_utils.dart';
+import '../../core/widgets/resolved_address_text.dart';
 import '../../data/models/service_request_model.dart';
 import '../../data/models/user_model.dart';
+// Deep Green: Auth and customer providers
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/customer_directory_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../customer/providers/quote_provider.dart';
 import '../customer/providers/request_provider.dart';
+// Deep Blue: Messages and reviews screens
 import '../messages/messages_screen.dart';
+import '../provider/widgets/customer_profile_widgets.dart';
 import '../reviews/review_screen.dart';
+// Deep Green: Booking provider
 import 'providers/booking_provider.dart';
 
+// Deep Blue: Main booking detail screen
 class BookingDetailScreen extends StatefulWidget {
   const BookingDetailScreen({super.key, required this.bookingId});
 
@@ -24,11 +34,13 @@ class BookingDetailScreen extends StatefulWidget {
   State<BookingDetailScreen> createState() => _BookingDetailScreenState();
 }
 
+// Deep Green: State management for booking details
 class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isSharingLocation = false;
   String? _requestedProviderId;
   String? _requestedCustomerId;
 
+  // Deep Blue: Initialize and load booking on mount
   @override
   void initState() {
     super.initState();
@@ -38,6 +50,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     });
   }
 
+  // Deep Green: Main build method with all sections
   @override
   Widget build(BuildContext context) {
     final bookingProvider = context.watch<BookingProvider>();
@@ -50,10 +63,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final booking = bookingProvider.getBooking(widget.bookingId);
     final user = authProvider.currentUser;
 
+    // Deep Blue: Loading state
     if (bookingProvider.isLoading && booking == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Deep Green: Error state
     if (booking == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Booking Details')),
@@ -66,6 +81,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       );
     }
 
+    // Deep Blue: Find related data
     final request = _findRequest(requestProvider.requests, booking);
     if (request == null && booking.serviceRequestId.isNotEmpty) {
       requestProvider.fetchRequestById(booking.serviceRequestId);
@@ -78,6 +94,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         ? null
         : customerDirectory.getCustomerById(booking.customerId!);
 
+    // Deep Green: Fetch missing profiles
     if (booking.providerId != null && providerUser == null) {
       _requestProviderProfile(providerDirectory, booking.providerId!);
     }
@@ -85,11 +102,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       _requestCustomerProfile(customerDirectory, booking.customerId!);
     }
 
-    final address = booking.address ?? request?.location ?? 'Not set';
+    final addressFallback = booking.address ?? request?.location ?? 'Not set';
     final priceLabel = quote == null
         ? 'Not set'
         : '\$${quote.price.toStringAsFixed(2)}';
+    final providerDistance = formatDistanceKm(
+      fromLat: request?.locationLat,
+      fromLng: request?.locationLng,
+      toLat: providerUser?.latitude,
+      toLng: providerUser?.longitude,
+    );
 
+    // Deep Blue: Main scaffold with scrollable content
     return Scaffold(
       appBar: AppBar(title: const Text('Booking Details')),
       body: SingleChildScrollView(
@@ -103,14 +127,17 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               title: 'Booking Summary',
               child: Column(
                 children: [
-                  _DetailRow(label: 'Booking ID', value: booking.id),
                   _DetailRow(
-                    label: 'Request ID',
-                    value: booking.serviceRequestId,
+                    label: 'Service',
+                    value: request?.title ?? 'Service',
                   ),
                   _DetailRow(
                     label: 'Status',
                     value: _statusLabel(booking.status),
+                  ),
+                  _DetailRow(
+                    label: 'Category',
+                    value: request?.category ?? 'Not set',
                   ),
                   if (booking.scheduledAt != null)
                     _DetailRow(
@@ -123,8 +150,20 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Address / Location',
-              child: Text(address, style: const TextStyle(fontSize: 15)),
+              child: ResolvedAddressText(
+                lat: request?.locationLat,
+                lng: request?.locationLng,
+                fallback: addressFallback,
+                style: const TextStyle(fontSize: 15),
+              ),
             ),
+            if ((request?.photoPaths ?? []).isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _DetailCard(
+                title: 'Request Photos',
+                child: _buildPhotoGallery(request!.photoPaths),
+              ),
+            ],
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Price Summary',
@@ -133,9 +172,27 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Provider',
-              child: Text(
-                providerUser?.name ?? booking.providerId ?? 'Unknown provider',
-                style: const TextStyle(fontSize: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    providerUser?.name ??
+                        booking.providerId ??
+                        'Unknown provider',
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                  if (providerDistance != 'N/A')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        'Distance: $providerDistance',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -168,6 +225,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
+  // Deep Green: Request provider profile if not loaded
   void _requestProviderProfile(
     ProviderDirectoryProvider providerDirectory,
     String providerId,
@@ -179,6 +237,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     providerDirectory.fetchProviderById(providerId);
   }
 
+  // Deep Blue: Request customer profile if not loaded
   void _requestCustomerProfile(
     CustomerDirectoryProvider customerDirectory,
     String customerId,
@@ -190,6 +249,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     customerDirectory.fetchCustomerById(customerId);
   }
 
+  // Deep Green: Build customer action buttons
   Widget _buildCustomerActions(
     BuildContext context,
     dynamic booking,
@@ -297,6 +357,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
+  // Deep Blue: Build provider action buttons
   Widget _buildProviderActions(
     BuildContext context,
     dynamic booking,
@@ -389,6 +450,21 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           label: const Text('Message Customer'),
         ),
       );
+      actions.add(
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    CustomerProfileDetailScreen(customer: customerUser!),
+              ),
+            );
+          },
+          icon: const Icon(Icons.person_outline),
+          label: const Text('View Customer Profile'),
+        ),
+      );
     }
 
     if (actions.isEmpty) {
@@ -411,6 +487,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
+  // Deep Green: Build live location sharing section with map
   Widget _buildLiveLocationSection(UserModel? providerUser) {
     final hasLocation =
         providerUser?.latitude != null && providerUser?.longitude != null;
@@ -473,6 +550,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
+  // Deep Blue: Show confirmation dialog for status change
   Future<bool> _confirmStatusChange(
     BuildContext context, {
     required String title,
@@ -498,6 +576,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return result == true;
   }
 
+  // Deep Green: Ask for cancellation reason
   Future<String?> _askCancelReason(BuildContext context) async {
     final controller = TextEditingController();
     final result = await showDialog<String>(
@@ -532,6 +611,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     return result?.trim();
   }
 
+  // Deep Blue: Find request from list by ID
   ServiceRequest? _findRequest(List<ServiceRequest> requests, dynamic booking) {
     try {
       return requests.firstWhere((r) => r.id == booking.serviceRequestId);
@@ -540,6 +620,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
   }
 
+  // Deep Green: Get human-readable status label
   String _statusLabel(BookingStatus status) {
     switch (status) {
       case BookingStatus.booked:
@@ -553,6 +634,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
   }
 
+  // Deep Blue: Format DateTime for display
   String _formatDateTime(DateTime date) {
     final year = date.year.toString();
     final month = date.month.toString().padLeft(2, '0');
@@ -561,8 +643,35 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final minute = date.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
+
+  Widget _buildPhotoGallery(List<String> paths) {
+    return SizedBox(
+      height: 90,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: paths.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final path = paths[index];
+          final isRemote = Uri.tryParse(path)?.hasAbsolutePath == true &&
+              (path.startsWith('http://') || path.startsWith('https://'));
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 90,
+              color: Colors.grey.shade100,
+              child: isRemote
+                  ? Image.network(path, fit: BoxFit.cover)
+                  : Image.file(File(path), fit: BoxFit.cover),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
 
+// Deep Green: Error state widget for failed booking loads
 class _BookingErrorState extends StatelessWidget {
   const _BookingErrorState({required this.message, required this.onRetry});
 
@@ -607,6 +716,7 @@ class _BookingErrorState extends StatelessWidget {
   }
 }
 
+// Deep Blue: Reusable detail card with shadow and padding
 class _DetailCard extends StatelessWidget {
   const _DetailCard({required this.title, required this.child});
 
@@ -644,6 +754,7 @@ class _DetailCard extends StatelessWidget {
   }
 }
 
+// Deep Green: Row with label and value pair
 class _DetailRow extends StatelessWidget {
   const _DetailRow({required this.label, required this.value});
 
@@ -673,6 +784,7 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
+// Deep Blue: Timeline widget showing booking progress
 class _StatusTimeline extends StatelessWidget {
   const _StatusTimeline({required this.status});
 
@@ -717,6 +829,7 @@ class _StatusTimeline extends StatelessWidget {
     );
   }
 
+  // Deep Green: Check if this step has been reached
   bool _isReached(BookingStatus step) {
     final order = {
       BookingStatus.booked: 0,
@@ -727,6 +840,7 @@ class _StatusTimeline extends StatelessWidget {
     return order[status]! >= order[step]!;
   }
 
+  // Deep Blue: Get label for each step
   String _labelFor(BookingStatus step) {
     switch (step) {
       case BookingStatus.booked:
@@ -740,6 +854,7 @@ class _StatusTimeline extends StatelessWidget {
     }
   }
 
+  // Deep Green: Get icon for each step
   IconData _iconFor(BookingStatus step) {
     switch (step) {
       case BookingStatus.booked:
