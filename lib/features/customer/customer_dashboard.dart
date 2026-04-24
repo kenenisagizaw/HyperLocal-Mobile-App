@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +10,7 @@ import '../../data/models/service_request_model.dart';
 import '../auth/providers/auth_provider.dart';
 import '../messages/messages_screen.dart';
 import '../messages/providers/message_provider.dart';
+import '../notifications/notification_navigation.dart';
 import '../notifications/providers/notification_provider.dart';
 import '../payments/providers/payment_provider.dart';
 import 'customer_profile_screen.dart';
@@ -100,20 +103,94 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  StreamSubscription<AppNotification>? _notificationSubscription;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       context.read<RequestProvider>().loadMyRequests();
       context.read<ProviderDirectoryProvider>().loadProviders();
-      context.read<NotificationProvider>().loadNotifications();
+      final newNotifications = await context
+          .read<NotificationProvider>()
+          .loadNotifications();
+      await context.read<NotificationProvider>().startStream();
+      if (!mounted || newNotifications.isEmpty) return;
+      final count = newNotifications.length;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 1
+                ? newNotifications.first.title
+                : '$count new notifications',
+          ),
+          action: SnackBarAction(
+            label: 'View',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const NotificationListScreen(),
+                ),
+              );
+            },
+          ),
+        ),
+      );
       final currentUser = context.read<AuthProvider>().currentUser;
       if (currentUser != null) {
         context.read<MessageProvider>().loadConversations();
+        context.read<MessageProvider>().startStream();
       }
     });
+
+    _notificationSubscription = context
+        .read<NotificationProvider>()
+        .incomingNotifications
+        .listen((notification) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(notification.title),
+              action: SnackBarAction(
+                label: 'View',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationListScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final provider = context.read<NotificationProvider>();
+    final messageProvider = context.read<MessageProvider>();
+    if (state == AppLifecycleState.resumed) {
+      provider.startStream();
+      messageProvider.startStream();
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      provider.stopStream();
+      messageProvider.stopStream();
+    }
   }
 
   @override
@@ -590,13 +667,7 @@ class _HomePageState extends State<HomePage> {
                           await context.read<NotificationProvider>().markRead(
                             n.id,
                           );
-                          final navigator = Navigator.of(context);
-                          await navigator.push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  NotificationDetailScreen(notification: n),
-                            ),
-                          );
+                          await handleNotificationTap(context, n);
                           if (!mounted) return;
                           setState(() {});
                         },
@@ -1023,12 +1094,7 @@ class NotificationListScreen extends StatelessWidget {
               onTap: () async {
                 await context.read<NotificationProvider>().markRead(n.id);
                 if (!context.mounted) return;
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NotificationDetailScreen(notification: n),
-                  ),
-                );
+                await handleNotificationTap(context, n);
               },
             ),
           );
