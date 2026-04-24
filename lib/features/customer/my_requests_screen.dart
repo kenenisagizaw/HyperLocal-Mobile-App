@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/utils/distance_utils.dart';
+import '../../core/widgets/resolved_address_text.dart';
 import '../auth/providers/auth_provider.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
@@ -310,6 +312,13 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     int quotesCount, {
     String? bookingId,
   }) {
+    final currentUser = context.read<AuthProvider>().currentUser;
+    final distanceLabel = formatDistanceKm(
+      fromLat: currentUser?.latitude,
+      fromLng: currentUser?.longitude,
+      toLat: request.locationLat,
+      toLng: request.locationLng,
+    );
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -475,6 +484,15 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                             icon: Icons.location_on,
                             label: 'Location',
                             value: _truncateText(request.location, 15),
+                            valueWidget: ResolvedAddressText(
+                              lat: request.locationLat,
+                              lng: request.locationLng,
+                              fallback: _truncateText(request.location, 15),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             color: Colors.blue.shade600,
                           ),
                         ),
@@ -517,6 +535,16 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                     ),
 
                     const SizedBox(height: 12),
+
+                    if (distanceLabel != 'N/A') ...[
+                      _buildInfoItem(
+                        icon: Icons.route,
+                        label: 'Distance',
+                        value: distanceLabel,
+                        color: Colors.teal.shade600,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
 
                     // Action buttons
                     Column(
@@ -616,6 +644,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     required String label,
     required String value,
     required Color color,
+    Widget? valueWidget,
   }) {
     return Row(
       children: [
@@ -625,18 +654,17 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+              if (valueWidget != null)
+                valueWidget
+              else
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
             ],
           ),
         ),
