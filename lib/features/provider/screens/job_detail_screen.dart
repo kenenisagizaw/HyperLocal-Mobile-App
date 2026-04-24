@@ -1,11 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/widgets/resolved_address_text.dart';
+import '../../../data/models/quote_model.dart';
 import '../../../data/models/service_request_model.dart';
 import '../../../data/models/user_model.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../bookings/booking_detail_screen.dart';
+import '../../bookings/providers/booking_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
 import '../quote_sent_screen.dart';
@@ -53,6 +60,8 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final requestProvider = context.read<RequestProvider>();
+      context.read<QuoteProvider>().loadMyQuotes();
+      context.read<BookingProvider>().loadMyBookingsAllStatuses();
       final refreshed = await requestProvider.fetchRequestById(
         widget.request.id,
       );
@@ -61,6 +70,23 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         _detailRequest = refreshed;
       });
     });
+  }
+
+  Quote? _findExistingQuote(
+    QuoteProvider quoteProvider,
+    String requestId,
+    String? providerId,
+  ) {
+    final quotes = quoteProvider.getQuotesForRequest(requestId);
+    for (final quote in quotes) {
+      if (providerId == null || quote.providerId == null) {
+        return quote;
+      }
+      if (quote.providerId == providerId) {
+        return quote;
+      }
+    }
+    return null;
   }
 
   Future<void> _submitQuote() async {
@@ -168,8 +194,21 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   Widget build(BuildContext context) {
     final request = _detailRequest ?? widget.request;
     final customer = widget.customer;
+    final quoteProvider = context.watch<QuoteProvider>();
+    final bookingProvider = context.watch<BookingProvider>();
+    final currentUser = context.watch<AuthProvider>().currentUser;
     final hasLocation =
         request.locationLat != null && request.locationLng != null;
+    final existingQuote = _findExistingQuote(
+      quoteProvider,
+      request.id,
+      currentUser?.id,
+    );
+    final hasActiveQuote =
+        existingQuote != null &&
+        existingQuote.status != QuoteStatus.rejected &&
+        existingQuote.status != QuoteStatus.withdrawn;
+    final booking = bookingProvider.getBookingForRequest(request.id);
 
     return Scaffold(
       appBar: AppBar(
@@ -212,26 +251,15 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     request.description,
                     style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      InfoChip(
-                        icon: Icons.place_rounded,
-                        label: request.location,
-                      ),
-                      InfoChip(
-                        icon: Icons.attach_money_rounded,
-                        label: request.budget == null
-                            ? 'Not set'
-                            : '\$${request.budget!.toStringAsFixed(0)}',
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
+            const SizedBox(height: 16),
+            _buildMediaSection(request.photoPaths),
+            const SizedBox(height: 16),
+            _buildLocationSection(request),
+            const SizedBox(height: 16),
+            _buildBudgetSection(request),
             const SizedBox(height: 20),
             if (hasLocation) ...[
               const Text(
@@ -307,132 +335,328 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Your Price',
-                      prefixText: '\$ ',
-                      labelStyle: TextStyle(color: Colors.grey.shade600),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+            if (hasActiveQuote)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.mark_chat_read_rounded,
+                      color: _primaryGreen,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      existingQuote.status == QuoteStatus.accepted
+                          ? 'Quote accepted. Waiting for booking.'
+                          : 'Quote sent. Please wait for the customer response.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w600,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: _primaryBlue,
-                          width: 2,
+                    ),
+                    if (booking != null) ...[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    BookingDetailScreen(bookingId: booking.id),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.calendar_month),
+                          label: const Text('View Booking'),
                         ),
                       ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _estimatedTimeController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Estimated Time (hours)',
-                      labelStyle: TextStyle(color: Colors.grey.shade600),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: _primaryBlue,
-                          width: 2,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _notesController,
-                    maxLines: 3,
-                    decoration: InputDecoration(
-                      labelText: 'Message / Details',
-                      alignLabelWithHint: true,
-                      labelStyle: TextStyle(color: Colors.grey.shade600),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: _primaryBlue,
-                          width: 2,
-                        ),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _submitQuote,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
+                    ],
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _priceController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Your Price',
+                        prefixText: '\$ ',
+                        labelStyle: TextStyle(color: Colors.grey.shade600),
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: _primaryBlue,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
                       ),
-                      child: const Text(
-                        'Send Quote',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _estimatedTimeController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Estimated Time (hours)',
+                        labelStyle: TextStyle(color: Colors.grey.shade600),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: _primaryBlue,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Message / Details',
+                        alignLabelWithHint: true,
+                        labelStyle: TextStyle(color: Colors.grey.shade600),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                            color: _primaryBlue,
+                            width: 2,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _submitQuote,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: const Text(
+                          'Send Quote',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMediaSection(List<String> paths) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Media',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          if (paths.isEmpty)
+            Text(
+              'No photos',
+              style: TextStyle(color: Colors.grey.shade600),
+            )
+          else
+            _buildPhotoGallery(paths),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationSection(ServiceRequest request) {
+    final address = request.location.isEmpty ? 'Location not set' : request.location;
+    final city = (request.city ?? '').isEmpty ? null : request.city;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Location',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ResolvedAddressText(
+            lat: request.locationLat,
+            lng: request.locationLng,
+            fallback: address,
+            style: const TextStyle(fontSize: 14),
+          ),
+          if (city != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              city,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBudgetSection(ServiceRequest request) {
+    final min = request.budgetMin;
+    final max = request.budgetMax;
+    String label;
+    if (min != null && max != null) {
+      label = '\$${min.toStringAsFixed(0)} - \$${max.toStringAsFixed(0)}';
+    } else if (min != null) {
+      label = '\$${min.toStringAsFixed(0)}';
+    } else if (max != null) {
+      label = '\$${max.toStringAsFixed(0)}';
+    } else if (request.budget != null) {
+      label = '\$${request.budget!.toStringAsFixed(0)}';
+    } else {
+      label = 'Not set';
+    }
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Budget',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Text(label, style: const TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoGallery(List<String> paths) {
+    return SizedBox(
+      height: 90,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: paths.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final path = paths[index];
+          final isRemote = Uri.tryParse(path)?.hasAbsolutePath == true &&
+              (path.startsWith('http://') || path.startsWith('https://'));
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              width: 90,
+              color: Colors.grey.shade100,
+              child: isRemote
+                  ? Image.network(path, fit: BoxFit.cover)
+                  : Image.file(File(path), fit: BoxFit.cover),
+            ),
+          );
+        },
       ),
     );
   }
 }
 
 class InfoChip extends StatelessWidget {
-  const InfoChip({super.key, required this.icon, required this.label});
+  const InfoChip({super.key, required this.icon, this.label, this.child})
+    : assert(label != null || child != null);
 
   final IconData icon;
-  final String label;
+  final String? label;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -454,7 +678,13 @@ class InfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 16, color: const Color(0xFF2563EB)),
           const SizedBox(width: 4),
-          Text(label),
+          Flexible(
+            child: child ??
+                Text(
+                  label ?? '',
+                  overflow: TextOverflow.ellipsis,
+                ),
+          ),
         ],
       ),
     );
