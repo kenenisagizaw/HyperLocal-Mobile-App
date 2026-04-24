@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/utils/distance_utils.dart';
+import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/customer_directory_provider.dart';
@@ -192,6 +194,12 @@ class CustomerProfileDetailScreen extends StatelessWidget {
     final hasLocation = customer.latitude != null && customer.longitude != null;
     final currentUser = context.read<AuthProvider>().currentUser;
     final canMessage = currentUser != null && currentUser.id != customer.id;
+    final distanceLabel = formatDistanceKm(
+      fromLat: currentUser?.latitude,
+      fromLng: currentUser?.longitude,
+      toLat: customer.latitude,
+      toLng: customer.longitude,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -295,7 +303,19 @@ class CustomerProfileDetailScreen extends StatelessWidget {
                   icon: Icons.location_on_rounded,
                   label: 'Address',
                   value: customer.address ?? 'Not shared',
+                  valueWidget: ResolvedAddressText(
+                    lat: customer.latitude,
+                    lng: customer.longitude,
+                    fallback: customer.address ?? 'Not shared',
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
                 ),
+                if (distanceLabel != 'N/A')
+                  _InfoRow(
+                    icon: Icons.route_rounded,
+                    label: 'Distance',
+                    value: distanceLabel,
+                  ),
               ],
             ),
             if (hasLocation) ...[
@@ -451,6 +471,12 @@ class _ProviderProfileDetailScreenState
     final averageRating = reviewProvider.averageRating;
     final currentUser = context.read<AuthProvider>().currentUser;
     final canMessage = currentUser != null && currentUser.id != provider.id;
+    final distanceLabel = formatDistanceKm(
+      fromLat: currentUser?.latitude,
+      fromLng: currentUser?.longitude,
+      toLat: provider.latitude,
+      toLng: provider.longitude,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -588,6 +614,12 @@ class _ProviderProfileDetailScreenState
                   label: 'Location',
                   value: provider.address ?? provider.location ?? 'Not shared',
                 ),
+                if (distanceLabel != 'N/A')
+                  _InfoRow(
+                    icon: Icons.route_rounded,
+                    label: 'Distance',
+                    value: distanceLabel,
+                  ),
               ],
             ),
             const SizedBox(height: 20),
@@ -817,11 +849,13 @@ class _InfoRow extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.valueWidget,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final Widget? valueWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -846,10 +880,13 @@ class _InfoRow extends StatelessWidget {
                   label,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
-                Text(
-                  value,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
+                if (valueWidget != null)
+                  valueWidget!
+                else
+                  Text(
+                    value,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
               ],
             ),
           ),
