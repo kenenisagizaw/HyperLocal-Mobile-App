@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/sse_client.dart';
+import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/models/conversation_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../data/repositories/message_repository.dart';
@@ -13,6 +18,7 @@ class MessageProvider extends ChangeNotifier {
   final List<Conversation> _conversations = [];
   final Map<String, List<Message>> _messagesByConversation = {};
   final Map<String, String?> _nextCursorByConversation = {};
+  SseConnection? _streamConnection;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -42,6 +48,46 @@ class MessageProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> startStream() async {
+    if (_streamConnection != null) {
+      return;
+    }
+    final token = await LocalStorage().getAccessToken();
+    if (token == null || token.isEmpty) {
+      return;
+    }
+    final uri = Uri.parse(
+      '${ApiConstants.baseUrl}${ApiConstants.messageStream}',
+    );
+    _streamConnection = await SseConnection.connect(
+      uri: uri,
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    _streamConnection!.stream.listen(
+      (event) {
+        if (event.event != null && event.event != 'message') {
+          return;
+        }
+        final data = jsonDecode(event.data);
+        if (data is! Map) {
+          return;
+        }
+        _handleStreamMessage(data.cast<String, dynamic>());
+      },
+      onError: (_) {
+        stopStream();
+      },
+      onDone: () {
+        stopStream();
+      },
+    );
+  }
+
+  void stopStream() {
+    _streamConnection?.close();
+    _streamConnection = null;
   }
 
   Future<List<Message>> loadMessages({
@@ -218,6 +264,44 @@ class MessageProvider extends ChangeNotifier {
       final bDate = b.updatedAt ?? b.lastMessage?.createdAt ?? DateTime(0);
       return bDate.compareTo(aDate);
     });
+  }
+
+  void _handleStreamMessage(Map<String, dynamic> data) {
+    final eventType = (data['event'] ?? '').toString().toLowerCase();
+    final conversationId = (data['conversationId'] ?? '').toString();
+    final messageId = (data['messageId'] ?? data['id'] ?? '').toString();
+
+    if (eventType == 'read' && conversationId.isNotEmpty) {
+      _markMessageRead(conversationId, messageId);
+      return;
+    }
+
+    if (eventType == 'created' || eventType == 'updated') {
+      final message = Message.fromJson(data);
+      _upsertMessage(message);
+      loadConversations();
+    }
+  }
+
+  void _markMessageRead(String conversationId, String messageId) {
+    if (messageId.isEmpty) {
+      return;
+    }
+    final list = _messagesByConversation[conversationId];
+    if (list == null) {
+      return;
+    }
+    final index = list.indexWhere((m) => m.id == messageId);
+    if (index >= 0 && !list[index].isRead) {
+      list[index].isRead = true;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    stopStream();
+    super.dispose();
   }
 
   void _setLoading(bool value) {
