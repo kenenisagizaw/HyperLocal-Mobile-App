@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +10,8 @@ import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
+import '../../messages/providers/message_provider.dart';
+import '../../notifications/notification_navigation.dart';
 import '../../notifications/providers/notification_provider.dart';
 import '../../reviews/provider_reviews_screen.dart';
 import '../../reviews/providers/review_provider.dart';
@@ -22,7 +26,9 @@ class ProviderHomePage extends StatefulWidget {
   State<ProviderHomePage> createState() => _ProviderHomePageState();
 }
 
-class _ProviderHomePageState extends State<ProviderHomePage> {
+class _ProviderHomePageState extends State<ProviderHomePage>
+    with WidgetsBindingObserver {
+  StreamSubscription<AppNotification>? _notificationSubscription;
   bool _isOnline = true;
 
   static const _primaryBlue = Color(0xFF2563EB);
@@ -33,10 +39,37 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       context.read<RequestProvider>().loadRequests();
-      context.read<NotificationProvider>().loadNotifications();
+      final newNotifications = await context
+          .read<NotificationProvider>()
+          .loadNotifications();
+      await context.read<NotificationProvider>().startStream();
+      if (mounted && newNotifications.isNotEmpty) {
+        final count = newNotifications.length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              count == 1
+                  ? newNotifications.first.title
+                  : '$count new notifications',
+            ),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationListScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
       final providerId = context.read<AuthProvider>().currentUser?.id;
       if (providerId != null && providerId.isNotEmpty) {
         context.read<ReviewProvider>().loadProviderReviews(
@@ -44,7 +77,55 @@ class _ProviderHomePageState extends State<ProviderHomePage> {
           take: 10,
         );
       }
+      if (providerId != null && providerId.isNotEmpty) {
+        context.read<MessageProvider>().startStream();
+      }
     });
+
+    _notificationSubscription = context
+        .read<NotificationProvider>()
+        .incomingNotifications
+        .listen((notification) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(notification.title),
+              action: SnackBarAction(
+                label: 'View',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationListScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _notificationSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final provider = context.read<NotificationProvider>();
+    final messageProvider = context.read<MessageProvider>();
+    if (state == AppLifecycleState.resumed) {
+      provider.startStream();
+      messageProvider.startStream();
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      provider.stopStream();
+      messageProvider.stopStream();
+    }
   }
 
   @override
@@ -848,14 +929,7 @@ class NotificationListScreen extends StatelessWidget {
                         notification.id,
                       );
                       if (!context.mounted) return;
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NotificationDetailScreen(
-                            notification: notification,
-                          ),
-                        ),
-                      );
+                      await handleNotificationTap(context, notification);
                     },
                   ),
                 );
