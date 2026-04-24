@@ -653,7 +653,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final path = paths[index];
-          final isRemote = Uri.tryParse(path)?.hasAbsolutePath == true &&
+          final isRemote =
+              Uri.tryParse(path)?.hasAbsolutePath == true &&
               (path.startsWith('http://') || path.startsWith('https://'));
           return ClipRRect(
             borderRadius: BorderRadius.circular(12),
