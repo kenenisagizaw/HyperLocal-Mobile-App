@@ -51,10 +51,7 @@ class _PaymentReturnHandlerState extends State<PaymentReturnHandler> {
     final bookingId = uri.queryParameters['bookingId'];
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PaymentReturnScreen(
-          txRef: txRef,
-          bookingId: bookingId,
-        ),
+        builder: (_) => PaymentReturnScreen(txRef: txRef, bookingId: bookingId),
       ),
     );
   }
