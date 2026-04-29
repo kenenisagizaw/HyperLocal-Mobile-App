@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
+import '../../core/constants/api_constants.dart';
 import '../../core/utils/distance_utils.dart';
 import '../../core/widgets/resolved_address_text.dart';
 import '../../data/models/quote_model.dart';
@@ -671,17 +672,16 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final path = paths[index];
-              final isRemote =
-                  Uri.tryParse(path)?.hasAbsolutePath == true &&
-                  (path.startsWith('http://') || path.startsWith('https://'));
+              final resolvedPath = _resolveMediaPath(path);
+              final isRemote = _isRemotePath(path);
               return ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   width: 90,
                   color: Colors.grey.shade100,
                   child: isRemote
-                      ? Image.network(path, fit: BoxFit.cover)
-                      : Image.file(File(path), fit: BoxFit.cover),
+                      ? Image.network(resolvedPath, fit: BoxFit.cover)
+                      : Image.file(File(resolvedPath), fit: BoxFit.cover),
                 ),
               );
             },
@@ -689,6 +689,22 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         ),
       ],
     );
+  }
+
+  String _resolveMediaPath(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    if (path.startsWith('/')) {
+      return '${ApiConstants.baseUrl}$path';
+    }
+    return path;
+  }
+
+  bool _isRemotePath(String path) {
+    return path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('/');
   }
 
   BoxDecoration _buildBackgroundGradient() {
