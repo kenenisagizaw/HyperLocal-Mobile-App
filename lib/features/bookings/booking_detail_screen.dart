@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/distance_utils.dart';
 import '../../core/widgets/resolved_address_text.dart';
+import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../../data/models/user_model.dart';
 // Deep Green: Auth and customer providers
@@ -21,6 +22,7 @@ import '../customer/providers/request_provider.dart';
 import '../messages/messages_screen.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import '../reviews/review_screen.dart';
+import '../payments/payment_screen.dart';
 // Deep Green: Booking provider
 import 'providers/booking_provider.dart';
 
@@ -39,6 +41,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   bool _isSharingLocation = false;
   String? _requestedProviderId;
   String? _requestedCustomerId;
+  bool _requestedQuotes = false;
 
   // Deep Blue: Initialize and load booking on mount
   @override
@@ -100,6 +103,11 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
     if (booking.customerId != null && customerUser == null) {
       _requestCustomerProfile(customerDirectory, booking.customerId!);
+    }
+
+    if (quote == null && !_requestedQuotes) {
+      _requestedQuotes = true;
+      quoteProvider.loadMyQuotes();
     }
 
     final addressFallback = booking.address ?? request?.location ?? 'Not set';
@@ -208,7 +216,13 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
               _buildLiveLocationSection(providerUser),
             const SizedBox(height: 16),
             if (user?.role == UserRole.customer)
-              _buildCustomerActions(context, booking, request, providerUser),
+              _buildCustomerActions(
+                context,
+                booking,
+                request,
+                providerUser,
+                quote,
+              ),
             if (user?.role == UserRole.provider)
               _buildProviderActions(context, booking, customerUser),
             if (booking.status == BookingStatus.completed &&
@@ -255,9 +269,36 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     dynamic booking,
     ServiceRequest? request,
     UserModel? providerUser,
+    Quote? quote,
   ) {
     final bookingProvider = context.read<BookingProvider>();
     final actions = <Widget>[];
+
+    if (booking.status == BookingStatus.booked &&
+        request != null &&
+        quote != null) {
+      actions.add(
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => PaymentScreen(
+                    request: request,
+                    quote: quote,
+                    bookingId: booking.id,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.payment),
+            label: const Text('Pay Now'),
+          ),
+        ),
+      );
+    }
 
     if (booking.status == BookingStatus.booked) {
       actions.add(
