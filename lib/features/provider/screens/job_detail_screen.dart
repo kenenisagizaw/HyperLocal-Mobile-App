@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/constants/api_constants.dart';
 import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/models/service_request_model.dart';
@@ -67,9 +68,49 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       );
       if (!mounted || refreshed == null) return;
       setState(() {
-        _detailRequest = refreshed;
+        _detailRequest = _mergeRequest(_currentRequest, refreshed);
       });
     });
+  }
+
+  ServiceRequest get _currentRequest => _detailRequest ?? widget.request;
+
+  ServiceRequest _mergeRequest(ServiceRequest base, ServiceRequest incoming) {
+    return ServiceRequest(
+      id: incoming.id.isNotEmpty ? incoming.id : base.id,
+      customerId: incoming.customerId.isNotEmpty
+          ? incoming.customerId
+          : base.customerId,
+      title: incoming.title.isNotEmpty ? incoming.title : base.title,
+      description: incoming.description.isNotEmpty
+          ? incoming.description
+          : base.description,
+      category: incoming.category.isNotEmpty ? incoming.category : base.category,
+      location: incoming.location.isNotEmpty ? incoming.location : base.location,
+      city: (incoming.city ?? '').isNotEmpty ? incoming.city : base.city,
+      locationLat: incoming.locationLat ?? base.locationLat,
+      locationLng: incoming.locationLng ?? base.locationLng,
+      budget: incoming.budget ?? base.budget,
+      budgetMin: incoming.budgetMin ?? base.budgetMin,
+      budgetMax: incoming.budgetMax ?? base.budgetMax,
+      photoPaths: incoming.photoPaths.isNotEmpty
+          ? incoming.photoPaths
+          : base.photoPaths,
+      createdAt: incoming.createdAt,
+      status: incoming.status,
+    );
+  }
+
+  ServiceRequest? _findRequestFromProvider(
+    RequestProvider requestProvider,
+    String requestId,
+  ) {
+    for (final request in requestProvider.requests) {
+      if (request.id == requestId) {
+        return request;
+      }
+    }
+    return null;
   }
 
   Quote? _findExistingQuote(
@@ -92,6 +133,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   Future<void> _submitQuote() async {
     final quoteProvider = context.read<QuoteProvider>();
     final requestProvider = context.read<RequestProvider>();
+    final activeRequest = _currentRequest;
     final priceText = _priceController.text.trim();
     final notes = _notesController.text.trim();
     final estimatedText = _estimatedTimeController.text.trim();
@@ -137,9 +179,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       return;
     }
 
-    if (widget.request.status == RequestStatus.accepted ||
-        widget.request.status == RequestStatus.completed ||
-        widget.request.status == RequestStatus.cancelled) {
+    if (activeRequest.status == RequestStatus.accepted ||
+        activeRequest.status == RequestStatus.completed ||
+        activeRequest.status == RequestStatus.cancelled) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('This request is not open for quotes.'),
@@ -153,7 +195,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     }
 
     final quote = await quoteProvider.submitQuote(
-      serviceRequestId: widget.request.id,
+      serviceRequestId: activeRequest.id,
       price: price,
       message: notes,
       estimatedTime: estimatedTime,
@@ -173,7 +215,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       return;
     }
 
-    requestProvider.updateStatus(widget.request.id, RequestStatus.quoted);
+    requestProvider.updateStatus(activeRequest.id, RequestStatus.quoted);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -192,7 +234,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final request = _detailRequest ?? widget.request;
+    final requestProvider = context.watch<RequestProvider>();
+    final providerRequest = _findRequestFromProvider(
+      requestProvider,
+      _currentRequest.id,
+    );
+    final request = providerRequest == null
+        ? _currentRequest
+        : _mergeRequest(_currentRequest, providerRequest);
     final customer = widget.customer;
     final quoteProvider = context.watch<QuoteProvider>();
     final bookingProvider = context.watch<BookingProvider>();
@@ -631,22 +680,37 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final path = paths[index];
-          final isRemote =
-              Uri.tryParse(path)?.hasAbsolutePath == true &&
-              (path.startsWith('http://') || path.startsWith('https://'));
+          final resolvedPath = _resolveMediaPath(path);
+          final isRemote = _isRemotePath(path);
           return ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               width: 90,
               color: Colors.grey.shade100,
               child: isRemote
-                  ? Image.network(path, fit: BoxFit.cover)
-                  : Image.file(File(path), fit: BoxFit.cover),
+                  ? Image.network(resolvedPath, fit: BoxFit.cover)
+                  : Image.file(File(resolvedPath), fit: BoxFit.cover),
             ),
           );
         },
       ),
     );
+  }
+
+  String _resolveMediaPath(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    if (path.startsWith('/')) {
+      return '${ApiConstants.baseUrl}$path';
+    }
+    return path;
+  }
+
+  bool _isRemotePath(String path) {
+    return path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('/');
   }
 }
 
