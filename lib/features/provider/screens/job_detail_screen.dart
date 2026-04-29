@@ -5,8 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/enums.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/constants/enums.dart';
 import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/models/service_request_model.dart';
@@ -85,8 +85,12 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       description: incoming.description.isNotEmpty
           ? incoming.description
           : base.description,
-      category: incoming.category.isNotEmpty ? incoming.category : base.category,
-      location: incoming.location.isNotEmpty ? incoming.location : base.location,
+      category: incoming.category.isNotEmpty
+          ? incoming.category
+          : base.category,
+      location: incoming.location.isNotEmpty
+          ? incoming.location
+          : base.location,
       city: (incoming.city ?? '').isNotEmpty ? incoming.city : base.city,
       locationLat: incoming.locationLat ?? base.locationLat,
       locationLng: incoming.locationLng ?? base.locationLng,
