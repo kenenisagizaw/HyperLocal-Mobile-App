@@ -20,9 +20,9 @@ import '../customer/providers/quote_provider.dart';
 import '../customer/providers/request_provider.dart';
 // Deep Blue: Messages and reviews screens
 import '../messages/messages_screen.dart';
+import '../payments/payment_screen.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import '../reviews/review_screen.dart';
-import '../payments/payment_screen.dart';
 // Deep Green: Booking provider
 import 'providers/booking_provider.dart';
 
