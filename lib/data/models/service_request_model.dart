@@ -44,12 +44,12 @@ class ServiceRequest {
     final budgetMinValue = json['budgetMin'] ?? json['budget_min'];
     final budgetMaxValue = json['budgetMax'] ?? json['budget_max'];
     final imagesValue =
-      json['images'] ??
-      json['photoPaths'] ??
-      json['photos'] ??
-      json['media'] ??
-      json['attachments'] ??
-      json['files'];
+        json['images'] ??
+        json['photoPaths'] ??
+        json['photos'] ??
+        json['media'] ??
+        json['attachments'] ??
+        json['files'];
 
     return ServiceRequest(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
@@ -172,7 +172,8 @@ class ServiceRequest {
       return value
           .map((item) {
             if (item is Map) {
-              final url = item['url'] ??
+              final url =
+                  item['url'] ??
                   item['path'] ??
                   item['imageUrl'] ??
                   item['fileUrl'] ??
