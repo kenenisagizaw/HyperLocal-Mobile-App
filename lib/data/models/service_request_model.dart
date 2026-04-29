@@ -43,7 +43,13 @@ class ServiceRequest {
     final budgetValue = json['budget'] ?? json['budgetMin'];
     final budgetMinValue = json['budgetMin'] ?? json['budget_min'];
     final budgetMaxValue = json['budgetMax'] ?? json['budget_max'];
-    final imagesValue = json['images'] ?? json['photoPaths'] ?? json['photos'];
+    final imagesValue =
+      json['images'] ??
+      json['photoPaths'] ??
+      json['photos'] ??
+      json['media'] ??
+      json['attachments'] ??
+      json['files'];
 
     return ServiceRequest(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
@@ -100,6 +106,42 @@ class ServiceRequest {
     };
   }
 
+  ServiceRequest copyWith({
+    String? id,
+    String? customerId,
+    String? title,
+    String? description,
+    String? category,
+    String? location,
+    String? city,
+    double? locationLat,
+    double? locationLng,
+    double? budget,
+    double? budgetMin,
+    double? budgetMax,
+    List<String>? photoPaths,
+    DateTime? createdAt,
+    RequestStatus? status,
+  }) {
+    return ServiceRequest(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      location: location ?? this.location,
+      city: city ?? this.city,
+      locationLat: locationLat ?? this.locationLat,
+      locationLng: locationLng ?? this.locationLng,
+      budget: budget ?? this.budget,
+      budgetMin: budgetMin ?? this.budgetMin,
+      budgetMax: budgetMax ?? this.budgetMax,
+      photoPaths: photoPaths ?? this.photoPaths,
+      createdAt: createdAt ?? this.createdAt,
+      status: status ?? this.status,
+    );
+  }
+
   static RequestStatus _parseStatus(dynamic value) {
     if (value is String) {
       final normalized = value.toLowerCase();
@@ -127,7 +169,25 @@ class ServiceRequest {
 
   static List<String> _parseImages(dynamic value) {
     if (value is List) {
-      return value.map((item) => item.toString()).toList();
+      return value
+          .map((item) {
+            if (item is Map) {
+              final url = item['url'] ??
+                  item['path'] ??
+                  item['imageUrl'] ??
+                  item['fileUrl'] ??
+                  item['location'];
+              if (url is String && url.isNotEmpty) {
+                return url;
+              }
+            }
+            if (item is String && item.isNotEmpty) {
+              return item;
+            }
+            return null;
+          })
+          .whereType<String>()
+          .toList();
     }
     return const [];
   }
