@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/constants/enums.dart';
 import '../../data/models/payment_model.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
-import '../auth/providers/auth_provider.dart';
 import '../bookings/booking_detail_screen.dart';
-import '../customer/providers/request_provider.dart';
+import '../bookings/providers/booking_provider.dart';
 import '../reviews/review_screen.dart';
 import 'providers/payment_provider.dart';
 
-class PaymentScreen extends StatelessWidget {
+class PaymentScreen extends StatefulWidget {
   const PaymentScreen({
     super.key,
     required this.request,
@@ -24,11 +23,104 @@ class PaymentScreen extends StatelessWidget {
   final String? bookingId;
 
   @override
+  State<PaymentScreen> createState() => _PaymentScreenState();
+}
+
+class _PaymentScreenState extends State<PaymentScreen> {
+  PaymentInitialization? _initialization;
+  bool _didLaunchCheckout = false;
+  bool _autoStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _autoStarted) return;
+      _autoStarted = true;
+      if (widget.bookingId != null && widget.bookingId!.isNotEmpty) {
+        _startPayment();
+      }
+    });
+  }
+
+  Future<void> _startPayment() async {
+    if (widget.bookingId == null || widget.bookingId!.isEmpty) {
+      _showSnack('Booking ID is missing.');
+      return;
+    }
+    final paymentProvider = context.read<PaymentProvider>();
+    final initialization = await paymentProvider.initializeBookingPayment(
+      bookingId: widget.bookingId!,
+      amount: widget.quote.price,
+      returnUrl:
+          'myapp://payment/chapa/callback?bookingId=${Uri.encodeComponent(widget.bookingId!)}',
+    );
+    if (!mounted) return;
+    if (initialization == null) {
+      _showSnack(paymentProvider.errorMessage ?? 'Failed to start payment.');
+      return;
+    }
+
+    final uri = Uri.tryParse(initialization.checkoutUrl);
+    if (uri == null) {
+      _showSnack('Invalid checkout URL.');
+      return;
+    }
+
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!mounted) return;
+    if (!launched) {
+      _showSnack('Unable to open checkout.');
+      return;
+    }
+
+    setState(() {
+      _initialization = initialization;
+      _didLaunchCheckout = true;
+    });
+  }
+
+  Future<void> _verifyPayment() async {
+    final txRef = _initialization?.transactionReference;
+    if (txRef == null || txRef.isEmpty) {
+      _showSnack('Missing transaction reference.');
+      return;
+    }
+    final paymentProvider = context.read<PaymentProvider>();
+    final bookingProvider = context.read<BookingProvider>();
+    final result = await paymentProvider.verifyPayment(txRef);
+    if (!mounted) return;
+    if (result == null) {
+      _showSnack(paymentProvider.errorMessage ?? 'Payment verification failed.');
+      return;
+    }
+    if (!result.verified) {
+      _showSnack('Payment not confirmed yet.');
+      return;
+    }
+
+    if (widget.bookingId != null && widget.bookingId!.isNotEmpty) {
+      await bookingProvider.loadBooking(widget.bookingId!);
+    }
+
+    if (!mounted) return;
+    _showSnack('Payment verified.');
+    Navigator.pop(context);
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
     final paymentProvider = context.watch<PaymentProvider>();
-    final requestProvider = context.watch<RequestProvider>();
-    final currentUser = authProvider.currentUser;
+    final bookingId = widget.bookingId;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
@@ -42,44 +134,67 @@ class PaymentScreen extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            _SummaryRow(label: 'Service', value: request.category),
-            _SummaryRow(label: 'Provider', value: quote.providerName),
+            _SummaryRow(label: 'Service', value: widget.request.category),
+            _SummaryRow(label: 'Provider', value: widget.quote.providerName),
             _SummaryRow(
               label: 'Total',
-              value: '\$${quote.price.toStringAsFixed(2)}',
+              value: '\$${widget.quote.price.toStringAsFixed(2)}',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            if (_initialization != null) ...[
+              Text(
+                'Transaction: ${_initialization!.transactionReference}',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+              const SizedBox(height: 8),
+            ],
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: currentUser == null
-                    ? null
-                    : () {
-                        final payment = paymentProvider.createPayment(
-                          requestId: request.id,
-                          quoteId: quote.id,
-                          payerId: currentUser.id,
-                          amount: quote.price,
-                        );
-                        requestProvider.updateStatus(
-                          request.id,
-                          RequestStatus.accepted,
-                        );
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PaymentSuccessScreen(
-                              payment: payment,
-                              request: request,
-                              quote: quote,
-                              bookingId: bookingId,
-                            ),
-                          ),
-                        );
-                      },
-                child: const Text('Pay Now'),
+                onPressed: paymentProvider.isLoading ? null : _startPayment,
+                child: Text(
+                  paymentProvider.isLoading ? 'Starting...' : 'Pay Now',
+                ),
               ),
             ),
+            if (_didLaunchCheckout) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Complete the payment in your browser, then tap verify.',
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: paymentProvider.isLoading ? null : _verifyPayment,
+                  child: Text(
+                    paymentProvider.isLoading
+                        ? 'Verifying...'
+                        : 'I have paid',
+                  ),
+                ),
+              ),
+            ],
+            if (bookingId != null && bookingId.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookingDetailScreen(
+                          bookingId: bookingId,
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text('View Booking'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
