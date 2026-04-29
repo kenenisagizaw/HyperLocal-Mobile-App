@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/enums.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/constants/enums.dart';
 import '../../core/utils/distance_utils.dart';
 import '../../core/widgets/resolved_address_text.dart';
 import '../../data/models/quote_model.dart';
