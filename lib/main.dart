@@ -63,8 +63,7 @@ void main() {
               NotificationRepository(context.read<NotificationApi>()),
         ),
         Provider(
-          create: (context) =>
-              PaymentRepository(context.read<PaymentApi>()),
+          create: (context) => PaymentRepository(context.read<PaymentApi>()),
         ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
