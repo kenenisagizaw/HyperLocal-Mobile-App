@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
+import 'features/payments/payment_return_handler.dart';
 import 'routes.dart';
 
 class MyApp extends StatelessWidget {
@@ -14,6 +15,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: Routes.root,
       routes: Routes.routes,
+      builder: (context, child) {
+        return PaymentReturnHandler(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }
