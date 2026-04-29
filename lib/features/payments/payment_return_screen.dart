@@ -74,8 +74,8 @@ class _PaymentReturnScreenState extends State<PaymentReturnScreen> {
     final title = _verified == true
         ? 'Payment Verified'
         : _verified == false
-            ? 'Payment Pending'
-            : 'Verifying Payment';
+        ? 'Payment Pending'
+        : 'Verifying Payment';
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
@@ -109,9 +109,8 @@ class _PaymentReturnScreenState extends State<PaymentReturnScreen> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => BookingDetailScreen(
-                          bookingId: bookingId,
-                        ),
+                        builder: (_) =>
+                            BookingDetailScreen(bookingId: bookingId),
                       ),
                     );
                   },
