@@ -35,8 +35,8 @@ class PaymentInitialization {
     final data = json['data'] is Map<String, dynamic>
         ? json['data'] as Map<String, dynamic>
         : json;
-    final checkoutUrl =
-        (data['checkoutUrl'] ?? data['checkout_url'] ?? '').toString();
+    final checkoutUrl = (data['checkoutUrl'] ?? data['checkout_url'] ?? '')
+        .toString();
     final txRef =
         (data['transactionReference'] ??
                 data['txRef'] ??
@@ -76,7 +76,8 @@ class PaymentVerification {
             .toString();
     final status = (data['status'] ?? data['paymentStatus'] ?? '').toString();
     final normalized = status.toLowerCase();
-    final verified = normalized == 'success' ||
+    final verified =
+        normalized == 'success' ||
         normalized == 'successful' ||
         normalized == 'paid' ||
         normalized == 'completed';
