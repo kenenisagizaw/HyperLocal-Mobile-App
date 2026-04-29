@@ -90,8 +90,13 @@ class RequestProvider extends ChangeNotifier {
         longitude: longitude,
         images: images,
       );
-      _requests = [created, ..._requests];
-      return created;
+      final resolved = (created.photoPaths.isEmpty && images.isNotEmpty)
+          ? created.copyWith(
+              photoPaths: images.map((file) => file.path).toList(),
+            )
+          : created;
+      _requests = [resolved, ..._requests];
+      return resolved;
     } on DioException catch (error) {
       lastStatusCode = error.response?.statusCode;
       errorMessage = _extractErrorMessage(error);
