@@ -5,6 +5,7 @@ import 'app.dart';
 import 'data/datasources/remote/booking_api.dart';
 import 'data/datasources/remote/message_api.dart';
 import 'data/datasources/remote/notification_api.dart';
+import 'data/datasources/remote/payment_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
@@ -12,6 +13,7 @@ import 'data/repositories/booking_repository.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/message_repository.dart';
 import 'data/repositories/notification_repository.dart';
+import 'data/repositories/payment_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
@@ -38,6 +40,7 @@ void main() {
         Provider(create: (_) => ReviewApi()),
         Provider(create: (_) => MessageApi()),
         Provider(create: (_) => NotificationApi()),
+        Provider(create: (_) => PaymentApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
         Provider(
@@ -58,6 +61,10 @@ void main() {
         Provider(
           create: (context) =>
               NotificationRepository(context.read<NotificationApi>()),
+        ),
+        Provider(
+          create: (context) =>
+              PaymentRepository(context.read<PaymentApi>()),
         ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
@@ -109,7 +116,13 @@ void main() {
             return previous ?? NotificationProvider(repository: repository);
           },
         ),
-        ChangeNotifierProvider(create: (_) => PaymentProvider()),
+        ChangeNotifierProxyProvider<PaymentRepository, PaymentProvider>(
+          create: (context) =>
+              PaymentProvider(repository: context.read<PaymentRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? PaymentProvider(repository: repository);
+          },
+        ),
         ChangeNotifierProxyProvider<ReviewRepository, ReviewProvider>(
           create: (context) =>
               ReviewProvider(repository: context.read<ReviewRepository>()),
