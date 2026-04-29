@@ -67,10 +67,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       return;
     }
 
-    final launched = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!mounted) return;
     if (!launched) {
       _showSnack('Unable to open checkout.');
@@ -94,7 +91,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final result = await paymentProvider.verifyPayment(txRef);
     if (!mounted) return;
     if (result == null) {
-      _showSnack(paymentProvider.errorMessage ?? 'Payment verification failed.');
+      _showSnack(
+        paymentProvider.errorMessage ?? 'Payment verification failed.',
+      );
       return;
     }
     if (!result.verified) {
@@ -169,9 +168,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 child: OutlinedButton(
                   onPressed: paymentProvider.isLoading ? null : _verifyPayment,
                   child: Text(
-                    paymentProvider.isLoading
-                        ? 'Verifying...'
-                        : 'I have paid',
+                    paymentProvider.isLoading ? 'Verifying...' : 'I have paid',
                   ),
                 ),
               ),
@@ -185,9 +182,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => BookingDetailScreen(
-                          bookingId: bookingId,
-                        ),
+                        builder: (_) =>
+                            BookingDetailScreen(bookingId: bookingId),
                       ),
                     );
                   },
