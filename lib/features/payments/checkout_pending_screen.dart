@@ -8,7 +8,16 @@ import '../../core/utils/logger.dart';
 import '../../core/services/service_locator.dart';
 
 class CheckoutPendingScreen extends StatefulWidget {
-  const CheckoutPendingScreen({super.key});
+  const CheckoutPendingScreen({
+    super.key,
+    this.transactionReference,
+    this.connectAmount,
+    this.amount,
+  });
+
+  final String? transactionReference;
+  final int? connectAmount;
+  final double? amount;
 
   @override
   State<CheckoutPendingScreen> createState() => _CheckoutPendingScreenState();
@@ -27,6 +36,9 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
   @override
   void initState() {
     super.initState();
+    _transactionReference = widget.transactionReference;
+    _connectAmount = widget.connectAmount;
+    _amount = widget.amount;
     _connectPurchaseService = ServiceLocator().connectPurchaseService;
     _setupDeepLinkListener();
     _startStatusCheckTimer();

@@ -2,16 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PaymentResultScreen extends StatelessWidget {
-  const PaymentResultScreen({super.key});
+  const PaymentResultScreen({
+    super.key,
+    required this.success,
+    this.transactionReference,
+    this.connectAmount,
+    this.amount,
+    this.error,
+  });
+
+  final bool success;
+  final String? transactionReference;
+  final int? connectAmount;
+  final double? amount;
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-    final success = args?['success'] as bool? ?? false;
-    final transactionReference = args?['transactionReference'] as String?;
-    final connectAmount = args?['connectAmount'] as int?;
-    final amount = args?['amount'] as double?;
-    final error = args?['error'] as String?;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
