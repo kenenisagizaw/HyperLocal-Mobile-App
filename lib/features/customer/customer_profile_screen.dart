@@ -5,8 +5,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../shared/widgets/custom_textfield.dart';
+import '../../routes.dart';
 import '../auth/providers/auth_provider.dart';
 import '../disputes/disputes_list_screen.dart';
+import '../profile/identity_verification_screen.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -318,6 +320,68 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const IdentityVerificationScreen(),
+                          ),
+                        );
+                      },
+                      leading: const Icon(Icons.verified_user, color: Colors.white),
+                      title: const Text(
+                        'Identity Verification',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.of(context).pushNamed(Routes.connectPackages);
+                      },
+                      leading: const Icon(Icons.flash_on, color: Colors.white),
+                      title: const Text(
+                        'Buy Connects',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: const Text(
+                        'Get more connects to hire service providers',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
                         ),
                       ),
                       trailing: const Icon(
