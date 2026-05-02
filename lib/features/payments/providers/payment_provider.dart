@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/api_constants.dart';
 import '../../../data/models/payment_model.dart';
 import '../../../data/repositories/payment_repository.dart';
 
@@ -21,15 +22,20 @@ class PaymentProvider extends ChangeNotifier {
   Future<PaymentInitialization?> initializeBookingPayment({
     required String bookingId,
     required double amount,
-    required String returnUrl,
+    String? returnUrl, // Optional for Flutter/mobile clients
+    String? serviceRequestId, // Optional metadata
   }) async {
     _setLoading(true);
     _clearErrors();
     try {
       final initialization = await repository.initializeBookingPayment(
+        purpose: "BOOKING_PAYMENT",
         amount: amount,
-        returnUrl: returnUrl,
-        bookingId: bookingId,
+        returnUrl: returnUrl ?? ApiConstants.paymentReturnUrl,
+        metadata: {
+          "bookingId": bookingId,
+          if (serviceRequestId != null) "serviceRequestId": serviceRequestId,
+        },
       );
       lastInitialization = initialization;
       return initialization;

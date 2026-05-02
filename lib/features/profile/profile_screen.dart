@@ -9,6 +9,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/user_model.dart';
+import '../../routes.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../disputes/disputes_list_screen.dart';
@@ -556,6 +557,13 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         elevation: 0,
         centerTitle: true,
         actions: [
+          IconButton(
+            tooltip: 'Buy Connects',
+            onPressed: () {
+              Navigator.of(context).pushNamed('/connect-packages');
+            },
+            icon: const Icon(Icons.flash_on, color: Colors.white),
+          ),
           IconButton(
             tooltip: 'Disputes',
             onPressed: () {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 
+import '../../routes.dart';
 import 'payment_return_screen.dart';
 
 class PaymentReturnHandler extends StatefulWidget {
@@ -49,6 +50,23 @@ class _PaymentReturnHandlerState extends State<PaymentReturnHandler> {
     _lastHandledTxRef = txRef;
 
     final bookingId = uri.queryParameters['bookingId'];
+    final purpose = uri.queryParameters['purpose'];
+    
+    // Handle connect purchase callbacks
+    if (purpose == 'CONNECT_PURCHASE' || bookingId == null) {
+      Navigator.of(context).pushNamed(
+        Routes.paymentResult,
+        arguments: {
+          'success': true, // Will be verified properly in the result screen
+          'transactionReference': txRef,
+          'connectAmount': null, // Will be determined by verification
+          'amount': null, // Will be determined by verification
+        },
+      );
+      return;
+    }
+    
+    // Handle booking payment callbacks (original functionality)
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PaymentReturnScreen(txRef: txRef, bookingId: bookingId),

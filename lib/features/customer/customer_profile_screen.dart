@@ -367,7 +367,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                     ),
                     child: ListTile(
                       onTap: () {
-                        Navigator.of(context).pushNamed(Routes.connectPackages);
+                        Navigator.of(context).pushNamed('/connect-packages');
                       },
                       leading: const Icon(Icons.flash_on, color: Colors.white),
                       title: const Text(
