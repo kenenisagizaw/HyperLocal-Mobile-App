@@ -20,8 +20,10 @@ import '../customer/providers/quote_provider.dart';
 import '../customer/providers/request_provider.dart';
 // Deep Blue: Messages and reviews screens
 import '../messages/messages_screen.dart';
+import '../disputes/dispute_create_screen.dart';
 import '../payments/payment_screen.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
+import '../provider/widgets/user_avatar.dart';
 import '../reviews/review_screen.dart';
 // Deep Green: Booking provider
 import 'providers/booking_provider.dart';
@@ -180,35 +182,65 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Provider',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    providerUser?.name ??
-                        booking.providerId ??
-                        'Unknown provider',
-                    style: const TextStyle(fontSize: 15),
+                  UserAvatar(
+                    name: providerUser?.name ?? 'Unknown Provider',
+                    imagePath: providerUser?.profilePicture,
+                    radius: 24,
                   ),
-                  if (providerDistance != 'N/A')
-                    Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        'Distance: $providerDistance',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          providerUser?.name ??
+                              booking.providerId ??
+                              'Unknown provider',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                        if (providerDistance != 'N/A')
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'Distance: $providerDistance',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Customer',
-              child: Text(
-                customerUser?.name ?? booking.customerId ?? 'Unknown customer',
-                style: const TextStyle(fontSize: 15),
+              child: Row(
+                children: [
+                  UserAvatar(
+                    name: customerUser?.name ?? 'Unknown Customer',
+                    imagePath: customerUser?.profilePicture,
+                    radius: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      customerUser?.name ?? booking.customerId ?? 'Unknown customer',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -224,7 +256,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 quote,
               ),
             if (user?.role == UserRole.provider)
-              _buildProviderActions(context, booking, customerUser),
+              _buildProviderActions(context, booking, request, customerUser),
             if (booking.status == BookingStatus.completed &&
                 user?.role == UserRole.provider)
               _DetailCard(
@@ -248,7 +280,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       return;
     }
     _requestedProviderId = providerId;
-    providerDirectory.fetchProviderById(providerId);
+    // Fetch provider profile but handle 404 errors gracefully
+    providerDirectory.fetchProviderById(providerId).catchError((e) {
+      debugPrint('Provider profile not found: $providerId');
+    });
   }
 
   // Deep Blue: Request customer profile if not loaded
@@ -328,6 +363,31 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       );
     }
 
+    if (booking.status == BookingStatus.booked ||
+        booking.status == BookingStatus.inProgress) {
+      actions.add(
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              final serviceRequestId = request?.id ?? booking.serviceRequestId;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DisputeCreateScreen(
+                    serviceRequestId: serviceRequestId,
+                    serviceRequestTitle: request?.title,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.gavel),
+            label: const Text('Raise Dispute'),
+          ),
+        ),
+      );
+    }
+
     if (providerUser?.id != null) {
       actions.add(
         SizedBox(
@@ -402,6 +462,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   Widget _buildProviderActions(
     BuildContext context,
     dynamic booking,
+    ServiceRequest? request,
     UserModel? customerUser,
   ) {
     final bookingProvider = context.read<BookingProvider>();
@@ -504,6 +565,28 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           },
           icon: const Icon(Icons.person_outline),
           label: const Text('View Customer Profile'),
+        ),
+      );
+    }
+
+    if (booking.status == BookingStatus.booked ||
+        booking.status == BookingStatus.inProgress) {
+      actions.add(
+        OutlinedButton.icon(
+          onPressed: () {
+            final serviceRequestId = request?.id ?? booking.serviceRequestId;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DisputeCreateScreen(
+                  serviceRequestId: serviceRequestId,
+                  serviceRequestTitle: request?.title,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.gavel),
+          label: const Text('Raise Dispute'),
         ),
       );
     }
