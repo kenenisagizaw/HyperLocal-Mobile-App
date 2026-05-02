@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/sse_client.dart';
+import '../../../core/services/websocket_service.dart';
 import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/repositories/notification_repository.dart';
@@ -14,12 +15,14 @@ class NotificationProvider extends ChangeNotifier {
   NotificationProvider({required this.repository});
 
   final NotificationRepository repository;
+  final WebSocketService _webSocketService = WebSocketService();
 
   final List<AppNotification> _notifications = [];
   final Set<String> _knownIds = {};
   final StreamController<AppNotification> _incomingController =
       StreamController<AppNotification>.broadcast();
   SseConnection? _streamConnection;
+  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -31,6 +34,14 @@ class NotificationProvider extends ChangeNotifier {
       _incomingController.stream;
 
   int get unreadCount => _notifications.where((n) => n.readAt == null).length;
+
+  void initializeWebSocket() {
+    _websocketSubscription = _webSocketService.events.listen((event) {
+      if (event.type == 'notification.created') {
+        _handleNotificationCreated(event.data);
+      }
+    });
+  }
 
   Future<List<AppNotification>> loadNotifications({
     int take = 20,
@@ -190,9 +201,20 @@ class NotificationProvider extends ChangeNotifier {
     errorMessage = _extractErrorMessage(error);
   }
 
+  void _handleNotificationCreated(Map<String, dynamic> data) {
+    try {
+      final notification = AppNotification.fromJson(data);
+      _upsertNotification(notification, fromStream: true);
+      _incomingController.add(notification);
+    } catch (e) {
+      debugPrint('Error handling notification.created event: $e');
+    }
+  }
+
   @override
   void dispose() {
     stopStream();
+    _websocketSubscription?.cancel();
     _incomingController.close();
     super.dispose();
   }
