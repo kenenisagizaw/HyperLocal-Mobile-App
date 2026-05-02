@@ -12,19 +12,26 @@ class PaymentApi {
   final LocalStorage _storage = LocalStorage();
 
   Future<PaymentInitialization> initializeBookingPayment({
+    required String purpose,
     required double amount,
-    required String returnUrl,
-    required String bookingId,
+    String? returnUrl, // Optional custom return URL
+    required Map<String, dynamic> metadata,
   }) async {
     final dio = await _dioFuture;
+    final data = {
+      'purpose': purpose,
+      'amount': amount,
+      'metadata': metadata,
+    };
+    
+    // Always include returnUrl - use provided custom URL or default frontend URL
+    // Chapa requires a public HTTP(S) URL for return URL
+    final finalReturnUrl = returnUrl ?? ApiConstants.paymentReturnUrl;
+    data['returnUrl'] = finalReturnUrl;
+    
     final response = await dio.post(
       ApiConstants.paymentsChapaInitialize,
-      data: {
-        'purpose': 'BOOKING_PAYMENT',
-        'amount': amount,
-        'returnUrl': returnUrl,
-        'metadata': {'bookingId': bookingId},
-      },
+      data: data,
       options: await _authOptions(),
     );
     final map = _unwrapMap(response.data);
