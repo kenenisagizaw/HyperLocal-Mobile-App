@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/user_model.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
+import '../disputes/disputes_list_screen.dart';
 import 'provider_verification_screen.dart';
 
 class ProviderProfilePage extends StatefulWidget {
@@ -555,6 +556,16 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
         elevation: 0,
         centerTitle: true,
         actions: [
+          IconButton(
+            tooltip: 'Disputes',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DisputesListScreen()),
+              );
+            },
+            icon: const Icon(Icons.gavel, color: Colors.white),
+          ),
           TextButton.icon(
             onPressed: () async {
               if (_isEditing) {
