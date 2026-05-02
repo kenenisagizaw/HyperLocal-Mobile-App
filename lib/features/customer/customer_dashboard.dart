@@ -13,6 +13,7 @@ import '../messages/providers/message_provider.dart';
 import '../notifications/notification_navigation.dart';
 import '../notifications/providers/notification_provider.dart';
 import '../payments/providers/payment_provider.dart';
+import '../../routes.dart';
 import 'customer_profile_screen.dart';
 import 'my_requests_screen.dart';
 import 'providers/provider_directory_provider.dart';
@@ -920,13 +921,14 @@ class PaymentsPage extends StatelessWidget {
     final payments = paymentProvider.payments
         .where((p) => p.payerId == currentUser.id)
         .toList();
-    if (payments.isEmpty) return const Center(child: Text('No payments yet'));
 
     return Container(
       color: const Color(0xFFF8FAFF),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: payments.length,
+      child: payments.isEmpty 
+        ? const Center(child: Text('No payments yet'))
+        : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: payments.length,
         itemBuilder: (context, index) {
           final payment = payments[index];
           ServiceRequest? request;
