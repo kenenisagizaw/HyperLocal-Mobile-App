@@ -42,7 +42,7 @@ class RequestApi {
     if (images.isNotEmpty) {
       final formData = FormData.fromMap({
         ...payload,
-        'images': [
+        'images[]': [
           for (final file in images)
             await MultipartFile.fromFile(file.path, filename: file.name),
         ],
