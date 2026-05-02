@@ -10,6 +10,8 @@ import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
+import '../../disputes/disputes_list_screen.dart';
+import '../../disputes/providers/dispute_provider.dart';
 import '../../messages/providers/message_provider.dart';
 import '../../notifications/notification_navigation.dart';
 import '../../notifications/providers/notification_provider.dart';
@@ -79,6 +81,7 @@ class _ProviderHomePageState extends State<ProviderHomePage>
       }
       if (providerId != null && providerId.isNotEmpty) {
         context.read<MessageProvider>().startStream();
+        context.read<DisputeProvider>().loadDisputes();
       }
     });
 
@@ -135,6 +138,7 @@ class _ProviderHomePageState extends State<ProviderHomePage>
     final quoteProvider = context.watch<QuoteProvider>();
     final reviewProvider = context.watch<ReviewProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
+    final disputeProvider = context.watch<DisputeProvider>();
 
     final currentUser = authProvider.currentUser;
     final providerName = currentUser?.name ?? 'Provider';
@@ -149,6 +153,9 @@ class _ProviderHomePageState extends State<ProviderHomePage>
     final rating = reviewProvider.averageRating;
     final reviewCount = providerReviews.length;
     final unreadNotificationsCount = notificationProvider.unreadCount;
+    final openDisputeCount = disputeProvider.disputes
+        .where((dispute) => dispute.isOpen)
+        .length;
 
     final activeJobs = requestProvider.requests
         .where((r) => r.status == RequestStatus.accepted)
@@ -386,6 +393,20 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                       label: "Today's Earnings",
                       value: '\$${earningsToday.toStringAsFixed(0)}',
                       gradientColors: const [_gradientEnd, _gradientStart],
+                    ),
+                    SummaryCard(
+                      icon: Icons.gavel_rounded,
+                      label: 'Open Disputes',
+                      value: openDisputeCount.toString(),
+                      gradientColors: const [_gradientStart, _gradientEnd],
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DisputesListScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

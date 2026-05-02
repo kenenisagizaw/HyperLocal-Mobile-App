@@ -13,6 +13,7 @@ import '../bookings/booking_creation_screen.dart';
 import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
+import '../disputes/dispute_create_screen.dart';
 import '../messages/messages_screen.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import '../provider/widgets/user_avatar.dart';
@@ -86,7 +87,28 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildRequestSummaryCard(request),
-                const SizedBox(height: 18),
+                const SizedBox(height: 12),
+                if (_canRaiseDispute(request.status)) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DisputeCreateScreen(
+                              serviceRequestId: request.id,
+                              serviceRequestTitle: request.title,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.gavel),
+                      label: const Text('Raise Dispute'),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
                 Text(
                   'Quotes (${effectiveQuotes.length})',
                   style: const TextStyle(
@@ -134,6 +156,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         ),
       ),
     );
+  }
+
+  bool _canRaiseDispute(RequestStatus status) {
+    return status == RequestStatus.accepted;
   }
 
   void _prefetchProviders(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/api_constants.dart';
 import '../../../core/utils/sse_client.dart';
+import '../../../core/services/websocket_service.dart';
 import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/models/conversation_model.dart';
 import '../../../data/models/message_model.dart';
@@ -14,11 +16,13 @@ class MessageProvider extends ChangeNotifier {
   MessageProvider({required this.repository});
 
   final MessageRepository repository;
+  final WebSocketService _webSocketService = WebSocketService();
 
   final List<Conversation> _conversations = [];
   final Map<String, List<Message>> _messagesByConversation = {};
   final Map<String, String?> _nextCursorByConversation = {};
   SseConnection? _streamConnection;
+  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -32,6 +36,22 @@ class MessageProvider extends ChangeNotifier {
 
   String? getNextCursor(String conversationId) {
     return _nextCursorByConversation[conversationId];
+  }
+
+  void initializeWebSocket() {
+    _websocketSubscription = _webSocketService.events.listen((event) {
+      switch (event.type) {
+        case 'message.created':
+          _handleMessageCreated(event.data);
+          break;
+        case 'message.updated':
+          _handleMessageUpdated(event.data);
+          break;
+        case 'message.read':
+          _handleMessageRead(event.data);
+          break;
+      }
+    });
   }
 
   Future<void> loadConversations() async {
@@ -298,9 +318,42 @@ class MessageProvider extends ChangeNotifier {
     }
   }
 
+  void _handleMessageCreated(Map<String, dynamic> data) {
+    try {
+      final message = Message.fromJson(data);
+      _upsertMessage(message);
+      loadConversations();
+    } catch (e) {
+      debugPrint('Error handling message.created event: $e');
+    }
+  }
+
+  void _handleMessageUpdated(Map<String, dynamic> data) {
+    try {
+      final message = Message.fromJson(data);
+      _upsertMessage(message);
+    } catch (e) {
+      debugPrint('Error handling message.updated event: $e');
+    }
+  }
+
+  void _handleMessageRead(Map<String, dynamic> data) {
+    try {
+      final conversationId = data['conversationId'] as String?;
+      final messageId = data['messageId'] as String?;
+      
+      if (conversationId != null && messageId != null) {
+        _markMessageRead(conversationId, messageId);
+      }
+    } catch (e) {
+      debugPrint('Error handling message.read event: $e');
+    }
+  }
+
   @override
   void dispose() {
     stopStream();
+    _websocketSubscription?.cancel();
     super.dispose();
   }
 

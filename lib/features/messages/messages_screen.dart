@@ -13,6 +13,7 @@ import '../customer/providers/customer_directory_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../customer/providers/quote_provider.dart';
 import 'providers/message_provider.dart';
+import '../../core/utils/image_utils.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -1197,8 +1198,7 @@ class _UserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage =
-        user?.profilePicture != null && user!.profilePicture!.trim().isNotEmpty;
+    final profileImage = user?.profilePicture;
 
     return Container(
       decoration: BoxDecoration(
@@ -1219,10 +1219,8 @@ class _UserAvatar extends StatelessWidget {
       child: CircleAvatar(
         radius: radius,
         backgroundColor: Colors.transparent,
-        backgroundImage: hasImage
-            ? FileImage(File(user!.profilePicture!))
-            : null,
-        child: hasImage
+        backgroundImage: ImageUtils.resolveImage(profileImage),
+        child: profileImage != null && profileImage.isNotEmpty
             ? null
             : Text(
                 _getInitials(nameFallback),

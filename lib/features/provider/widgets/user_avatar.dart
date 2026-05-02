@@ -1,8 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/api_constants.dart';
+import '../../../core/utils/image_utils.dart';
 
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
@@ -40,18 +38,7 @@ class UserAvatar extends StatelessWidget {
   }
 
   ImageProvider? _resolveImage(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) {
-      return null;
-    }
-    final uri = Uri.tryParse(trimmed);
-    if (uri != null && uri.hasScheme) {
-      return NetworkImage(trimmed);
-    }
-    if (trimmed.startsWith('/')) {
-      return NetworkImage('${ApiConstants.baseUrl}$trimmed');
-    }
-    return FileImage(File(trimmed));
+    return ImageUtils.resolveImage(value);
   }
 }
 

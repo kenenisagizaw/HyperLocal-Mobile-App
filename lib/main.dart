@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'data/datasources/remote/booking_api.dart';
+import 'data/datasources/remote/dispute_api.dart';
 import 'data/datasources/remote/message_api.dart';
 import 'data/datasources/remote/notification_api.dart';
 import 'data/datasources/remote/payment_api.dart';
@@ -10,6 +11,7 @@ import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
 import 'data/repositories/booking_repository.dart';
+import 'data/repositories/dispute_repository.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/message_repository.dart';
 import 'data/repositories/notification_repository.dart';
@@ -20,6 +22,7 @@ import 'data/repositories/request_repository.dart';
 import 'data/repositories/review_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/bookings/providers/booking_provider.dart';
+import 'features/disputes/providers/dispute_provider.dart';
 import 'features/customer/providers/customer_directory_provider.dart';
 import 'features/customer/providers/provider_directory_provider.dart';
 import 'features/customer/providers/quote_provider.dart';
@@ -28,6 +31,7 @@ import 'features/messages/providers/message_provider.dart';
 import 'features/notifications/providers/notification_provider.dart';
 import 'features/payments/providers/payment_provider.dart';
 import 'features/reviews/providers/review_provider.dart';
+import 'core/providers/websocket_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +40,7 @@ void main() {
       providers: [
         Provider(create: (_) => RequestApi()),
         Provider(create: (_) => BookingApi()),
+        Provider(create: (_) => DisputeApi()),
         Provider(create: (_) => QuoteApi()),
         Provider(create: (_) => ReviewApi()),
         Provider(create: (_) => MessageApi()),
@@ -48,6 +53,9 @@ void main() {
         ),
         Provider(
           create: (context) => BookingRepository(context.read<BookingApi>()),
+        ),
+        Provider(
+          create: (context) => DisputeRepository(context.read<DisputeApi>()),
         ),
         Provider(
           create: (context) => QuoteRepository(context.read<QuoteApi>()),
@@ -136,6 +144,13 @@ void main() {
             return previous ?? BookingProvider(repository: repository);
           },
         ),
+        ChangeNotifierProxyProvider<DisputeRepository, DisputeProvider>(
+          create: (context) =>
+              DisputeProvider(repository: context.read<DisputeRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? DisputeProvider(repository: repository);
+          },
+        ),
         ChangeNotifierProxyProvider<QuoteRepository, QuoteProvider>(
           create: (context) =>
               QuoteProvider(repository: context.read<QuoteRepository>()),
@@ -143,6 +158,7 @@ void main() {
             return previous ?? QuoteProvider(repository: repository);
           },
         ),
+        ChangeNotifierProvider(create: (_) => WebSocketProvider()),
       ],
       child: const MyApp(),
     ),

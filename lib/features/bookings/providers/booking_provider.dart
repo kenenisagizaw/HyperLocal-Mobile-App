@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/services/websocket_service.dart';
 import '../../../data/models/booking_model.dart';
 import '../../../data/repositories/booking_repository.dart';
 
@@ -9,8 +13,10 @@ class BookingProvider extends ChangeNotifier {
   BookingProvider({required this.repository});
 
   final BookingRepository repository;
+  final WebSocketService _webSocketService = WebSocketService();
 
   final Map<String, Booking> _bookings = {};
+  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -27,6 +33,15 @@ class BookingProvider extends ChangeNotifier {
       }
     }
     return null;
+  }
+
+  void initializeWebSocket() {
+    // Note: Backend API doesn't have booking events yet
+    // This method is kept for future implementation when booking events are added
+    _websocketSubscription = _webSocketService.events.listen((event) {
+      // Listen for future booking-related events
+      // Currently no booking events are supported by the backend API
+    });
   }
 
   Future<List<Booking>> loadMyBookings({
@@ -211,5 +226,12 @@ class BookingProvider extends ChangeNotifier {
       }
     }
     return error.message;
+  }
+
+  
+  @override
+  void dispose() {
+    _websocketSubscription?.cancel();
+    super.dispose();
   }
 }

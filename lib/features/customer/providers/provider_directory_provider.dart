@@ -31,7 +31,9 @@ class ProviderDirectoryProvider extends ChangeNotifier {
     try {
       return _providers.firstWhere((p) => p.id == id);
     } catch (_) {
-      return repository.getProviderById(id);
+      // Return null instead of making API call to avoid 404 errors
+      // The provider will be loaded on-demand if needed
+      return null;
     }
   }
 
@@ -59,7 +61,9 @@ class ProviderDirectoryProvider extends ChangeNotifier {
       final provider = UserModel.fromJson(userJson);
       upsertProvider(provider);
       return provider;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error fetching provider $id: $e');
+      // Don't throw error, just return null to handle missing providers gracefully
       return null;
     }
   }

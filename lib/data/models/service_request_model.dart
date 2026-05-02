@@ -44,12 +44,12 @@ class ServiceRequest {
     final budgetMinValue = json['budgetMin'] ?? json['budget_min'];
     final budgetMaxValue = json['budgetMax'] ?? json['budget_max'];
     final imagesValue =
-        json['images'] ??
-        json['photoPaths'] ??
-        json['photos'] ??
-        json['media'] ??
-        json['attachments'] ??
-        json['files'];
+      json['images'] ??
+      json['photoPaths'] ??
+      json['photos'] ??
+      json['media'] ??
+      json['attachments'] ??
+      json['files'];
 
     return ServiceRequest(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
@@ -169,27 +169,39 @@ class ServiceRequest {
 
   static List<String> _parseImages(dynamic value) {
     if (value is List) {
-      return value
-          .map((item) {
-            if (item is Map) {
-              final url =
-                  item['url'] ??
-                  item['path'] ??
-                  item['imageUrl'] ??
-                  item['fileUrl'] ??
-                  item['location'];
-              if (url is String && url.isNotEmpty) {
-                return url;
-              }
-            }
-            if (item is String && item.isNotEmpty) {
-              return item;
-            }
-            return null;
-          })
-          .whereType<String>()
-          .toList();
+      return value.map((item) => _extractImageUrl(item)).toList();
     }
     return const [];
+  }
+
+  static String _extractImageUrl(dynamic item) {
+    if (item is String) {
+      return item;
+    }
+    
+    if (item is Map<String, dynamic>) {
+      // Try to extract URL from common fields
+      final url = item['url'] ?? 
+                 item['path'] ?? 
+                 item['src'] ?? 
+                 item['image'] ?? 
+                 item['imageUrl'] ??
+                 item['image_url'];
+      
+      if (url is String && url.isNotEmpty) {
+        return url;
+      }
+      
+      // If it's a complex object, try to convert to JSON and extract
+      final jsonString = item.toString();
+      if (jsonString.contains('url:')) {
+        final urlMatch = RegExp(r'url:\s*([^,}]+)').firstMatch(jsonString);
+        if (urlMatch != null) {
+          return urlMatch.group(1)?.trim() ?? '';
+        }
+      }
+    }
+    
+    return item.toString();
   }
 }
