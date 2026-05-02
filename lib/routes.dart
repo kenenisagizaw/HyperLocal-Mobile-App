@@ -8,6 +8,9 @@ import 'features/auth/reset_password_screen.dart';
 import 'features/auth/splash_screen.dart';
 import 'features/auth/verify_email_screen.dart';
 import 'features/auth/welcome_screen.dart';
+import 'features/payments/connect_packages_screen.dart';
+import 'features/payments/checkout_pending_screen.dart';
+import 'features/payments/payment_result_screen.dart';
 
 class Routes {
   static const root = '/';
@@ -17,6 +20,9 @@ class Routes {
   static const verifyEmail = '/verify-email';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
+  static const connectPackages = '/connect-packages';
+  static const checkoutPending = '/checkout-pending';
+  static const paymentResult = '/payment-result';
 
   static Map<String, WidgetBuilder> routes = {
     root: (_) => const SplashScreen(),
@@ -27,5 +33,8 @@ class Routes {
     forgotPassword: (_) => const ForgotPasswordScreen(),
     resetPassword: (_) => const ResetPasswordScreen(),
     '/auth': (_) => const AuthGate(),
+    connectPackages: (_) => const ConnectPackagesScreen(),
+    checkoutPending: (_) => const CheckoutPendingScreen(),
+    paymentResult: (_) => const PaymentResultScreen(),
   };
 }

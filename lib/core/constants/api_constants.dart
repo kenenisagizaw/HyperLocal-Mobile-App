@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://10.232.102.208:5000';
+  static const String baseUrl = 'http://192.168.43.232:5000';
 
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
@@ -56,4 +56,12 @@ class ApiConstants {
   static const String paymentsChapaInitialize =
       '/api/payments/chapa/initialize';
   static const String paymentsChapaVerify = '/api/payments/chapa/verify';
+  
+  // For development, use ngrok or Cloudflare Tunnel public URLs
+  // In production, this should be your actual frontend URL
+  static const String frontendUrl = 'http://10.232.102.208:3000'; // Replace with your public URL
+  static const String paymentReturnUrl = '$frontendUrl/payment/chapa/callback';
+  
+  // Mobile deep link return URL for payment callbacks
+  static const String mobilePaymentReturnUrl = 'myapp://payment/chapa/callback';
 }
