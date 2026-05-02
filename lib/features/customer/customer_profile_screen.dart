@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../shared/widgets/custom_textfield.dart';
 import '../auth/providers/auth_provider.dart';
+import '../disputes/disputes_list_screen.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -296,6 +297,36 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: ListTile(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const DisputesListScreen(),
+                          ),
+                        );
+                      },
+                      leading: const Icon(Icons.gavel, color: Colors.white),
+                      title: const Text(
+                        'Disputes',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   // Form Section
                   Container(
                     decoration: BoxDecoration(
