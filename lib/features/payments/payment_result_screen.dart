@@ -95,7 +95,7 @@ class PaymentResultScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '$connectAmount',
+                            '${connectAmount ?? 0}',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -116,7 +116,7 @@ class PaymentResultScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'ETB ${amount.toStringAsFixed(0)}',
+                            'ETB ${amount?.toStringAsFixed(0) ?? '0'}',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -139,7 +139,7 @@ class PaymentResultScreen extends StatelessWidget {
                             ),
                             Expanded(
                               child: Text(
-                                transactionReference,
+                                transactionReference ?? 'N/A',
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
