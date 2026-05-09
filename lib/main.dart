@@ -10,6 +10,7 @@ import 'data/datasources/remote/payment_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
+import 'data/datasources/remote/wallet_api.dart';
 import 'data/repositories/booking_repository.dart';
 import 'data/repositories/dispute_repository.dart';
 import 'data/repositories/customer_repository.dart';
@@ -20,6 +21,7 @@ import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
 import 'data/repositories/review_repository.dart';
+import 'data/repositories/wallet_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/bookings/providers/booking_provider.dart';
 import 'features/disputes/providers/dispute_provider.dart';
@@ -31,6 +33,7 @@ import 'features/messages/providers/message_provider.dart';
 import 'features/notifications/providers/notification_provider.dart';
 import 'features/payments/providers/payment_provider.dart';
 import 'features/reviews/providers/review_provider.dart';
+import 'features/wallet/providers/wallet_provider.dart';
 import 'core/providers/websocket_provider.dart';
 
 void main() {
@@ -46,8 +49,12 @@ void main() {
         Provider(create: (_) => MessageApi()),
         Provider(create: (_) => NotificationApi()),
         Provider(create: (_) => PaymentApi()),
+        Provider(create: (_) => WalletApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
+        Provider(
+          create: (context) => WalletRepository(context.read<WalletApi>()),
+        ),
         Provider(
           create: (context) => RequestRepository(context.read<RequestApi>()),
         ),
@@ -156,6 +163,13 @@ void main() {
               QuoteProvider(repository: context.read<QuoteRepository>()),
           update: (context, repository, previous) {
             return previous ?? QuoteProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProxyProvider<WalletRepository, WalletProvider>(
+          create: (context) =>
+              WalletProvider(repository: context.read<WalletRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? WalletProvider(repository: repository);
           },
         ),
         ChangeNotifierProvider(create: (_) => WebSocketProvider()),
