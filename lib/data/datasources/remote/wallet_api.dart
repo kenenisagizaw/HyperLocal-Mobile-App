@@ -112,7 +112,9 @@ class WalletApi {
 
   Future<Options?> _authOptions() async {
     final token = await _storage.getAccessToken();
-    Logger.info('Wallet API - Retrieved token: ${token != null ? "exists" : "null"}');
+    Logger.info(
+      'Wallet API - Retrieved token: ${token != null ? "exists" : "null"}',
+    );
     if (token == null || token.isEmpty) {
       Logger.error('Wallet API - No authentication token available');
       return null;
