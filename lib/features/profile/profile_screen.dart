@@ -474,9 +474,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       placemark.country,
     ];
     return parts
-      .whereType<String>()
-      .where((part) => part.trim().isNotEmpty)
-      .map((part) => part.trim())
+        .whereType<String>()
+        .where((part) => part.trim().isNotEmpty)
+        .map((part) => part.trim())
         .join(', ');
   }
 
@@ -872,8 +872,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                     const SizedBox(height: 16),
                     Builder(
                       builder: (context) {
-                        final walletProvider =
-                            context.watch<WalletProvider>();
+                        final walletProvider = context.watch<WalletProvider>();
                         return Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -908,8 +907,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                          Colors.blue,
-                                        ),
+                                              Colors.blue,
+                                            ),
                                       ),
                                     )
                                   else
@@ -978,33 +977,32 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                         ),
                                       ],
                                     ),
-                                      const SizedBox(height: 12),
-                                      Wrap(
-                                        spacing: 8,
-                                        children: [
-                                          OutlinedButton.icon(
-                                            onPressed: () {
-                                              Navigator.of(context).pushNamed(
-                                                '/wallet/connects',
-                                              );
-                                            },
-                                            icon: const Icon(Icons.flash_on),
-                                            label: const Text('Connects'),
+                                    const SizedBox(height: 12),
+                                    Wrap(
+                                      spacing: 8,
+                                      children: [
+                                        OutlinedButton.icon(
+                                          onPressed: () {
+                                            Navigator.of(
+                                              context,
+                                            ).pushNamed('/wallet/connects');
+                                          },
+                                          icon: const Icon(Icons.flash_on),
+                                          label: const Text('Connects'),
+                                        ),
+                                        OutlinedButton.icon(
+                                          onPressed: () {
+                                            Navigator.of(
+                                              context,
+                                            ).pushNamed('/wallet/provider');
+                                          },
+                                          icon: const Icon(
+                                            Icons.account_balance_wallet,
                                           ),
-                                          OutlinedButton.icon(
-                                            onPressed: () {
-                                              Navigator.of(context).pushNamed(
-                                                '/wallet/provider',
-                                              );
-                                            },
-                                            icon: const Icon(
-                                              Icons.account_balance_wallet,
-                                            ),
-                                            label:
-                                                const Text('Provider Wallet'),
-                                          ),
-                                        ],
-                                      ),
+                                          label: const Text('Provider Wallet'),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 )
                               else
