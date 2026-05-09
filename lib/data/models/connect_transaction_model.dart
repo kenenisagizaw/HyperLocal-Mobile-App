@@ -31,15 +31,13 @@ class ConnectTransaction {
             json['connects'] ??
             json['quantity'],
       ),
-      description:
-          (json['description'] ?? json['note'] ?? json['reason'] ?? '')
-              .toString(),
+      description: (json['description'] ?? json['note'] ?? json['reason'] ?? '')
+          .toString(),
       status: (json['status'] ?? json['state'] ?? 'completed').toString(),
       createdAt: _parseDate(json['createdAt']) ?? DateTime.now(),
-      reference:
-          (json['reference'] ?? json['transactionId'] ?? '').toString(),
-      requestId:
-          (json['requestId'] ?? json['serviceRequestId'] ?? '').toString(),
+      reference: (json['reference'] ?? json['transactionId'] ?? '').toString(),
+      requestId: (json['requestId'] ?? json['serviceRequestId'] ?? '')
+          .toString(),
       quoteId: (json['quoteId'] ?? '').toString(),
     );
   }
