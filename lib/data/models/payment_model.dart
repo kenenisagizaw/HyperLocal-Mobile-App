@@ -74,16 +74,36 @@ class PaymentVerification {
                 data['reference'] ??
                 '')
             .toString();
-    final status = (data['status'] ?? data['paymentStatus'] ?? '').toString();
+    
+    // Check for success field first (backend returns this)
+    final success = json['success'] ?? false;
+    
+    // Fall back to status field if success field doesn't exist
+    final status = (data['status'] ?? data['paymentStatus'] ?? json['status'] ?? '').toString();
     final normalized = status.toLowerCase();
-    final verified =
+    
+    // Add debug logging
+    print('PaymentVerification Debug:');
+    print('Full JSON response: $json');
+    print('Extracted data: $data');
+    print('Transaction reference: $txRef');
+    print('Success field: $success');
+    print('Raw status: $status');
+    print('Normalized status: $normalized');
+    
+    // Determine verification based on success field or status field
+    final verified = success == true ||
         normalized == 'success' ||
         normalized == 'successful' ||
         normalized == 'paid' ||
-        normalized == 'completed';
+        normalized == 'completed' ||
+        normalized == 'verified';
+        
+    print('Is verified: $verified');
+    
     return PaymentVerification(
       transactionReference: txRef,
-      status: status,
+      status: success == true ? 'success' : status,
       verified: verified,
     );
   }
