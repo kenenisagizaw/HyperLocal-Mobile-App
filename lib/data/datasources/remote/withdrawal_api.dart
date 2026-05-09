@@ -65,12 +65,16 @@ class WithdrawalApi {
     final map = _unwrapMap(response.data);
     final data = _extractDataMap(map);
     final list =
-        map['withdrawals'] ?? map['items'] ?? data?['withdrawals'] ?? data?['items'];
+        map['withdrawals'] ??
+        map['items'] ??
+        data?['withdrawals'] ??
+        data?['items'];
     if (list is List) {
       return list
           .whereType<Map>()
-          .map((item) =>
-              WithdrawalRequest.fromJson(item.cast<String, dynamic>()))
+          .map(
+            (item) => WithdrawalRequest.fromJson(item.cast<String, dynamic>()),
+          )
           .toList();
     }
     return const [];
