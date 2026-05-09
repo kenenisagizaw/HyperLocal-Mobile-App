@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 // Deep Blue: Core constants and models
+import '../../core/constants/api_constants.dart';
 import '../../core/constants/enums.dart';
 import '../../core/utils/distance_utils.dart';
 import '../../core/widgets/resolved_address_text.dart';
@@ -283,6 +284,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     // Fetch provider profile but handle 404 errors gracefully
     providerDirectory.fetchProviderById(providerId).catchError((e) {
       debugPrint('Provider profile not found: $providerId');
+      return null;
     });
   }
 
@@ -777,22 +779,44 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final path = paths[index];
-          final isRemote =
-              Uri.tryParse(path)?.hasAbsolutePath == true &&
-              (path.startsWith('http://') || path.startsWith('https://'));
+          final resolvedPath = _resolveMediaPath(path);
+          final isRemote = _isRemotePath(path);
           return ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               width: 90,
               color: Colors.grey.shade100,
               child: isRemote
-                  ? Image.network(path, fit: BoxFit.cover)
-                  : Image.file(File(path), fit: BoxFit.cover),
+                  ? Image.network(resolvedPath, fit: BoxFit.cover)
+                  : Image.file(File(resolvedPath), fit: BoxFit.cover),
             ),
           );
         },
       ),
     );
+  }
+
+  String _resolveMediaPath(String path) {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return path;
+    }
+    if (_isServerRelative(path)) {
+      return '${ApiConstants.baseUrl}$path';
+    }
+    return path;
+  }
+
+  bool _isRemotePath(String path) {
+    return path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        _isServerRelative(path);
+  }
+
+  bool _isServerRelative(String path) {
+    if (!path.startsWith('/')) return false;
+    return path.startsWith('/uploads') ||
+        path.startsWith('/media') ||
+        path.startsWith('/files');
   }
 }
 
