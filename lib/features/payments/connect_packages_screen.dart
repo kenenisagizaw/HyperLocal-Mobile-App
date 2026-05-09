@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../data/services/connect_purchase_service.dart';
+import '../../data/datasources/local/local_storage.dart';
 import '../../core/utils/logger.dart';
 import '../../core/services/service_locator.dart';
+import '../auth/providers/auth_provider.dart';
 
 class ConnectPackagesScreen extends StatefulWidget {
   const ConnectPackagesScreen({super.key});
@@ -93,6 +96,24 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
     });
 
     try {
+      // Check if user is authenticated
+      final authProvider = context.read<AuthProvider>();
+      Logger.info('Auth Provider - Current user: ${authProvider.currentUser?.id ?? "null"}');
+      Logger.info('Auth Provider - Is authenticated: ${authProvider.currentUser != null}');
+      
+      if (authProvider.currentUser == null) {
+        throw Exception('User not authenticated. Please log in first.');
+      }
+      
+      // Debug token comparison
+      final localStorage = LocalStorage();
+      final storedToken = await localStorage.getAccessToken();
+      Logger.info('Token Debug - Stored token exists: ${storedToken != null}');
+      if (storedToken != null) {
+        Logger.info('Token Debug - Stored token length: ${storedToken.length}');
+        Logger.info('Token Debug - Stored token preview: ${storedToken.substring(0, storedToken.length > 20 ? 20 : storedToken.length)}...');
+      }
+      
       Logger.info('Initializing purchase for ${package.connectAmount} connects');
       
       // Initialize payment
@@ -119,10 +140,70 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
     } catch (e) {
       Logger.error('Failed to initialize payment: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to initialize payment: $e'),
-            backgroundColor: Colors.red,
+        String errorMessage = 'Payment initialization failed';
+        String errorDetail = '';
+        
+        // Handle specific errors
+        if (e.toString().contains('401') || e.toString().contains('unauthorized')) {
+          errorMessage = 'Authentication required';
+          errorDetail = 'Please log in again to continue.';
+        } else if (e.toString().contains('User not authenticated')) {
+          errorMessage = 'Please log in';
+          errorDetail = 'You need to be logged in to purchase connects.';
+        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+          errorMessage = 'Network error';
+          errorDetail = 'Please check your internet connection and try again.';
+        } else if (e.toString().contains('timeout')) {
+          errorMessage = 'Request timeout';
+          errorDetail = 'The server is taking too long to respond. Please try again.';
+        } else if (e.toString().contains('404')) {
+          errorMessage = 'Service unavailable';
+          errorDetail = 'The payment service is currently unavailable.';
+        } else if (e.toString().contains('400')) {
+          errorMessage = 'Invalid request';
+          errorDetail = 'The payment request format is invalid. Please try again.';
+        } else if (e.toString().contains('500')) {
+          errorMessage = 'Server error';
+          errorDetail = 'Something went wrong on our end. Please try again later.';
+        } else {
+          errorMessage = 'Payment initialization failed';
+          errorDetail = 'An unexpected error occurred. Please try again.';
+        }
+        
+        // Show detailed error dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(errorMessage),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(errorDetail),
+                const SizedBox(height: 8),
+                Text(
+                  'Error details: ${e.toString()}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              if (e.toString().contains('401') || e.toString().contains('User not authenticated'))
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+                  },
+                  child: const Text('Login'),
+                ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
           ),
         );
       }
