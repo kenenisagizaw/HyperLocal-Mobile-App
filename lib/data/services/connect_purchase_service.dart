@@ -29,15 +29,24 @@ class ConnectPurchaseService {
 
     final amount = connectPackages[connectAmount]!;
     
-    return await _paymentRepository.initializeBookingPayment(
-      purpose: 'CONNECT_PURCHASE',
-      amount: amount,
-      returnUrl: ApiConstants.mobilePaymentReturnUrl,
-      metadata: {
-        'connectAmount': connectAmount,
-        'purpose': 'CONNECT_PURCHASE',
-      },
-    );
+    Logger.info('Initializing payment: amount=$amount, connectAmount=$connectAmount');
+    Logger.info('API Base URL: ${ApiConstants.baseUrl}');
+    
+    try {
+      final result = await _paymentRepository.initializeBookingPayment(
+        purpose: 'CONNECT_PURCHASE',
+        amount: amount,
+        metadata: {
+          'connectAmount': connectAmount,
+          'purpose': 'CONNECT_PURCHASE',
+        },
+      );
+      Logger.info('Payment initialization successful: ${result.transactionReference}');
+      return result;
+    } catch (e) {
+      Logger.error('Payment initialization failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> launchPaymentUrl(String checkoutUrl) async {
