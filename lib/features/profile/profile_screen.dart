@@ -9,10 +9,10 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/user_model.dart';
-import '../../routes.dart';
 import '../auth/providers/auth_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../disputes/disputes_list_screen.dart';
+import '../wallet/providers/wallet_provider.dart';
 import 'provider_verification_screen.dart';
 
 class ProviderProfilePage extends StatefulWidget {
@@ -474,8 +474,9 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
       placemark.country,
     ];
     return parts
-        .where((part) => part != null && part!.trim().isNotEmpty)
-        .map((part) => part!.trim())
+      .whereType<String>()
+      .where((part) => part.trim().isNotEmpty)
+      .map((part) => part.trim())
         .join(', ');
   }
 
@@ -654,7 +655,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
           steps: [
             // -------- Step 1: Basic Info --------
             Step(
-              title: Text(
+              title: const Text(
                 'Basic Info',
                 style: TextStyle(
                   fontSize: 18,
@@ -868,6 +869,131 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                             )
                             .toList(),
                       ),
+                    const SizedBox(height: 16),
+                    Builder(
+                      builder: (context) {
+                        final walletProvider =
+                            context.watch<WalletProvider>();
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.blue.shade200),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.account_balance_wallet,
+                                    color: Colors.blue.shade700,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Wallet',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (walletProvider.isLoading)
+                                    const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Colors.blue,
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.refresh,
+                                        color: Colors.blue,
+                                      ),
+                                      onPressed: () =>
+                                          walletProvider.refreshWallet(),
+                                      tooltip: 'Refresh Wallet',
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              if (walletProvider.isLoading)
+                                const Text(
+                                  'Loading wallet data...',
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 14,
+                                  ),
+                                )
+                              else if (walletProvider.hasWallet)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Connects: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${walletProvider.connectBalance}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.blue.shade700,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Balance: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          'ETB ${walletProvider.walletBalance.toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.blue.shade700,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              else
+                                Text(
+                                  walletProvider.errorMessage ??
+                                      'No wallet data available',
+                                  style: TextStyle(
+                                    color: Colors.red.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),

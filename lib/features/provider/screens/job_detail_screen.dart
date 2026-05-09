@@ -705,7 +705,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
     }
-    if (path.startsWith('/')) {
+    if (_isServerRelative(path)) {
       return '${ApiConstants.baseUrl}$path';
     }
     return path;
@@ -714,7 +714,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
   bool _isRemotePath(String path) {
     return path.startsWith('http://') ||
         path.startsWith('https://') ||
-        path.startsWith('/');
+        _isServerRelative(path);
+  }
+
+  bool _isServerRelative(String path) {
+    if (!path.startsWith('/')) return false;
+    return path.startsWith('/uploads') ||
+        path.startsWith('/media') ||
+        path.startsWith('/files');
   }
 }
 
