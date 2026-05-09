@@ -978,6 +978,33 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                         ),
                                       ],
                                     ),
+                                      const SizedBox(height: 12),
+                                      Wrap(
+                                        spacing: 8,
+                                        children: [
+                                          OutlinedButton.icon(
+                                            onPressed: () {
+                                              Navigator.of(context).pushNamed(
+                                                '/wallet/connects',
+                                              );
+                                            },
+                                            icon: const Icon(Icons.flash_on),
+                                            label: const Text('Connects'),
+                                          ),
+                                          OutlinedButton.icon(
+                                            onPressed: () {
+                                              Navigator.of(context).pushNamed(
+                                                '/wallet/provider',
+                                              );
+                                            },
+                                            icon: const Icon(
+                                              Icons.account_balance_wallet,
+                                            ),
+                                            label:
+                                                const Text('Provider Wallet'),
+                                          ),
+                                        ],
+                                      ),
                                   ],
                                 )
                               else
