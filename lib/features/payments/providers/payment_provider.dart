@@ -22,7 +22,6 @@ class PaymentProvider extends ChangeNotifier {
   Future<PaymentInitialization?> initializeBookingPayment({
     required String bookingId,
     required double amount,
-    String? returnUrl, // Optional for Flutter/mobile clients
     String? serviceRequestId, // Optional metadata
   }) async {
     _setLoading(true);
@@ -31,7 +30,6 @@ class PaymentProvider extends ChangeNotifier {
       final initialization = await repository.initializeBookingPayment(
         purpose: "BOOKING_PAYMENT",
         amount: amount,
-        returnUrl: returnUrl ?? ApiConstants.paymentReturnUrl,
         metadata: {
           "bookingId": bookingId,
           if (serviceRequestId != null) "serviceRequestId": serviceRequestId,
