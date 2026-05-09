@@ -13,6 +13,10 @@ import 'features/payments/connect_packages_screen.dart';
 import 'features/payments/checkout_pending_screen.dart';
 import 'features/payments/payment_result_screen.dart';
 import 'features/payments/payment_return_handler.dart';
+import 'features/wallet/screens/connects_wallet_screen.dart';
+import 'features/wallet/screens/provider_wallet_screen.dart';
+import 'features/wallet/screens/withdrawal_history_screen.dart';
+import 'features/wallet/screens/withdrawal_request_screen.dart';
 import 'routes.dart';
 
 class MyApp extends StatelessWidget {
@@ -81,6 +85,26 @@ class MyApp extends StatelessWidget {
                 connectAmount: args?['connectAmount'],
                 amount: args?['amount'],
                 error: args?['error'],
+              ),
+            );
+          case '/wallet/connects':
+            return MaterialPageRoute(
+              builder: (_) => const ConnectsWalletScreen(),
+            );
+          case '/wallet/provider':
+            return MaterialPageRoute(
+              builder: (_) => const ProviderWalletScreen(),
+            );
+          case '/wallet/withdrawal/history':
+            return MaterialPageRoute(
+              builder: (_) => const WithdrawalHistoryScreen(),
+            );
+          case '/wallet/withdrawal/request':
+            final args = settings.arguments as Map<String, dynamic>?;
+            return MaterialPageRoute(
+              builder: (_) => WithdrawalRequestScreen(
+                availableBalance: args?['availableBalance'] ?? 0.0,
+                feePercent: args?['feePercent'],
               ),
             );
           default:
