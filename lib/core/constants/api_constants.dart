@@ -57,6 +57,8 @@ class ApiConstants {
       '/api/payments/chapa/initialize';
   static const String paymentsChapaVerify = '/api/payments/chapa/verify';
   
+  static const String wallet = '/api/wallet';
+  
   // For development, use ngrok or Cloudflare Tunnel public URLs
   // In production, this should be your actual frontend URL
   static const String frontendUrl = 'http://10.232.102.208:3000'; // Replace with your public URL
