@@ -51,23 +51,24 @@ class ApiConstants {
   static const String notificationsReadAll = '/api/notifications/read-all';
   static const String notificationsStream = '/api/notifications/stream';
 
-    static const String disputes = '/api/disputes';
+  static const String disputes = '/api/disputes';
 
   static const String paymentsChapaInitialize =
       '/api/payments/chapa/initialize';
   static const String paymentsChapaVerify = '/api/payments/chapa/verify';
-  
+
   static const String wallet = '/api/wallet';
   static const String connects = '/api/connects';
   static const String withdrawalsWallet = '/api/withdrawals/wallet';
   static const String withdrawalsRequest = '/api/withdrawals/request';
   static const String withdrawals = '/api/withdrawals';
-  
+
   // For development, use ngrok or Cloudflare Tunnel public URLs
   // In production, this should be your actual frontend URL
-  static const String frontendUrl = 'http://10.232.102.208:3000'; // Replace with your public URL
+  static const String frontendUrl =
+      'http://10.232.102.208:3000'; // Replace with your public URL
   static const String paymentReturnUrl = '$frontendUrl/payment/chapa/callback';
-  
+
   // Mobile deep link return URL for payment callbacks
   static const String mobilePaymentReturnUrl = 'myapp://payment/chapa/callback';
 }
