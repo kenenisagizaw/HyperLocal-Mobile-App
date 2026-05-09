@@ -27,15 +27,13 @@ class WalletTransaction {
       type: (json['type'] ?? json['category'] ?? 'payment').toString(),
       amount: _parseDouble(json['amount'] ?? json['value'] ?? 0),
       status: (json['status'] ?? json['state'] ?? 'completed').toString(),
-      description:
-          (json['description'] ?? json['note'] ?? json['reason'] ?? '')
-              .toString(),
-      reference:
-          (json['reference'] ?? json['transactionId'] ?? '').toString(),
+      description: (json['description'] ?? json['note'] ?? json['reason'] ?? '')
+          .toString(),
+      reference: (json['reference'] ?? json['transactionId'] ?? '').toString(),
       createdAt: _parseDate(json['createdAt']) ?? DateTime.now(),
       bookingId: (json['bookingId'] ?? '').toString(),
-      requestId:
-          (json['requestId'] ?? json['serviceRequestId'] ?? '').toString(),
+      requestId: (json['requestId'] ?? json['serviceRequestId'] ?? '')
+          .toString(),
     );
   }
 
