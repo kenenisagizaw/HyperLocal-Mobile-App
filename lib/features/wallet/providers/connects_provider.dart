@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/utils/logger.dart';
-import '../../../data/models/connect_wallet_model.dart';
 import '../../../data/models/connect_transaction_model.dart';
+import '../../../data/models/connect_wallet_model.dart';
 import '../../../data/repositories/connects_repository.dart';
 
 class ConnectsProvider extends ChangeNotifier {
   ConnectsProvider({required ConnectsRepository repository})
-      : _repository = repository {
+    : _repository = repository {
     fetchConnects();
   }
 
@@ -43,10 +43,7 @@ class ConnectsProvider extends ChangeNotifier {
 
     try {
       Logger.info('Connects Provider - Loading connects');
-      final result = await _repository.fetchConnects(
-        skip: 0,
-        take: _pageSize,
-      );
+      final result = await _repository.fetchConnects(skip: 0, take: _pageSize);
       _wallet = result;
       _hasMore = result.transactions.length >= _pageSize;
     } catch (e) {
