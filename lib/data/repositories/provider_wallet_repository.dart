@@ -1,6 +1,6 @@
+import '../../core/utils/logger.dart';
 import '../datasources/remote/provider_wallet_api.dart';
 import '../models/provider_wallet_model.dart';
-import '../../core/utils/logger.dart';
 
 class ProviderWalletRepository {
   ProviderWalletRepository(this._api);
