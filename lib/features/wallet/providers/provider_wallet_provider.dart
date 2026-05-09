@@ -7,7 +7,7 @@ import '../../../data/repositories/provider_wallet_repository.dart';
 
 class ProviderWalletProvider extends ChangeNotifier {
   ProviderWalletProvider({required ProviderWalletRepository repository})
-      : _repository = repository {
+    : _repository = repository {
     fetchWallet();
   }
 
@@ -31,8 +31,7 @@ class ProviderWalletProvider extends ChangeNotifier {
   String? get statusFilter => _statusFilter;
   String? get typeFilter => _typeFilter;
 
-  List<WalletTransaction> get transactions =>
-      _wallet?.transactions ?? const [];
+  List<WalletTransaction> get transactions => _wallet?.transactions ?? const [];
 
   Future<void> fetchWallet({bool refresh = false}) async {
     if (_isLoading) return;
