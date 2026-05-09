@@ -1,6 +1,6 @@
+import '../../core/utils/logger.dart';
 import '../datasources/remote/withdrawal_api.dart';
 import '../models/withdrawal_request_model.dart';
-import '../../core/utils/logger.dart';
 
 class WithdrawalRepository {
   WithdrawalRepository(this._api);
