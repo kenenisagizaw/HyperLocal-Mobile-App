@@ -117,9 +117,7 @@ class ProviderWalletApi {
       return list
           .whereType<Map>()
           .map(
-            (item) => WalletTransaction.fromJson(
-              item.cast<String, dynamic>(),
-            ),
+            (item) => WalletTransaction.fromJson(item.cast<String, dynamic>()),
           )
           .toList();
     }
