@@ -11,6 +11,9 @@ import 'features/auth/welcome_screen.dart';
 import 'features/payments/connect_packages_screen.dart';
 import 'features/payments/checkout_pending_screen.dart';
 import 'features/payments/payment_result_screen.dart';
+import 'features/wallet/screens/connects_wallet_screen.dart';
+import 'features/wallet/screens/provider_wallet_screen.dart';
+import 'features/wallet/screens/withdrawal_history_screen.dart';
 
 class Routes {
   static const root = '/';
@@ -23,6 +26,10 @@ class Routes {
   static const connectPackages = '/connect-packages';
   static const checkoutPending = '/checkout-pending';
   static const paymentResult = '/payment-result';
+  static const connectsWallet = '/wallet/connects';
+  static const providerWallet = '/wallet/provider';
+  static const withdrawalRequest = '/wallet/withdrawal/request';
+  static const withdrawalHistory = '/wallet/withdrawal/history';
 
   static Map<String, WidgetBuilder> routes = {
     root: (_) => const SplashScreen(),
@@ -36,5 +43,8 @@ class Routes {
     connectPackages: (_) => const ConnectPackagesScreen(),
     checkoutPending: (_) => const CheckoutPendingScreen(),
     paymentResult: (_) => const PaymentResultScreen(success: false),
+    connectsWallet: (_) => const ConnectsWalletScreen(),
+    providerWallet: (_) => const ProviderWalletScreen(),
+    withdrawalHistory: (_) => const WithdrawalHistoryScreen(),
   };
 }
