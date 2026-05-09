@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/utils/image_utils.dart';
 import '../../data/models/message_model.dart' as message_models;
 import '../../data/models/user_model.dart';
 import '../auth/providers/auth_provider.dart';
@@ -14,7 +15,6 @@ import '../customer/providers/provider_directory_provider.dart';
 import '../customer/providers/quote_provider.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import 'providers/message_provider.dart';
-import '../../core/utils/image_utils.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
