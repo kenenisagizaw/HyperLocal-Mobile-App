@@ -3,25 +3,31 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'data/datasources/remote/booking_api.dart';
+import 'data/datasources/remote/connects_api.dart';
 import 'data/datasources/remote/dispute_api.dart';
 import 'data/datasources/remote/message_api.dart';
 import 'data/datasources/remote/notification_api.dart';
 import 'data/datasources/remote/payment_api.dart';
+import 'data/datasources/remote/provider_wallet_api.dart';
 import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
 import 'data/datasources/remote/wallet_api.dart';
+import 'data/datasources/remote/withdrawal_api.dart';
 import 'data/repositories/booking_repository.dart';
+import 'data/repositories/connects_repository.dart';
 import 'data/repositories/dispute_repository.dart';
 import 'data/repositories/customer_repository.dart';
 import 'data/repositories/message_repository.dart';
 import 'data/repositories/notification_repository.dart';
 import 'data/repositories/payment_repository.dart';
+import 'data/repositories/provider_wallet_repository.dart';
 import 'data/repositories/provider_repository.dart';
 import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
 import 'data/repositories/review_repository.dart';
 import 'data/repositories/wallet_repository.dart';
+import 'data/repositories/withdrawal_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/bookings/providers/booking_provider.dart';
 import 'features/disputes/providers/dispute_provider.dart';
@@ -34,6 +40,9 @@ import 'features/notifications/providers/notification_provider.dart';
 import 'features/payments/providers/payment_provider.dart';
 import 'features/reviews/providers/review_provider.dart';
 import 'features/wallet/providers/wallet_provider.dart';
+import 'features/wallet/providers/connects_provider.dart';
+import 'features/wallet/providers/provider_wallet_provider.dart';
+import 'features/wallet/providers/withdrawal_provider.dart';
 import 'core/providers/websocket_provider.dart';
 
 void main() {
@@ -50,10 +59,24 @@ void main() {
         Provider(create: (_) => NotificationApi()),
         Provider(create: (_) => PaymentApi()),
         Provider(create: (_) => WalletApi()),
+        Provider(create: (_) => ConnectsApi()),
+        Provider(create: (_) => ProviderWalletApi()),
+        Provider(create: (_) => WithdrawalApi()),
         Provider(create: (_) => CustomerRepository()),
         Provider(create: (_) => ProviderRepository()),
         Provider(
           create: (context) => WalletRepository(context.read<WalletApi>()),
+        ),
+        Provider(
+          create: (context) => ConnectsRepository(context.read<ConnectsApi>()),
+        ),
+        Provider(
+          create: (context) =>
+              ProviderWalletRepository(context.read<ProviderWalletApi>()),
+        ),
+        Provider(
+          create: (context) =>
+              WithdrawalRepository(context.read<WithdrawalApi>()),
         ),
         Provider(
           create: (context) => RequestRepository(context.read<RequestApi>()),
@@ -170,6 +193,32 @@ void main() {
               WalletProvider(repository: context.read<WalletRepository>()),
           update: (context, repository, previous) {
             return previous ?? WalletProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProxyProvider<ConnectsRepository, ConnectsProvider>(
+          create: (context) =>
+              ConnectsProvider(repository: context.read<ConnectsRepository>()),
+          update: (context, repository, previous) {
+            return previous ?? ConnectsProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProxyProvider<
+          ProviderWalletRepository,
+          ProviderWalletProvider
+        >(
+          create: (context) => ProviderWalletProvider(
+            repository: context.read<ProviderWalletRepository>(),
+          ),
+          update: (context, repository, previous) {
+            return previous ?? ProviderWalletProvider(repository: repository);
+          },
+        ),
+        ChangeNotifierProxyProvider<WithdrawalRepository, WithdrawalProvider>(
+          create: (context) => WithdrawalProvider(
+            repository: context.read<WithdrawalRepository>(),
+          ),
+          update: (context, repository, previous) {
+            return previous ?? WithdrawalProvider(repository: repository);
           },
         ),
         ChangeNotifierProvider(create: (_) => WebSocketProvider()),
