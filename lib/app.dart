@@ -9,15 +9,14 @@ import 'features/auth/reset_password_screen.dart';
 import 'features/auth/splash_screen.dart';
 import 'features/auth/verify_email_screen.dart';
 import 'features/auth/welcome_screen.dart';
-import 'features/payments/connect_packages_screen.dart';
 import 'features/payments/checkout_pending_screen.dart';
+import 'features/payments/connect_packages_screen.dart';
 import 'features/payments/payment_result_screen.dart';
 import 'features/payments/payment_return_handler.dart';
 import 'features/wallet/screens/connects_wallet_screen.dart';
 import 'features/wallet/screens/provider_wallet_screen.dart';
 import 'features/wallet/screens/withdrawal_history_screen.dart';
 import 'features/wallet/screens/withdrawal_request_screen.dart';
-import 'routes.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -32,25 +31,15 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/':
-            return MaterialPageRoute(
-              builder: (_) => const SplashScreen(),
-            );
+            return MaterialPageRoute(builder: (_) => const SplashScreen());
           case '/welcome':
-            return MaterialPageRoute(
-              builder: (_) => const WelcomeScreen(),
-            );
+            return MaterialPageRoute(builder: (_) => const WelcomeScreen());
           case '/login':
-            return MaterialPageRoute(
-              builder: (_) => const LoginScreen(),
-            );
+            return MaterialPageRoute(builder: (_) => const LoginScreen());
           case '/register':
-            return MaterialPageRoute(
-              builder: (_) => const RegisterScreen(),
-            );
+            return MaterialPageRoute(builder: (_) => const RegisterScreen());
           case '/verify-email':
-            return MaterialPageRoute(
-              builder: (_) => const VerifyEmailScreen(),
-            );
+            return MaterialPageRoute(builder: (_) => const VerifyEmailScreen());
           case '/forgot-password':
             return MaterialPageRoute(
               builder: (_) => const ForgotPasswordScreen(),
@@ -60,9 +49,7 @@ class MyApp extends StatelessWidget {
               builder: (_) => const ResetPasswordScreen(),
             );
           case '/auth':
-            return MaterialPageRoute(
-              builder: (_) => const AuthGate(),
-            );
+            return MaterialPageRoute(builder: (_) => const AuthGate());
           case '/connect-packages':
             return MaterialPageRoute(
               builder: (_) => const ConnectPackagesScreen(),
