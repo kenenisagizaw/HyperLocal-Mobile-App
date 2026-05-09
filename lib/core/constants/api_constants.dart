@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.43.232:5000';
+  static const String baseUrl = 'http://10.232.80.4:5000';
 
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
@@ -58,6 +58,10 @@ class ApiConstants {
   static const String paymentsChapaVerify = '/api/payments/chapa/verify';
   
   static const String wallet = '/api/wallet';
+  static const String connects = '/api/connects';
+  static const String withdrawalsWallet = '/api/withdrawals/wallet';
+  static const String withdrawalsRequest = '/api/withdrawals/request';
+  static const String withdrawals = '/api/withdrawals';
   
   // For development, use ngrok or Cloudflare Tunnel public URLs
   // In production, this should be your actual frontend URL
