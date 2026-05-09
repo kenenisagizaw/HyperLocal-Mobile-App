@@ -32,6 +32,8 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
   Timer? _statusCheckTimer;
   StreamSubscription<Uri?>? _deepLinkSubscription;
   late final ConnectPurchaseService _connectPurchaseService;
+  int _pollingAttempts = 0;
+  static const int _maxPollingAttempts = 60; // 5 minutes (60 * 5 seconds)
 
   @override
   void initState() {
@@ -77,16 +79,46 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
   }
 
   void _startStatusCheckTimer() {
-    // Check payment status every 5 seconds
-    _statusCheckTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (!_paymentCompleted && _transactionReference != null) {
-        _checkPaymentStatus();
+    // Check payment status every 3 seconds with backoff, stop on 200
+    int pollingInterval = 3;
+    _statusCheckTimer = Timer.periodic(Duration(seconds: pollingInterval), (timer) {
+      if (!_paymentCompleted && _transactionReference != null && _pollingAttempts < _maxPollingAttempts) {
+        _checkPaymentStatus().then((success) {
+          _pollingAttempts++;
+          // Implement exponential backoff: increase interval after each attempt
+          if (!success && _pollingAttempts % 5 == 0) {
+            pollingInterval = (pollingInterval * 2).clamp(3, 10); // Max 10 seconds
+            timer.cancel();
+            _startStatusCheckTimerWithInterval(pollingInterval);
+          }
+        });
+      } else if (_pollingAttempts >= _maxPollingAttempts) {
+        Logger.info('Max polling attempts reached, stopping timer');
+        timer.cancel();
+        _handlePaymentTimeout();
       }
     });
   }
 
-  Future<void> _checkPaymentStatus() async {
-    if (_isVerifying || _transactionReference == null) return;
+  void _startStatusCheckTimerWithInterval(int seconds) {
+    _statusCheckTimer = Timer.periodic(Duration(seconds: seconds), (timer) {
+      if (!_paymentCompleted && _transactionReference != null && _pollingAttempts < _maxPollingAttempts) {
+        _checkPaymentStatus().then((success) {
+          _pollingAttempts++;
+          if (success) {
+            timer.cancel(); // Stop polling immediately on success
+          }
+        });
+      } else if (_pollingAttempts >= _maxPollingAttempts) {
+        Logger.info('Max polling attempts reached, stopping timer');
+        timer.cancel();
+        _handlePaymentTimeout();
+      }
+    });
+  }
+
+  Future<bool> _checkPaymentStatus() async {
+    if (_isVerifying || _transactionReference == null) return false;
 
     try {
       setState(() {
@@ -97,9 +129,12 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
       
       if (verification.verified) {
         _handlePaymentSuccess(verification);
+        return true; // Success - stop polling
       }
+      return false; // Continue polling
     } catch (e) {
       Logger.error('Error checking payment status: $e');
+      return false; // Continue polling on error
     } finally {
       setState(() {
         _isVerifying = false;
@@ -129,6 +164,26 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
       setState(() {
         _isVerifying = false;
       });
+    }
+  }
+
+  void _handlePaymentTimeout() {
+    setState(() {
+      _paymentCompleted = true;
+    });
+    _statusCheckTimer?.cancel();
+
+    if (mounted) {
+      Navigator.of(context).pushNamed(
+        '/payment-result',
+        arguments: {
+          'success': false,
+          'transactionReference': _transactionReference,
+          'connectAmount': _connectAmount,
+          'amount': _amount,
+          'error': 'Payment verification timed out. Please check your payment status manually.',
+        },
+      );
     }
   }
 
