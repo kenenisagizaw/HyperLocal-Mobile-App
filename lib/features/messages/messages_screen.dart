@@ -12,6 +12,7 @@ import '../auth/providers/auth_provider.dart';
 import '../customer/providers/customer_directory_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../customer/providers/quote_provider.dart';
+import '../provider/widgets/customer_profile_widgets.dart';
 import 'providers/message_provider.dart';
 import '../../core/utils/image_utils.dart';
 
@@ -136,6 +137,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   leading: GestureDetector(
                     onTap: () {
                       if (otherUser == null) return;
+                      if (otherUser.role == UserRole.provider) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProviderProfileDetailScreen(
+                              providerId: otherUser.id,
+                            ),
+                          ),
+                        );
+                        return;
+                      }
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -418,6 +430,18 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     });
   }
 
+  UserModel? _resolveUser(
+    String userId,
+    ProviderDirectoryProvider providerDirectory,
+    CustomerDirectoryProvider customerDirectory,
+  ) {
+    final provider = providerDirectory.getProviderById(userId);
+    if (provider != null) return provider;
+    final customer = customerDirectory.getCustomerById(userId);
+    if (customer != null) return customer;
+    return null;
+  }
+
   bool _isImagePath(String path) {
     final cleaned = path.toLowerCase().split('?').first;
     return cleaned.endsWith('.png') ||
@@ -545,11 +569,20 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final messageProvider = context.watch<MessageProvider>();
+    final providerDirectory = context.watch<ProviderDirectoryProvider>();
+    final customerDirectory = context.watch<CustomerDirectoryProvider>();
     final currentUser = authProvider.currentUser;
 
     if (currentUser == null) {
       return const Scaffold(body: Center(child: Text('No user logged in')));
     }
+
+    final resolvedUser = _resolveUser(
+      widget.otherUserId,
+      providerDirectory,
+      customerDirectory,
+    );
+    final displayName = resolvedUser?.name ?? widget.otherUserName;
 
     final conversationId = _conversationId ?? '';
     final threadMessages = conversationId.isEmpty
@@ -563,25 +596,37 @@ class _MessageThreadScreenState extends State<MessageThreadScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(widget.otherUserName),
+        title: Text(displayName),
         centerTitle: true,
-        leading: widget.otherUser == null
+        leading: resolvedUser == null && widget.otherUser == null
             ? null
             : GestureDetector(
                 onTap: () {
+                  final targetUser = resolvedUser ?? widget.otherUser;
+                  if (targetUser == null) return;
+                  if (targetUser.role == UserRole.provider) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProviderProfileDetailScreen(
+                          providerId: targetUser.id,
+                        ),
+                      ),
+                    );
+                    return;
+                  }
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) =>
-                          UserProfileDetailScreen(user: widget.otherUser!),
+                      builder: (_) => UserProfileDetailScreen(user: targetUser),
                     ),
                   );
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8),
                   child: _UserAvatar(
-                    user: widget.otherUser,
-                    nameFallback: widget.otherUserName,
+                    user: resolvedUser ?? widget.otherUser,
+                    nameFallback: displayName,
                   ),
                 ),
               ),
