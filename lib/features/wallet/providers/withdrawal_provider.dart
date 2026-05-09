@@ -6,7 +6,7 @@ import '../../../data/repositories/withdrawal_repository.dart';
 
 class WithdrawalProvider extends ChangeNotifier {
   WithdrawalProvider({required WithdrawalRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final WithdrawalRepository _repository;
   final int _pageSize = 20;
