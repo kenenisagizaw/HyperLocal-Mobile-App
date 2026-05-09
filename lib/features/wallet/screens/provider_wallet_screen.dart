@@ -86,8 +86,7 @@ class _ProviderWalletScreenState extends State<ProviderWalletScreen> {
                             Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => WithdrawalRequestScreen(
-                                  availableBalance:
-                                      wallet.availableToWithdraw,
+                                  availableBalance: wallet.availableToWithdraw,
                                   feePercent: wallet.withdrawalFeePercent,
                                 ),
                               ),
@@ -179,7 +178,8 @@ class _ProviderWalletScreenState extends State<ProviderWalletScreen> {
                   )
                 else
                   ...transactions.map((tx) {
-                    final isCredit = tx.type.toLowerCase().contains('payment') ||
+                    final isCredit =
+                        tx.type.toLowerCase().contains('payment') ||
                         tx.type.toLowerCase().contains('refund') ||
                         tx.amount >= 0;
                     final subtitle =
@@ -244,12 +244,7 @@ class _FilterChip extends StatelessWidget {
       onSelected: onSelected,
       itemBuilder: (context) {
         return options
-            .map(
-              (option) => PopupMenuItem(
-                value: option,
-                child: Text(option),
-              ),
-            )
+            .map((option) => PopupMenuItem(value: option, child: Text(option)))
             .toList();
       },
       child: Container(

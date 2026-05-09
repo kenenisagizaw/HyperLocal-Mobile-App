@@ -203,13 +203,12 @@ class _WithdrawalRequestScreenState extends State<WithdrawalRequestScreen> {
                               }
                               final amountValue = _parseAmount();
                               if (amountValue == null) return;
-                              final result =
-                                  await provider.requestWithdrawal(
+                              final result = await provider.requestWithdrawal(
                                 amount: amountValue,
                                 method: _method,
                                 accountName: _accountNameController.text.trim(),
-                                accountNumber:
-                                    _accountNumberController.text.trim(),
+                                accountNumber: _accountNumberController.text
+                                    .trim(),
                                 bankName: _bankNameController.text.trim(),
                                 phoneNumber: _phoneController.text.trim(),
                               );
@@ -237,8 +236,9 @@ class _WithdrawalRequestScreenState extends State<WithdrawalRequestScreen> {
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text('Submit request'),

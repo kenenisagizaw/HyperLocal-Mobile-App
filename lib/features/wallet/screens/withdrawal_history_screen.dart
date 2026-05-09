@@ -75,8 +75,7 @@ class _WithdrawalHistoryScreenState extends State<WithdrawalHistoryScreen> {
                     return WalletTransactionTile(
                       title: 'Withdrawal',
                       subtitle: subtitle,
-                      amount:
-                          '-ETB ${withdrawal.amount.toStringAsFixed(2)}',
+                      amount: '-ETB ${withdrawal.amount.toStringAsFixed(2)}',
                       status: withdrawal.status,
                       isCredit: false,
                     );

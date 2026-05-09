@@ -48,7 +48,8 @@ class _ConnectsWalletScreenState extends State<ConnectsWalletScreen> {
         actions: [
           IconButton(
             tooltip: 'Buy Connects',
-            onPressed: () => Navigator.of(context).pushNamed('/connect-packages'),
+            onPressed: () =>
+                Navigator.of(context).pushNamed('/connect-packages'),
             icon: const Icon(Icons.flash_on),
           ),
         ],
@@ -96,13 +97,13 @@ class _ConnectsWalletScreenState extends State<ConnectsWalletScreen> {
                   )
                 else
                   ...transactions.map((tx) {
-                    final isCredit = tx.type.toLowerCase().contains('purchase') ||
+                    final isCredit =
+                        tx.type.toLowerCase().contains('purchase') ||
                         tx.type.toLowerCase().contains('refund') ||
                         tx.amount > 0;
                     final subtitle =
                         '${_formatDate(tx.createdAt)} • ${tx.description.isEmpty ? 'Connect activity' : tx.description}';
-                    final amount =
-                        '${isCredit ? '+' : '-'}${tx.amount}';
+                    final amount = '${isCredit ? '+' : '-'}${tx.amount}';
                     return WalletTransactionTile(
                       title: _titleForConnect(tx.type),
                       subtitle: subtitle,

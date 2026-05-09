@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 class WalletSectionHeader extends StatelessWidget {
-  const WalletSectionHeader({
-    super.key,
-    required this.title,
-    this.action,
-  });
+  const WalletSectionHeader({super.key, required this.title, this.action});
 
   final String title;
   final Widget? action;
@@ -16,10 +12,7 @@ class WalletSectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         const Spacer(),
         if (action != null) action!,
