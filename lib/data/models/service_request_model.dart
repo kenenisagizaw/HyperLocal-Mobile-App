@@ -169,39 +169,16 @@ class ServiceRequest {
 
   static List<String> _parseImages(dynamic value) {
     if (value is List) {
-      return value.map((item) => _extractImageUrl(item)).toList();
+      return value.map((item) {
+        if (item is Map<String, dynamic>) {
+          // Extract URL from image object
+          return (item['url'] ?? item['path'] ?? '').toString();
+        } else {
+          // Fallback for string items
+          return item.toString();
+        }
+      }).toList();
     }
     return const [];
-  }
-
-  static String _extractImageUrl(dynamic item) {
-    if (item is String) {
-      return item;
-    }
-    
-    if (item is Map<String, dynamic>) {
-      // Try to extract URL from common fields
-      final url = item['url'] ?? 
-                 item['path'] ?? 
-                 item['src'] ?? 
-                 item['image'] ?? 
-                 item['imageUrl'] ??
-                 item['image_url'];
-      
-      if (url is String && url.isNotEmpty) {
-        return url;
-      }
-      
-      // If it's a complex object, try to convert to JSON and extract
-      final jsonString = item.toString();
-      if (jsonString.contains('url:')) {
-        final urlMatch = RegExp(r'url:\s*([^,}]+)').firstMatch(jsonString);
-        if (urlMatch != null) {
-          return urlMatch.group(1)?.trim() ?? '';
-        }
-      }
-    }
-    
-    return item.toString();
   }
 }
