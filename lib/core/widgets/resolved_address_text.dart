@@ -75,12 +75,16 @@ class _ResolvedAddressTextState extends State<ResolvedAddressText> {
     }
     setState(() => _isResolving = true);
     try {
+      print('Resolving address for coordinates: lat=$lat, lng=$lng');
+      
       final dio = Dio(
         BaseOptions(
           headers: const {
             'User-Agent': 'my_first_app',
             'Accept': 'application/json',
           },
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
         ),
       );
       final response = await dio.get(
@@ -94,15 +98,38 @@ class _ResolvedAddressTextState extends State<ResolvedAddressText> {
         },
       );
       if (!mounted) return;
+      
+      print('Address resolution response: ${response.data}');
+      
       if (response.data is Map) {
         final data = response.data as Map;
         final displayName = data['display_name']?.toString();
+        final address = data['address'] as Map?;
+        
+        print('Extracted display name: $displayName');
+        print('Address data: $address');
+        
         if (displayName != null && displayName.trim().isNotEmpty) {
           _cache[cacheKey] = displayName;
           setState(() => _resolved = displayName);
+        } else {
+          // Try to construct address from components if display_name is empty
+          final components = <String>[];
+          if (address?['road'] != null) components.add(address!['road']);
+          if (address?['suburb'] != null) components.add(address!['suburb']);
+          if (address?['city'] != null) components.add(address!['city']);
+          if (address?['country'] != null) components.add(address!['country']);
+          
+          final constructedAddress = components.join(', ');
+          if (constructedAddress.trim().isNotEmpty) {
+            _cache[cacheKey] = constructedAddress;
+            setState(() => _resolved = constructedAddress);
+            print('Constructed address from components: $constructedAddress');
+          }
         }
       }
-    } catch (_) {
+    } catch (e) {
+      print('Address resolution failed: $e');
       // Keep fallback text when reverse geocoding fails.
     } finally {
       if (mounted) {
