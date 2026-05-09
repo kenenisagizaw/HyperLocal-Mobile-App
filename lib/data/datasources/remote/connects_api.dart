@@ -80,8 +80,9 @@ class ConnectsApi {
     if (list is List) {
       return list
           .whereType<Map>()
-          .map((item) =>
-              ConnectTransaction.fromJson(item.cast<String, dynamic>()))
+          .map(
+            (item) => ConnectTransaction.fromJson(item.cast<String, dynamic>()),
+          )
           .toList();
     }
     return const [];
