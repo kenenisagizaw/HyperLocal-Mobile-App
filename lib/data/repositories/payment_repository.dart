@@ -9,13 +9,11 @@ class PaymentRepository {
   Future<PaymentInitialization> initializeBookingPayment({
     required String purpose,
     required double amount,
-    String? returnUrl, // Optional for Flutter/mobile clients
     required Map<String, dynamic> metadata,
   }) {
     return api.initializeBookingPayment(
       purpose: purpose,
       amount: amount,
-      returnUrl: returnUrl,
       metadata: metadata,
     );
   }
