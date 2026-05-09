@@ -9,6 +9,7 @@ import '../../routes.dart';
 import '../auth/providers/auth_provider.dart';
 import '../disputes/disputes_list_screen.dart';
 import '../profile/identity_verification_screen.dart';
+import '../wallet/providers/wallet_provider.dart';
 
 class CustomerProfileScreen extends StatefulWidget {
   const CustomerProfileScreen({super.key});
@@ -357,6 +358,77 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                         color: Colors.white,
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Consumer<WalletProvider>(
+                    builder: (context, walletProvider, child) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: ListTile(
+                          leading: const Icon(Icons.account_balance_wallet, color: Colors.white),
+                          title: const Text(
+                            'Wallet',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: walletProvider.isLoading
+                              ? const Text(
+                                  'Loading...',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                )
+                              : walletProvider.hasWallet
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${walletProvider.connectBalance} connects',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        Text(
+                                          'ETB ${walletProvider.walletBalance.toStringAsFixed(2)}',
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Text(
+                                      walletProvider.errorMessage ?? 'No wallet data',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                          trailing: walletProvider.isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                              : IconButton(
+                                  icon: const Icon(Icons.refresh, color: Colors.white),
+                                  onPressed: () => walletProvider.refreshWallet(),
+                                  tooltip: 'Refresh Wallet',
+                                ),
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 12),
                   Container(
