@@ -1,6 +1,6 @@
+import '../../core/utils/logger.dart';
 import '../datasources/remote/connects_api.dart';
 import '../models/connect_wallet_model.dart';
-import '../../core/utils/logger.dart';
 
 class ConnectsRepository {
   ConnectsRepository(this._api);
