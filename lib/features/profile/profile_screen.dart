@@ -378,6 +378,154 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   }
 
   // ---------------- UI helpers ----------------
+  Widget _buildSectionTitle(String title, {String? subtitle, Widget? trailing}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.blue,
+                ),
+              ),
+              if (subtitle != null && subtitle.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (trailing != null) trailing,
+      ],
+    );
+  }
+
+  Widget _buildSectionCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade300,
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  String _valueOrPlaceholder(String value, String placeholder) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? placeholder : trimmed;
+  }
+
+  Widget _buildProfileHeaderCard() {
+    return _buildSectionCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: _isEditing
+                ? () => _pickFile(ImageSource.gallery, 'profile')
+                : null,
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.blue.shade100,
+                  backgroundImage: _profileImage != null
+                      ? FileImage(File(_profileImage!.path))
+                      : null,
+                  child: _profileImage == null
+                      ? Icon(
+                          Icons.person,
+                          size: 36,
+                          color: Colors.blue.shade700,
+                        )
+                      : null,
+                ),
+                if (_isEditing)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _valueOrPlaceholder(
+                    _nameController.text,
+                    'Add your name',
+                  ),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _valueOrPlaceholder(
+                    _emailController.text,
+                    'Add an email address',
+                  ),
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _valueOrPlaceholder(
+                    _phoneController.text,
+                    'Add a phone number',
+                  ),
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          if (_isEditing)
+            const Icon(Icons.edit, size: 18, color: Colors.blue),
+        ],
+      ),
+    );
+  }
 
   Widget _buildTextField(
     TextEditingController controller,
@@ -575,7 +723,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             },
             icon: const Icon(Icons.gavel, color: Colors.white),
           ),
-          TextButton.icon(
+          IconButton(
+            tooltip: _isEditing ? 'Done' : 'Edit',
             onPressed: () async {
               if (_isEditing) {
                 final success = await _updateProfile();
@@ -586,16 +735,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
               }
               setState(() => _isEditing = true);
             },
-            icon: const Icon(Icons.edit, color: Colors.white),
-            label: Text(
-              _isEditing ? 'Done' : 'Edit',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            icon: Icon(_isEditing ? Icons.check : Icons.edit, color: Colors.white),
           ),
-          TextButton.icon(
+          IconButton(
+            tooltip: 'Verify',
             onPressed: () {
               Navigator.push(
                 context,
@@ -605,24 +748,11 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
               );
             },
             icon: const Icon(Icons.verified, color: Colors.white),
-            label: const Text(
-              'Verify',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
-          TextButton.icon(
+          IconButton(
+            tooltip: 'Logout',
             onPressed: _isLoggingOut ? null : _confirmLogout,
             icon: const Icon(Icons.logout, color: Colors.white),
-            label: Text(
-              _isLoggingOut ? 'Logging out' : 'Logout',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
         ],
         shape: const RoundedRectangleBorder(
@@ -637,91 +767,25 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             colors: [Colors.blue.shade50, Colors.green.shade50],
           ),
         ),
-        child: Stepper(
-          type: StepperType.vertical,
-          currentStep: 0,
-          onStepContinue: null,
-          onStepCancel: null,
-          connectorColor: WidgetStateProperty.all(Colors.blue.shade300),
-          stepIconBuilder: (stepIndex, stepState) {
-            if (stepState == StepState.complete) {
-              return const Icon(Icons.check, color: Colors.green);
-            }
-            return null;
-          },
-          controlsBuilder: (context, details) {
-            return const SizedBox.shrink();
-          },
-          steps: [
-            // -------- Step 1: Basic Info --------
-            Step(
-              title: const Text(
-                'Basic Info',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.blue,
-                ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionTitle(
+                'Profile Overview',
+                subtitle: _isEditing
+                    ? 'Update your public profile details.'
+                    : 'This is how customers see you.',
               ),
-              content: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 12),
+              _buildProfileHeaderCard(),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Basic Information'),
+              const SizedBox(height: 12),
+              _buildSectionCard(
                 child: Column(
                   children: [
-                    GestureDetector(
-                      onTap: _isEditing
-                          ? () => _pickFile(ImageSource.gallery, 'profile')
-                          : null,
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundColor: Colors.blue.shade100,
-                            backgroundImage: _profileImage != null
-                                ? FileImage(File(_profileImage!.path))
-                                : null,
-                            child: _profileImage == null
-                                ? Icon(
-                                    Icons.person,
-                                    size: 50,
-                                    color: Colors.blue.shade700,
-                                  )
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                     _buildTextField(
                       _nameController,
                       'Full Name',
@@ -748,26 +812,15 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       Icons.badge,
                       enabled: _isEditing,
                     ),
-                    _buildTextField(
-                      _addressController,
-                      'Address',
-                      Icons.location_on,
-                      enabled: _isEditing,
-                    ),
-                    if (_isEditing)
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: OutlinedButton.icon(
-                          onPressed: _getCurrentLocation,
-                          icon: const Icon(Icons.my_location),
-                          label: Text(
-                            _providerLocation == null
-                                ? 'Use current location'
-                                : 'Update current location',
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Business Details'),
+              const SizedBox(height: 12),
+              _buildSectionCard(
+                child: Column(
+                  children: [
                     _buildTextField(
                       _businessNameController,
                       'Business Name',
@@ -789,8 +842,45 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       keyboardType: TextInputType.number,
                       enabled: _isEditing,
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Availability & Location'),
+              const SizedBox(height: 12),
+              _buildSectionCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     _buildAvailabilityDropdown(enabled: _isEditing),
-                    const SizedBox(height: 16),
+                    _buildTextField(
+                      _addressController,
+                      'Address',
+                      Icons.location_on,
+                      enabled: _isEditing,
+                    ),
+                    if (_isEditing)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: OutlinedButton.icon(
+                          onPressed: _getCurrentLocation,
+                          icon: const Icon(Icons.my_location),
+                          label: Text(
+                            _providerLocation == null
+                                ? 'Use current location'
+                                : 'Update current location',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Portfolio & Certifications'),
+              const SizedBox(height: 12),
+              _buildSectionCard(
+                child: Column(
+                  children: [
                     Row(
                       children: [
                         const Icon(Icons.photo_library, color: Colors.blue),
@@ -869,161 +959,156 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                             )
                             .toList(),
                       ),
-                    const SizedBox(height: 16),
-                    Builder(
-                      builder: (context) {
-                        final walletProvider = context.watch<WalletProvider>();
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.shade200),
-                          ),
-                          child: Column(
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildSectionTitle('Wallet'),
+              const SizedBox(height: 12),
+              Builder(
+                builder: (context) {
+                  final walletProvider = context.watch<WalletProvider>();
+                  return _buildSectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet,
+                              color: Colors.blue.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Wallet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue.shade700,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (walletProvider.isLoading)
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.blue,
+                                  ),
+                                ),
+                              )
+                            else
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.refresh,
+                                  color: Colors.blue,
+                                ),
+                                onPressed: () => walletProvider.refreshWallet(),
+                                tooltip: 'Refresh Wallet',
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (walletProvider.isLoading)
+                          const Text(
+                            'Loading wallet data...',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 14,
+                            ),
+                          )
+                        else if (walletProvider.hasWallet)
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.account_balance_wallet,
-                                    color: Colors.blue.shade700,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Wallet',
+                                  const Text(
+                                    'Connects: ',
                                     style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.blue.shade700,
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-                                  const Spacer(),
-                                  if (walletProvider.isLoading)
-                                    const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.blue,
-                                            ),
-                                      ),
-                                    )
-                                  else
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.refresh,
-                                        color: Colors.blue,
-                                      ),
-                                      onPressed: () =>
-                                          walletProvider.refreshWallet(),
-                                      tooltip: 'Refresh Wallet',
+                                  Text(
+                                    '${walletProvider.connectBalance}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue.shade700,
+                                      fontWeight: FontWeight.w600,
                                     ),
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              if (walletProvider.isLoading)
-                                const Text(
-                                  'Loading wallet data...',
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontSize: 14,
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Balance: ',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                )
-                              else if (walletProvider.hasWallet)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          'Connects: ',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${walletProvider.connectBalance}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.blue.shade700,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
+                                  Text(
+                                    'ETB ${walletProvider.walletBalance.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.blue.shade700,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          'Balance: ',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        Text(
-                                          'ETB ${walletProvider.walletBalance.toStringAsFixed(2)}',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.blue.shade700,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Wrap(
-                                      spacing: 8,
-                                      children: [
-                                        OutlinedButton.icon(
-                                          onPressed: () {
-                                            Navigator.of(
-                                              context,
-                                            ).pushNamed('/wallet/connects');
-                                          },
-                                          icon: const Icon(Icons.flash_on),
-                                          label: const Text('Connects'),
-                                        ),
-                                        OutlinedButton.icon(
-                                          onPressed: () {
-                                            Navigator.of(
-                                              context,
-                                            ).pushNamed('/wallet/provider');
-                                          },
-                                          icon: const Icon(
-                                            Icons.account_balance_wallet,
-                                          ),
-                                          label: const Text('Provider Wallet'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                )
-                              else
-                                Text(
-                                  walletProvider.errorMessage ??
-                                      'No wallet data available',
-                                  style: TextStyle(
-                                    color: Colors.red.shade600,
-                                    fontSize: 14,
                                   ),
-                                ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      Navigator.of(context).pushNamed(
+                                        '/wallet/connects',
+                                      );
+                                    },
+                                    icon: const Icon(Icons.flash_on),
+                                    label: const Text('Connects'),
+                                  ),
+                                  OutlinedButton.icon(
+                                    onPressed: () {
+                                      Navigator.of(context).pushNamed(
+                                        '/wallet/provider',
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.account_balance_wallet,
+                                    ),
+                                    label: const Text('Provider Wallet'),
+                                  ),
+                                ],
+                              ),
                             ],
+                          )
+                        else
+                          Text(
+                            walletProvider.errorMessage ??
+                                'No wallet data available',
+                            style: TextStyle(
+                              color: Colors.red.shade600,
+                              fontSize: 14,
+                            ),
                           ),
-                        );
-                      },
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
