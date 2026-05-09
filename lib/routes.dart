@@ -35,6 +35,6 @@ class Routes {
     '/auth': (_) => const AuthGate(),
     connectPackages: (_) => const ConnectPackagesScreen(),
     checkoutPending: (_) => const CheckoutPendingScreen(),
-    paymentResult: (_) => const PaymentResultScreen(),
+    paymentResult: (_) => const PaymentResultScreen(success: false),
   };
 }
