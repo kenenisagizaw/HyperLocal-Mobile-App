@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
+import '../../customer/providers/customer_directory_provider.dart';
 import '../../disputes/disputes_list_screen.dart';
 import '../../disputes/providers/dispute_provider.dart';
 import '../../messages/providers/message_provider.dart';
@@ -19,6 +21,7 @@ import '../../reviews/provider_reviews_screen.dart';
 import '../../reviews/providers/review_provider.dart';
 import '../../../routes.dart';
 import '../utils/formatters.dart';
+import '../utils/distance_utils.dart';
 
 class ProviderHomePage extends StatefulWidget {
   const ProviderHomePage({super.key, required this.onNavigateToTab});
@@ -33,6 +36,7 @@ class _ProviderHomePageState extends State<ProviderHomePage>
     with WidgetsBindingObserver {
   StreamSubscription<AppNotification>? _notificationSubscription;
   bool _isOnline = true;
+  final Set<String> _requestedCustomerIds = {};
 
   static const _primaryBlue = Color(0xFF2563EB);
   static const _primaryGreen = Color(0xFF059669);
@@ -138,6 +142,7 @@ class _ProviderHomePageState extends State<ProviderHomePage>
     final requestProvider = context.watch<RequestProvider>();
     final quoteProvider = context.watch<QuoteProvider>();
     final reviewProvider = context.watch<ReviewProvider>();
+    final customerDirectory = context.watch<CustomerDirectoryProvider>();
     final notificationProvider = context.watch<NotificationProvider>();
     final disputeProvider = context.watch<DisputeProvider>();
 
@@ -441,7 +446,28 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                   )
                 else
                   ...activeJobsPreview.map(
-                    (job) => Container(
+                    (job) {
+                      final customer = job.customerId.isEmpty
+                          ? null
+                          : customerDirectory.getCustomerById(job.customerId);
+                      if (customer == null && job.customerId.isNotEmpty) {
+                        _ensureCustomerProfile(
+                          customerDirectory,
+                          job.customerId,
+                        );
+                      }
+                      final customerLabel = customer?.name ??
+                          (job.customerId.isEmpty
+                              ? 'Unknown customer'
+                              : 'Loading customer...');
+
+                      final distanceKm = calculateDistanceKm(
+                        currentUser,
+                        job.locationLat,
+                        job.locationLng,
+                      );
+
+                      return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: _cardDecoration(),
                       child: ListTile(
@@ -469,9 +495,34 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                         ),
                         subtitle: Padding(
                           padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            'Customer: ${job.customerId}',
-                            style: TextStyle(color: Colors.grey.shade600),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Customer: $customerLabel',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                              const SizedBox(height: 4),
+                              ResolvedAddressText(
+                                lat: job.locationLat,
+                                lng: job.locationLng,
+                                fallback: job.location,
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              if (distanceKm != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Distance: ${distanceKm.toStringAsFixed(1)} km',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                         trailing: Container(
@@ -493,7 +544,8 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                           ),
                         ),
                       ),
-                    ),
+                    );
+                    },
                   ),
                 const SizedBox(height: 20),
                 const SectionHeader(title: 'Recent Activity'),
@@ -582,6 +634,19 @@ class _ProviderHomePageState extends State<ProviderHomePage>
         ),
       ],
     );
+  }
+
+  void _ensureCustomerProfile(
+    CustomerDirectoryProvider customerDirectory,
+    String customerId,
+  ) {
+    if (customerId.isEmpty || _requestedCustomerIds.contains(customerId)) {
+      return;
+    }
+    _requestedCustomerIds.add(customerId);
+    customerDirectory.fetchCustomerById(customerId).catchError((_) {
+      return null;
+    });
   }
 }
 

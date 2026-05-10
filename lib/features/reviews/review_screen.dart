@@ -22,163 +22,240 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   int _rating = 5;
-  final TextEditingController _commentController = TextEditingController();
-  bool _isCheckingBooking = true;
-  bool _isBookingCompleted = false;
-  String? _bookingError;
+  final _comment = TextEditingController();
+
+  bool _loading = true;
+  bool _completed = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadBookingStatus();
+      _checkBooking();
     });
   }
 
-  @override
-  void dispose() {
-    _commentController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadBookingStatus() async {
+  Future<void> _checkBooking() async {
     setState(() {
-      _isCheckingBooking = true;
-      _bookingError = null;
+      _loading = true;
+      _error = null;
     });
 
-    final bookingProvider = context.read<BookingProvider>();
-    final booking = await bookingProvider.loadBooking(widget.bookingId);
+    final provider = context.read<BookingProvider>();
+    final booking = await provider.loadBooking(widget.bookingId);
+
     if (!mounted) return;
 
-    final status = booking?.status;
     setState(() {
-      _isCheckingBooking = false;
-      _isBookingCompleted = status == BookingStatus.completed;
-      _bookingError = booking == null
-          ? (bookingProvider.errorMessage ?? 'Booking not found.')
-          : null;
+      _loading = false;
+      _completed = booking?.status == BookingStatus.completed;
+      _error = booking == null ? 'Booking not found' : null;
     });
   }
 
-  Future<void> _submitReview() async {
-    if (!_isBookingCompleted) {
+  Future<void> _submit() async {
+    if (!_completed) return;
+
+    final reviewProvider = context.read<ReviewProvider>();
+
+    final res = await reviewProvider.submitReview(
+      bookingId: widget.bookingId,
+      rating: _rating,
+      comment: _comment.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (res == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reviews are only allowed after booking completion.'),
+        SnackBar(
+          content: Text(
+            reviewProvider.errorMessage ?? 'Failed to submit review',
+          ),
         ),
       );
       return;
     }
 
-    final authProvider = context.read<AuthProvider>();
-    final reviewProvider = context.read<ReviewProvider>();
-    final currentUser = authProvider.currentUser;
-
-    if (currentUser == null) {
-      return;
-    }
-
-    final created = await reviewProvider.submitReview(
-      bookingId: widget.bookingId,
-      rating: _rating,
-      comment: _commentController.text.trim(),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Review submitted')),
     );
 
-    if (created == null) {
-      final message = reviewProvider.errorMessage ?? 'Failed to submit review.';
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(message)));
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Review submitted')));
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final canReview = _completed;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Leave a Review')),
-      body: Padding(
+      backgroundColor: const Color(0xFFF6F7FB),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.black,
+        title: const Text(
+          'Your Review',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_isCheckingBooking)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 8),
-                    Text('Checking booking status...'),
-                  ],
-                ),
-              )
-            else if (_bookingError != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  _bookingError!,
-                  style: const TextStyle(color: Colors.redAccent),
-                ),
-              )
-            else if (!_isBookingCompleted)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Text(
-                  'Booking must be completed before leaving a review.',
-                  style: TextStyle(color: Colors.orange),
-                ),
-              ),
-            const Text(
-              'Rate your provider',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: List.generate(5, (index) {
-                final star = index + 1;
-                return IconButton(
-                  onPressed: _isBookingCompleted
-                      ? () => setState(() => _rating = star)
-                      : null,
-                  icon: Icon(
-                    _rating >= star ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _commentController,
-              maxLines: 4,
-              enabled: _isBookingCompleted,
-              decoration: const InputDecoration(
-                labelText: 'Comment',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            _header(),
+
             const SizedBox(height: 16),
+
+            _card(
+              title: 'Rate your experience',
+              child: _ratingStars(canReview),
+            ),
+
+            const SizedBox(height: 16),
+
+            _card(
+              title: 'Share your feedback',
+              child: TextField(
+                controller: _comment,
+                enabled: canReview,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText:
+                      'What went well? What could be improved?',
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             SizedBox(
               width: double.infinity,
+              height: 52,
               child: ElevatedButton(
-                onPressed: _isBookingCompleted ? _submitReview : null,
-                child: const Text('Submit Review'),
+                onPressed: canReview ? _submit : null,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  canReview
+                      ? 'Submit Review'
+                      : 'Complete Booking First',
+                ),
               ),
             ),
+
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: LinearProgressIndicator(),
+              ),
+
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _header() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Colors.blue, Colors.indigo],
+        ),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'How was your service?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 6),
+          Text(
+            'Your feedback helps improve quality.',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _card({required String title, required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _ratingStars(bool enabled) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (i) {
+        final star = i + 1;
+
+        return GestureDetector(
+          onTap: enabled
+              ? () => setState(() => _rating = star)
+              : null,
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 150),
+            scale: _rating == star ? 1.2 : 1.0,
+            child: Icon(
+              _rating >= star
+                  ? Icons.star_rounded
+                  : Icons.star_border_rounded,
+              size: 36,
+              color: Colors.amber,
+            ),
+          ),
+        );
+      }),
     );
   }
 }
