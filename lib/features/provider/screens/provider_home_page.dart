@@ -9,9 +9,9 @@ import '../../../data/models/app_notification_model.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/models/review_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../customer/providers/customer_directory_provider.dart';
 import '../../customer/providers/quote_provider.dart';
 import '../../customer/providers/request_provider.dart';
-import '../../customer/providers/customer_directory_provider.dart';
 import '../../disputes/disputes_list_screen.dart';
 import '../../disputes/providers/dispute_provider.dart';
 import '../../messages/providers/message_provider.dart';
@@ -19,9 +19,8 @@ import '../../notifications/notification_navigation.dart';
 import '../../notifications/providers/notification_provider.dart';
 import '../../reviews/provider_reviews_screen.dart';
 import '../../reviews/providers/review_provider.dart';
-import '../../../routes.dart';
-import '../utils/formatters.dart';
 import '../utils/distance_utils.dart';
+import '../utils/formatters.dart';
 
 class ProviderHomePage extends StatefulWidget {
   const ProviderHomePage({super.key, required this.onNavigateToTab});
@@ -445,29 +444,26 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                     ),
                   )
                 else
-                  ...activeJobsPreview.map(
-                    (job) {
-                      final customer = job.customerId.isEmpty
-                          ? null
-                          : customerDirectory.getCustomerById(job.customerId);
-                      if (customer == null && job.customerId.isNotEmpty) {
-                        _ensureCustomerProfile(
-                          customerDirectory,
-                          job.customerId,
-                        );
-                      }
-                      final customerLabel = customer?.name ??
-                          (job.customerId.isEmpty
-                              ? 'Unknown customer'
-                              : 'Loading customer...');
+                  ...activeJobsPreview.map((job) {
+                    final customer = job.customerId.isEmpty
+                        ? null
+                        : customerDirectory.getCustomerById(job.customerId);
+                    if (customer == null && job.customerId.isNotEmpty) {
+                      _ensureCustomerProfile(customerDirectory, job.customerId);
+                    }
+                    final customerLabel =
+                        customer?.name ??
+                        (job.customerId.isEmpty
+                            ? 'Unknown customer'
+                            : 'Loading customer...');
 
-                      final distanceKm = calculateDistanceKm(
-                        currentUser,
-                        job.locationLat,
-                        job.locationLng,
-                      );
+                    final distanceKm = calculateDistanceKm(
+                      currentUser,
+                      job.locationLat,
+                      job.locationLng,
+                    );
 
-                      return Container(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: _cardDecoration(),
                       child: ListTile(
@@ -545,8 +541,7 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                         ),
                       ),
                     );
-                    },
-                  ),
+                  }),
                 const SizedBox(height: 20),
                 const SectionHeader(title: 'Recent Activity'),
                 const SizedBox(height: 12),
