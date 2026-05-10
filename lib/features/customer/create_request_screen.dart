@@ -124,8 +124,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     setState(() {
       _locationLat = position.latitude;
       _locationLng = position.longitude;
-      _locationController.text =
-          '${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}';
+      _locationController.text = 'Location recorded';
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -179,10 +178,11 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
     if (_selectedCategory == null ||
         _titleController.text.trim().isEmpty ||
         _descriptionController.text.trim().isEmpty ||
-        _locationController.text.trim().isEmpty) {
+        _locationLat == null ||
+        _locationLng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please fill all fields.'),
+          content: const Text('Please fill all fields and set location.'),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -437,6 +437,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                         decoration: InputDecoration(
                           labelText: 'Location',
                           labelStyle: TextStyle(color: Colors.blue.shade700),
+                          hintText: 'Tap below to record location',
                           prefixIcon: Icon(
                             Icons.location_on,
                             color: Colors.blue.shade400,
