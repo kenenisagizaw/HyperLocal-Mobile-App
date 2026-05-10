@@ -19,9 +19,9 @@ import '../customer/providers/customer_directory_provider.dart';
 import '../customer/providers/provider_directory_provider.dart';
 import '../customer/providers/quote_provider.dart';
 import '../customer/providers/request_provider.dart';
+import '../disputes/dispute_create_screen.dart';
 // Deep Blue: Messages and reviews screens
 import '../messages/messages_screen.dart';
-import '../disputes/dispute_create_screen.dart';
 import '../payments/payment_screen.dart';
 import '../provider/widgets/customer_profile_widgets.dart';
 import '../provider/widgets/user_avatar.dart';
@@ -52,8 +52,10 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   @override
   void initState() {
     super.initState();
-    print('DEBUG: BookingDetailScreen initialized with bookingId: ${widget.bookingId}');
-    
+    print(
+      'DEBUG: BookingDetailScreen initialized with bookingId: ${widget.bookingId}',
+    );
+
     // Validate booking ID
     if (widget.bookingId.isEmpty || widget.bookingId.length < 3) {
       print('DEBUG: Invalid booking ID detected: ${widget.bookingId}');
@@ -68,21 +70,23 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       });
       return;
     }
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       // Check if booking is already in cache first
       final bookingProvider = context.read<BookingProvider>();
       final existingBooking = bookingProvider.getBooking(widget.bookingId);
-      
+
       if (existingBooking != null) {
         print('DEBUG: Booking found in cache: ${existingBooking.id}');
         // No need to load from API, booking is already available
         return;
       }
-      
-      print('DEBUG: Booking not in cache, calling loadBooking for bookingId: ${widget.bookingId}');
+
+      print(
+        'DEBUG: Booking not in cache, calling loadBooking for bookingId: ${widget.bookingId}',
+      );
       bookingProvider.loadBooking(widget.bookingId);
     });
   }
@@ -99,12 +103,16 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     final booking = bookingProvider.getBooking(widget.bookingId);
     final user = authProvider.currentUser;
-    
+
     print('DEBUG: Build method - bookingId: ${widget.bookingId}');
     print('DEBUG: Build method - booking: $booking');
     print('DEBUG: Build method - isLoading: ${bookingProvider.isLoading}');
-    print('DEBUG: Build method - errorMessage: ${bookingProvider.errorMessage}');
-    print('DEBUG: Build method - all bookings in provider: ${bookingProvider.bookings.map((b) => b.id).toList()}');
+    print(
+      'DEBUG: Build method - errorMessage: ${bookingProvider.errorMessage}',
+    );
+    print(
+      'DEBUG: Build method - all bookings in provider: ${bookingProvider.bookings.map((b) => b.id).toList()}',
+    );
 
     // Deep Blue: Loading state
     if (bookingProvider.isLoading && booking == null) {
@@ -114,19 +122,22 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     // Deep Green: Error state
     if (booking == null) {
       // Check if we should retry automatically (for race conditions)
-      final shouldRetry = bookingProvider.errorMessage == null && 
-                       !bookingProvider.isLoading && 
-                       _retryCount < 3;
-      
+      final shouldRetry =
+          bookingProvider.errorMessage == null &&
+          !bookingProvider.isLoading &&
+          _retryCount < 3;
+
       if (shouldRetry) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           _retryCount++;
-          print('DEBUG: Auto-retry attempt $_retryCount for booking ${widget.bookingId}');
+          print(
+            'DEBUG: Auto-retry attempt $_retryCount for booking ${widget.bookingId}',
+          );
           context.read<BookingProvider>().loadBooking(widget.bookingId);
         });
       }
-      
+
       return Scaffold(
         appBar: AppBar(title: const Text('Booking Details')),
         body: _BookingErrorState(
@@ -289,9 +300,9 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 onTap: _isLoadingCustomerProfile && customerUser == null
                     ? null
                     : () => _openCustomerProfile(
-                          customerId: booking.customerId,
-                          customerUser: customerUser,
-                        ),
+                        customerId: booking.customerId,
+                        customerUser: customerUser,
+                      ),
                 child: Row(
                   children: [
                     UserAvatar(
@@ -365,15 +376,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     }
     _requestedCustomerId = customerId;
     _setCustomerProfileLoading(true);
-    customerDirectory.fetchCustomerById(customerId).then((_) {
-      if (!mounted) return;
-      _setCustomerProfileLoading(false);
-    }).catchError((e) {
-      debugPrint('Customer profile not found: $customerId');
-      if (!mounted) return;
-      _setCustomerProfileLoading(false);
-      return null;
-    });
+    customerDirectory
+        .fetchCustomerById(customerId)
+        .then((_) {
+          if (!mounted) return;
+          _setCustomerProfileLoading(false);
+        })
+        .catchError((e) {
+          debugPrint('Customer profile not found: $customerId');
+          if (!mounted) return;
+          _setCustomerProfileLoading(false);
+          return null;
+        });
   }
 
   void _setCustomerProfileLoading(bool value) {
@@ -392,10 +406,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     if (customerUser != null) {
       return Text(
         customerUser.name,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       );
     }
 
@@ -410,10 +421,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
           const SizedBox(width: 8),
           Text(
             'Loading customer profile...',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
         ],
       );
@@ -421,10 +429,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     return Text(
       customerId ?? 'Unknown customer',
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
     );
   }
 
