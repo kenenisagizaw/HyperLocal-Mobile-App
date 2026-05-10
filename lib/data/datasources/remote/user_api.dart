@@ -55,7 +55,7 @@ class UserApi {
     required String accessToken,
   }) async {
     final response = await _dio.get(
-      '${ApiConstants.userPublicProfile}/$id/public-profile',
+      '${ApiConstants.userPublicProfile}/$id/public',
       options: Options(headers: _authHeaders(accessToken)),
     );
     return _asMap(response.data);

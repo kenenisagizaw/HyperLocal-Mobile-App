@@ -39,11 +39,33 @@ class BookingApi {
 
   // Deep Blue: Retrieve booking by ID
   Future<Booking> getBookingById(String id) async {
+    print('DEBUG: API call to get booking: ${ApiConstants.bookings}/$id');
     final dio = await _dioFuture;
+    final authOptions = await _authOptions();
+    if (authOptions == null) {
+      print('DEBUG: No authentication token available');
+      throw DioException(
+        requestOptions: RequestOptions(path: '${ApiConstants.bookings}/$id'),
+        type: DioExceptionType.cancel,
+        error: 'No authentication token available',
+      );
+    }
     final response = await dio.get(
       '${ApiConstants.bookings}/$id',
-      options: await _authOptions(),
+      options: authOptions,
     );
+    print('DEBUG: API response status: ${response.statusCode}');
+    print('DEBUG: API response data: ${response.data}');
+    
+    if (response.statusCode == 404) {
+      throw DioException(
+        requestOptions: RequestOptions(path: '${ApiConstants.bookings}/$id'),
+        response: response,
+        type: DioExceptionType.badResponse,
+        error: 'Booking not found',
+      );
+    }
+    
     return _parseBooking(response.data);
   }
 
@@ -117,9 +139,30 @@ class BookingApi {
 
   // Deep Green: Parse single booking from response
   Booking _parseBooking(dynamic data) {
+    print('DEBUG: _parseBooking called with data: $data');
     final map = _unwrapMap(data);
+    print('DEBUG: Unwrapped map: $map');
     final bookingMap = _extractBookingMap(map);
-    return Booking.fromJson(bookingMap);
+    print('DEBUG: Extracted booking map: $bookingMap');
+    try {
+      final booking = Booking.fromJson(bookingMap);
+      print('DEBUG: Successfully parsed booking: ${booking.id}');
+      return booking;
+    } on ArgumentError catch (e) {
+      print('DEBUG: ArgumentError parsing booking: $e');
+      throw DioException(
+        requestOptions: RequestOptions(path: ''),
+        type: DioExceptionType.unknown,
+        error: 'Invalid booking data: ${e.message}',
+      );
+    } catch (e) {
+      print('DEBUG: Error parsing booking: $e');
+      throw DioException(
+        requestOptions: RequestOptions(path: ''),
+        type: DioExceptionType.unknown,
+        error: 'Failed to parse booking data: $e',
+      );
+    }
   }
 
   // Deep Blue: Try to parse booking, return null if fails
