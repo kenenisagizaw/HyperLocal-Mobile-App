@@ -173,6 +173,8 @@ class UserModel {
     );
   }
 
+  get avatarUrl => null;
+
   static Map<String, dynamic> _extractBase(Map<String, dynamic> json) {
     final user = json['user'];
     if (user is Map) {
