@@ -6,7 +6,7 @@ class Review {
     required this.reviewerId,
     required this.rating,
     required this.comment,
-    required this.createdAt,
+    required this.createdAt, required String bookingId,
   });
 
   final String id;
@@ -60,7 +60,7 @@ class Review {
               .toString(),
       rating: _parseRating(json['rating']),
       comment: (json['comment'] ?? json['message'] ?? '').toString(),
-      createdAt: _parseDate(json['createdAt']),
+      createdAt: _parseDate(json['createdAt']), bookingId: '',
     );
   }
 
