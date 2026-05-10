@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/service_request_model.dart';
 import '../../../data/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -247,6 +248,11 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                       final customer = customerDirectory.getCustomerById(
                         req.customerId,
                       );
+                      final distanceKm = calculateDistanceKm(
+                        providerUser,
+                        req.locationLat,
+                        req.locationLng,
+                      );
                       final isDisabled =
                           req.status == RequestStatus.accepted ||
                           req.status == RequestStatus.completed ||
@@ -299,8 +305,10 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                                             ),
                                           ),
                                           const SizedBox(height: 2),
-                                          Text(
-                                            req.location,
+                                          ResolvedAddressText(
+                                            lat: req.locationLat,
+                                            lng: req.locationLng,
+                                            fallback: req.location,
                                             style: TextStyle(
                                               color: Colors.grey.shade600,
                                               fontSize: 13,
@@ -379,6 +387,22 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                                               fontSize: 13,
                                             ),
                                           ),
+                                          if (distanceKm != null) ...[
+                                            const SizedBox(width: 12),
+                                            Icon(
+                                              Icons.route,
+                                              size: 16,
+                                              color: Colors.grey.shade500,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${distanceKm.toStringAsFixed(1)} km',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),
