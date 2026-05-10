@@ -123,14 +123,25 @@ class BookingProvider extends ChangeNotifier {
   }
 
   Future<Booking?> loadBooking(String id) async {
+    print('DEBUG: Loading booking with ID: $id');
     _setLoading(true);
     _clearErrors();
     try {
       final booking = await repository.fetchBooking(id);
+      print('DEBUG: Successfully loaded booking: ${booking.id}');
       _bookings[booking.id] = booking;
       return booking;
     } on DioException catch (error) {
-      _setError(error);
+      print('DEBUG: Failed to load booking: ${error.response?.statusCode} - ${error.message}');
+      if (error.response?.statusCode == 404) {
+        errorMessage = 'Booking not found. The booking may have been deleted or the ID is incorrect.';
+      } else {
+        _setError(error);
+      }
+      return null;
+    } catch (error) {
+      print('DEBUG: Unexpected error loading booking: $error');
+      errorMessage = 'An unexpected error occurred while loading the booking.';
       return null;
     } finally {
       _setLoading(false);
