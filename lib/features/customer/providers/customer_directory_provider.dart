@@ -57,7 +57,7 @@ class CustomerDirectoryProvider extends ChangeNotifier {
       final token = await LocalStorage().getAccessToken();
       final response = token != null && token.isNotEmpty
           ? await api.getPublicProfile(id: id, accessToken: token)
-          : await api.getUserById(id);
+          : await _getPublicProfileWithoutAuth(dio, id);
       final payload = _unwrapData(response);
       final userJson = _extractUser(payload) ?? _extractUser(response);
       if (userJson == null) {
@@ -80,6 +80,20 @@ class CustomerDirectoryProvider extends ChangeNotifier {
       return inner.cast<String, dynamic>();
     }
     return data;
+  }
+
+  Future<Map<String, dynamic>> _getPublicProfileWithoutAuth(
+    dynamic dio,
+    String id,
+  ) async {
+    final response = await dio.get('/api/users/$id/public');
+    if (response.data is Map<String, dynamic>) {
+      return response.data as Map<String, dynamic>;
+    }
+    if (response.data is Map) {
+      return (response.data as Map).cast<String, dynamic>();
+    }
+    return <String, dynamic>{};
   }
 
   Map<String, dynamic>? _extractUser(Map<String, dynamic> data) {
