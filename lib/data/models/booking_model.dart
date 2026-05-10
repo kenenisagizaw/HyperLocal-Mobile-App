@@ -29,8 +29,16 @@ class Booking {
     final serviceRequest = json['serviceRequest'] is Map
         ? json['serviceRequest'] as Map
         : null;
+    
+    // Extract and validate booking ID
+    final id = (json['id'] ?? json['_id'] ?? '').toString();
+    if (id.isEmpty) {
+      print('DEBUG: Booking.fromJson - No valid ID found in JSON: $json');
+      throw ArgumentError('Booking ID is required but not found in JSON response');
+    }
+    
     return Booking(
-      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      id: id,
       serviceRequestId: (json['serviceRequestId'] ?? json['requestId'] ?? '')
           .toString(),
       quoteId: (json['acceptedQuoteId'] ?? json['quoteId'] ?? '').toString(),
