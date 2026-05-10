@@ -45,14 +45,45 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   String? _requestedProviderId;
   String? _requestedCustomerId;
   bool _requestedQuotes = false;
+  int _retryCount = 0;
+  bool _isLoadingCustomerProfile = false;
 
   // Deep Blue: Initialize and load booking on mount
   @override
   void initState() {
     super.initState();
+    print('DEBUG: BookingDetailScreen initialized with bookingId: ${widget.bookingId}');
+    
+    // Validate booking ID
+    if (widget.bookingId.isEmpty || widget.bookingId.length < 3) {
+      print('DEBUG: Invalid booking ID detected: ${widget.bookingId}');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Invalid booking ID provided'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      });
+      return;
+    }
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<BookingProvider>().loadBooking(widget.bookingId);
+      
+      // Check if booking is already in cache first
+      final bookingProvider = context.read<BookingProvider>();
+      final existingBooking = bookingProvider.getBooking(widget.bookingId);
+      
+      if (existingBooking != null) {
+        print('DEBUG: Booking found in cache: ${existingBooking.id}');
+        // No need to load from API, booking is already available
+        return;
+      }
+      
+      print('DEBUG: Booking not in cache, calling loadBooking for bookingId: ${widget.bookingId}');
+      bookingProvider.loadBooking(widget.bookingId);
     });
   }
 
@@ -68,6 +99,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     final booking = bookingProvider.getBooking(widget.bookingId);
     final user = authProvider.currentUser;
+    
+    print('DEBUG: Build method - bookingId: ${widget.bookingId}');
+    print('DEBUG: Build method - booking: $booking');
+    print('DEBUG: Build method - isLoading: ${bookingProvider.isLoading}');
+    print('DEBUG: Build method - errorMessage: ${bookingProvider.errorMessage}');
+    print('DEBUG: Build method - all bookings in provider: ${bookingProvider.bookings.map((b) => b.id).toList()}');
 
     // Deep Blue: Loading state
     if (bookingProvider.isLoading && booking == null) {
@@ -76,11 +113,26 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
 
     // Deep Green: Error state
     if (booking == null) {
+      // Check if we should retry automatically (for race conditions)
+      final shouldRetry = bookingProvider.errorMessage == null && 
+                       !bookingProvider.isLoading && 
+                       _retryCount < 3;
+      
+      if (shouldRetry) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _retryCount++;
+          print('DEBUG: Auto-retry attempt $_retryCount for booking ${widget.bookingId}');
+          context.read<BookingProvider>().loadBooking(widget.bookingId);
+        });
+      }
+      
       return Scaffold(
         appBar: AppBar(title: const Text('Booking Details')),
         body: _BookingErrorState(
           message: bookingProvider.errorMessage ?? 'Booking not found.',
           onRetry: () {
+            _retryCount = 0;
             context.read<BookingProvider>().loadBooking(widget.bookingId);
           },
         ),
@@ -183,65 +235,80 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Provider',
-              child: Row(
-                children: [
-                  UserAvatar(
-                    name: providerUser?.name ?? 'Unknown Provider',
-                    imagePath: providerUser?.profilePicture,
-                    radius: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          providerUser?.name ??
-                              booking.providerId ??
-                              'Unknown provider',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (providerDistance != 'N/A')
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              'Distance: $providerDistance',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 12,
-                              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _openProviderProfile(
+                  providerId: booking.providerId,
+                  providerUser: providerUser,
+                ),
+                child: Row(
+                  children: [
+                    UserAvatar(
+                      name: providerUser?.name ?? 'Unknown Provider',
+                      imagePath: providerUser?.profilePicture,
+                      radius: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            providerUser?.name ??
+                                booking.providerId ??
+                                'Unknown provider',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                      ],
+                          if (providerDistance != 'N/A')
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                'Distance: $providerDistance',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
             _DetailCard(
               title: 'Customer',
-              child: Row(
-                children: [
-                  UserAvatar(
-                    name: customerUser?.name ?? 'Unknown Customer',
-                    imagePath: customerUser?.profilePicture,
-                    radius: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      customerUser?.name ?? booking.customerId ?? 'Unknown customer',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _isLoadingCustomerProfile && customerUser == null
+                    ? null
+                    : () => _openCustomerProfile(
+                          customerId: booking.customerId,
+                          customerUser: customerUser,
+                        ),
+                child: Row(
+                  children: [
+                    UserAvatar(
+                      name: customerUser?.name ?? 'Unknown Customer',
+                      imagePath: customerUser?.profilePicture,
+                      radius: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildCustomerProfileLabel(
+                        customerUser,
+                        booking.customerId,
                       ),
                     ),
-                  ),
-                ],
+                    const Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -297,7 +364,129 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
       return;
     }
     _requestedCustomerId = customerId;
-    customerDirectory.fetchCustomerById(customerId);
+    _setCustomerProfileLoading(true);
+    customerDirectory.fetchCustomerById(customerId).then((_) {
+      if (!mounted) return;
+      _setCustomerProfileLoading(false);
+    }).catchError((e) {
+      debugPrint('Customer profile not found: $customerId');
+      if (!mounted) return;
+      _setCustomerProfileLoading(false);
+      return null;
+    });
+  }
+
+  void _setCustomerProfileLoading(bool value) {
+    if (_isLoadingCustomerProfile == value) {
+      return;
+    }
+    setState(() {
+      _isLoadingCustomerProfile = value;
+    });
+  }
+
+  Widget _buildCustomerProfileLabel(
+    UserModel? customerUser,
+    String? customerId,
+  ) {
+    if (customerUser != null) {
+      return Text(
+        customerUser.name,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+    }
+
+    if (_isLoadingCustomerProfile) {
+      return Row(
+        children: [
+          const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Loading customer profile...',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Text(
+      customerId ?? 'Unknown customer',
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Future<void> _openProviderProfile({
+    required String? providerId,
+    required UserModel? providerUser,
+  }) async {
+    if (providerId == null || providerId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Provider profile not available.')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProviderProfileDetailScreen(
+          providerId: providerId,
+          initialProvider: providerUser,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openCustomerProfile({
+    required String? customerId,
+    required UserModel? customerUser,
+  }) async {
+    if (customerUser != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CustomerProfileDetailScreen(customer: customerUser),
+        ),
+      );
+      return;
+    }
+
+    if (customerId == null || customerId.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer profile not available.')),
+      );
+      return;
+    }
+
+    final customerDirectory = context.read<CustomerDirectoryProvider>();
+    final fetched = await customerDirectory.fetchCustomerById(customerId);
+    if (!mounted) return;
+    if (fetched == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer profile not available.')),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CustomerProfileDetailScreen(customer: fetched),
+      ),
+    );
   }
 
   // Deep Green: Build customer action buttons
