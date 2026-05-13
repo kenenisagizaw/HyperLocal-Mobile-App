@@ -1,19 +1,17 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/api_constants.dart';
-import '../../../core/utils/sse_client.dart';
 import '../../../core/services/websocket_service.dart';
-import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/models/conversation_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../data/repositories/message_repository.dart';
 
 class MessageProvider extends ChangeNotifier {
-  MessageProvider({required this.repository});
+  MessageProvider({required this.repository}) {
+    initializeWebSocket();
+  }
 
   final MessageRepository repository;
   final WebSocketService _webSocketService = WebSocketService();
@@ -21,7 +19,6 @@ class MessageProvider extends ChangeNotifier {
   final List<Conversation> _conversations = [];
   final Map<String, List<Message>> _messagesByConversation = {};
   final Map<String, String?> _nextCursorByConversation = {};
-  SseConnection? _streamConnection;
   StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
@@ -39,15 +36,16 @@ class MessageProvider extends ChangeNotifier {
   }
 
   void initializeWebSocket() {
+    _websocketSubscription?.cancel();
     _websocketSubscription = _webSocketService.events.listen((event) {
       switch (event.type) {
-        case 'message.created':
+        case 'new_message':
           _handleMessageCreated(event.data);
           break;
-        case 'message.updated':
+        case 'message_updated':
           _handleMessageUpdated(event.data);
           break;
-        case 'message.read':
+        case 'message_read':
           _handleMessageRead(event.data);
           break;
       }
@@ -68,46 +66,6 @@ class MessageProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
-  }
-
-  Future<void> startStream() async {
-    if (_streamConnection != null) {
-      return;
-    }
-    final token = await LocalStorage().getAccessToken();
-    if (token == null || token.isEmpty) {
-      return;
-    }
-    final uri = Uri.parse(
-      '${ApiConstants.baseUrl}${ApiConstants.messageStream}',
-    );
-    _streamConnection = await SseConnection.connect(
-      uri: uri,
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    _streamConnection!.stream.listen(
-      (event) {
-        if (event.event != null && event.event != 'message') {
-          return;
-        }
-        final data = jsonDecode(event.data);
-        if (data is! Map) {
-          return;
-        }
-        _handleStreamMessage(data.cast<String, dynamic>());
-      },
-      onError: (_) {
-        stopStream();
-      },
-      onDone: () {
-        stopStream();
-      },
-    );
-  }
-
-  void stopStream() {
-    _streamConnection?.close();
-    _streamConnection = null;
   }
 
   Future<List<Message>> loadMessages({
@@ -286,23 +244,6 @@ class MessageProvider extends ChangeNotifier {
     });
   }
 
-  void _handleStreamMessage(Map<String, dynamic> data) {
-    final eventType = (data['event'] ?? '').toString().toLowerCase();
-    final conversationId = (data['conversationId'] ?? '').toString();
-    final messageId = (data['messageId'] ?? data['id'] ?? '').toString();
-
-    if (eventType == 'read' && conversationId.isNotEmpty) {
-      _markMessageRead(conversationId, messageId);
-      return;
-    }
-
-    if (eventType == 'created' || eventType == 'updated') {
-      final message = Message.fromJson(data);
-      _upsertMessage(message);
-      loadConversations();
-    }
-  }
-
   void _markMessageRead(String conversationId, String messageId) {
     if (messageId.isEmpty) {
       return;
@@ -320,7 +261,10 @@ class MessageProvider extends ChangeNotifier {
 
   void _handleMessageCreated(Map<String, dynamic> data) {
     try {
-      final message = Message.fromJson(data);
+      final payload = data['message'] is Map
+          ? (data['message'] as Map).cast<String, dynamic>()
+          : data;
+      final message = Message.fromJson(payload);
       _upsertMessage(message);
       loadConversations();
     } catch (e) {
@@ -330,7 +274,10 @@ class MessageProvider extends ChangeNotifier {
 
   void _handleMessageUpdated(Map<String, dynamic> data) {
     try {
-      final message = Message.fromJson(data);
+      final payload = data['message'] is Map
+          ? (data['message'] as Map).cast<String, dynamic>()
+          : data;
+      final message = Message.fromJson(payload);
       _upsertMessage(message);
     } catch (e) {
       debugPrint('Error handling message.updated event: $e');
@@ -352,7 +299,6 @@ class MessageProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    stopStream();
     _websocketSubscription?.cancel();
     super.dispose();
   }
