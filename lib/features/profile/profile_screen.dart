@@ -378,11 +378,7 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
   }
 
   // ---------------- UI helpers ----------------
-  Widget _buildSectionTitle(
-    String title, {
-    String? subtitle,
-    Widget? trailing,
-  }) {
+  Widget _buildSectionTitle(String title, {String? subtitle, Widget? trailing}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -403,7 +399,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     subtitle,
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ),
             ],
@@ -472,7 +471,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                       decoration: BoxDecoration(
                         color: Colors.blue,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
                       ),
                       child: const Icon(
                         Icons.camera_alt,
@@ -490,7 +492,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _valueOrPlaceholder(_nameController.text, 'Add your name'),
+                  _valueOrPlaceholder(
+                    _nameController.text,
+                    'Add your name',
+                  ),
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -515,7 +520,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
               ],
             ),
           ),
-          if (_isEditing) const Icon(Icons.edit, size: 18, color: Colors.blue),
+          if (_isEditing)
+            const Icon(Icons.edit, size: 18, color: Colors.blue),
         ],
       ),
     );
@@ -717,39 +723,51 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
             },
             icon: const Icon(Icons.gavel, color: Colors.white),
           ),
-          IconButton(
-            tooltip: _isEditing ? 'Done' : 'Edit',
-            onPressed: () async {
-              if (_isEditing) {
-                final success = await _updateProfile();
-                if (success) {
-                  setState(() => _isEditing = false);
-                }
-                return;
+          PopupMenuButton<String>(
+            tooltip: 'More',
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (value) async {
+              switch (value) {
+                case 'edit':
+                  if (_isEditing) {
+                    final success = await _updateProfile();
+                    if (success) {
+                      setState(() => _isEditing = false);
+                    }
+                    return;
+                  }
+                  setState(() => _isEditing = true);
+                  break;
+                case 'verify':
+                  if (!mounted) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const ProviderVerificationScreen(),
+                    ),
+                  );
+                  break;
+                case 'logout':
+                  if (_isLoggingOut) return;
+                  _confirmLogout();
+                  break;
               }
-              setState(() => _isEditing = true);
             },
-            icon: Icon(
-              _isEditing ? Icons.check : Icons.edit,
-              color: Colors.white,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Verify',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const ProviderVerificationScreen(),
-                ),
-              );
-            },
-            icon: const Icon(Icons.verified, color: Colors.white),
-          ),
-          IconButton(
-            tooltip: 'Logout',
-            onPressed: _isLoggingOut ? null : _confirmLogout,
-            icon: const Icon(Icons.logout, color: Colors.white),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'edit',
+                child: Text(_isEditing ? 'Done' : 'Edit'),
+              ),
+              const PopupMenuItem(
+                value: 'verify',
+                child: Text('Verify'),
+              ),
+              PopupMenuItem(
+                value: 'logout',
+                enabled: !_isLoggingOut,
+                child: Text(_isLoggingOut ? 'Logging out' : 'Logout'),
+              ),
+            ],
           ),
         ],
         shape: const RoundedRectangleBorder(
@@ -1011,7 +1029,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                         if (walletProvider.isLoading)
                           const Text(
                             'Loading wallet data...',
-                            style: TextStyle(color: Colors.blue, fontSize: 14),
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontSize: 14,
+                            ),
                           )
                         else if (walletProvider.hasWallet)
                           Column(
@@ -1064,18 +1085,18 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                                 children: [
                                   OutlinedButton.icon(
                                     onPressed: () {
-                                      Navigator.of(
-                                        context,
-                                      ).pushNamed('/wallet/connects');
+                                      Navigator.of(context).pushNamed(
+                                        '/wallet/connects',
+                                      );
                                     },
                                     icon: const Icon(Icons.flash_on),
                                     label: const Text('Connects'),
                                   ),
                                   OutlinedButton.icon(
                                     onPressed: () {
-                                      Navigator.of(
-                                        context,
-                                      ).pushNamed('/wallet/provider');
+                                      Navigator.of(context).pushNamed(
+                                        '/wallet/provider',
+                                      );
                                     },
                                     icon: const Icon(
                                       Icons.account_balance_wallet,
