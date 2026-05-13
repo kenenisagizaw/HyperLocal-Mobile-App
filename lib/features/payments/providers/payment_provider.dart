@@ -1,16 +1,23 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/api_constants.dart';
+import '../../../core/services/websocket_service.dart';
 import '../../../data/models/payment_model.dart';
 import '../../../data/repositories/payment_repository.dart';
 
 class PaymentProvider extends ChangeNotifier {
-  PaymentProvider({required this.repository});
+  PaymentProvider({required this.repository}) {
+    initializeWebSocket();
+  }
 
   final PaymentRepository repository;
+  final WebSocketService _webSocketService = WebSocketService();
 
   final List<Payment> _payments = [];
+  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -18,6 +25,15 @@ class PaymentProvider extends ChangeNotifier {
 
   List<Payment> get payments => List.unmodifiable(_payments);
   bool get isLoading => _isLoading;
+
+  void initializeWebSocket() {
+    _websocketSubscription?.cancel();
+    _websocketSubscription = _webSocketService.events.listen((event) {
+      if (event.type == 'payment_update') {
+        _handlePaymentUpdated(event.data);
+      }
+    });
+  }
 
   Future<PaymentInitialization?> initializeBookingPayment({
     required String bookingId,
@@ -78,6 +94,57 @@ class PaymentProvider extends ChangeNotifier {
     return payment;
   }
 
+  void _handlePaymentUpdated(Map<String, dynamic> data) {
+    try {
+      final payload = data['payment'] is Map
+          ? (data['payment'] as Map).cast<String, dynamic>()
+          : data;
+      final payment = _paymentFromJson(payload);
+      final index = _payments.indexWhere((item) => item.id == payment.id);
+      if (index >= 0) {
+        _payments[index] = payment;
+      } else {
+        _payments.insert(0, payment);
+      }
+      notifyListeners();
+    } catch (error) {
+      debugPrint('Error handling payment_update event: $error');
+    }
+  }
+
+  Payment _paymentFromJson(Map<String, dynamic> json) {
+    return Payment(
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
+      requestId: (json['requestId'] ?? json['serviceRequestId'] ?? '')
+          .toString(),
+      quoteId: (json['quoteId'] ?? '').toString(),
+      payerId: (json['payerId'] ?? json['userId'] ?? '').toString(),
+      amount: _parseDouble(json['amount']),
+      status: _parsePaymentStatus(json['status'] ?? json['paymentStatus']),
+      createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
+          DateTime.now(),
+    );
+  }
+
+  double _parseDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  PaymentStatus _parsePaymentStatus(dynamic value) {
+    final normalized = (value ?? '').toString().toLowerCase();
+    if (normalized == 'paid' ||
+        normalized == 'success' ||
+        normalized == 'successful' ||
+        normalized == 'completed') {
+      return PaymentStatus.paid;
+    }
+    if (normalized == 'failed' || normalized == 'cancelled') {
+      return PaymentStatus.failed;
+    }
+    return PaymentStatus.pending;
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -108,5 +175,11 @@ class PaymentProvider extends ChangeNotifier {
       }
     }
     return error.message;
+  }
+
+  @override
+  void dispose() {
+    _websocketSubscription?.cancel();
+    super.dispose();
   }
 }
