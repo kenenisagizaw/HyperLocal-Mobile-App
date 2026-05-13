@@ -23,7 +23,7 @@ class NotificationApi {
     final list = _extractList(map);
     return list
         .whereType<Map>()
-        .map((item) => AppNotification.fromJson(item.cast<String, dynamic>()))
+      .map((item) => AppNotification.fromJson(_unwrapItem(item)))
         .toList();
   }
 
@@ -82,5 +82,18 @@ class NotificationApi {
       return list;
     }
     return const [];
+  }
+
+  Map<String, dynamic> _unwrapItem(Map item) {
+    final direct = item['notification'];
+    if (direct is Map) {
+      return direct.cast<String, dynamic>();
+    }
+    final nested = item['data'] is Map ? item['data'] as Map : null;
+    final nestedNotif = nested?['notification'];
+    if (nestedNotif is Map) {
+      return nestedNotif.cast<String, dynamic>();
+    }
+    return item.cast<String, dynamic>();
   }
 }
