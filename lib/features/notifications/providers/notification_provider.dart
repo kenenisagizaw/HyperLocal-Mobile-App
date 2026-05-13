@@ -1,18 +1,16 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/constants/api_constants.dart';
-import '../../../core/utils/sse_client.dart';
 import '../../../core/services/websocket_service.dart';
-import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/repositories/notification_repository.dart';
 
 class NotificationProvider extends ChangeNotifier {
-  NotificationProvider({required this.repository});
+  NotificationProvider({required this.repository}) {
+    initializeWebSocket();
+  }
 
   final NotificationRepository repository;
   final WebSocketService _webSocketService = WebSocketService();
@@ -21,7 +19,6 @@ class NotificationProvider extends ChangeNotifier {
   final Set<String> _knownIds = {};
   final StreamController<AppNotification> _incomingController =
       StreamController<AppNotification>.broadcast();
-  SseConnection? _streamConnection;
   StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
@@ -36,9 +33,18 @@ class NotificationProvider extends ChangeNotifier {
   int get unreadCount => _notifications.where((n) => n.readAt == null).length;
 
   void initializeWebSocket() {
+    _websocketSubscription?.cancel();
     _websocketSubscription = _webSocketService.events.listen((event) {
-      if (event.type == 'notification.created') {
-        _handleNotificationCreated(event.data);
+      switch (event.type) {
+        case 'new_notification':
+          _handleNotificationCreated(event.data);
+          break;
+        case 'notification_read':
+          _handleNotificationRead(event.data);
+          break;
+        case 'notifications_read_all':
+          _handleAllNotificationsRead();
+          break;
       }
     });
   }
@@ -106,50 +112,6 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> startStream() async {
-    if (_streamConnection != null) {
-      return;
-    }
-    final token = await LocalStorage().getAccessToken();
-    if (token == null || token.isEmpty) {
-      return;
-    }
-    final uri = Uri.parse(
-      '${ApiConstants.baseUrl}${ApiConstants.notificationsStream}',
-    );
-    _streamConnection = await SseConnection.connect(
-      uri: uri,
-      headers: {'Authorization': 'Bearer $token'},
-    );
-    _streamConnection!.stream.listen(
-      (event) {
-        if (event.event != null && event.event != 'notification') {
-          return;
-        }
-        final data = jsonDecode(event.data);
-        if (data is! Map) {
-          return;
-        }
-        final notification = AppNotification.fromJson(
-          data.cast<String, dynamic>(),
-        );
-        _upsertNotification(notification, fromStream: true);
-        _incomingController.add(notification);
-      },
-      onError: (_) {
-        stopStream();
-      },
-      onDone: () {
-        stopStream();
-      },
-    );
-  }
-
-  void stopStream() {
-    _streamConnection?.close();
-    _streamConnection = null;
-  }
-
   void _upsertNotification(
     AppNotification notification, {
     required bool fromStream,
@@ -203,7 +165,10 @@ class NotificationProvider extends ChangeNotifier {
 
   void _handleNotificationCreated(Map<String, dynamic> data) {
     try {
-      final notification = AppNotification.fromJson(data);
+      final payload = data['notification'] is Map
+          ? (data['notification'] as Map).cast<String, dynamic>()
+          : data;
+      final notification = AppNotification.fromJson(payload);
       _upsertNotification(notification, fromStream: true);
       _incomingController.add(notification);
     } catch (e) {
@@ -211,9 +176,29 @@ class NotificationProvider extends ChangeNotifier {
     }
   }
 
+  void _handleNotificationRead(Map<String, dynamic> data) {
+    final notificationId = (data['notificationId'] ?? data['id'] ?? '')
+        .toString();
+    if (notificationId.isEmpty) return;
+
+    final index = _notifications.indexWhere((n) => n.id == notificationId);
+    if (index < 0) return;
+
+    final readAt = AppNotification.parseDate(data['readAt']) ?? DateTime.now();
+    _notifications[index] = _notifications[index].copyWith(readAt: readAt);
+    notifyListeners();
+  }
+
+  void _handleAllNotificationsRead() {
+    final readAt = DateTime.now();
+    for (var i = 0; i < _notifications.length; i++) {
+      _notifications[i] = _notifications[i].copyWith(readAt: readAt);
+    }
+    notifyListeners();
+  }
+
   @override
   void dispose() {
-    stopStream();
     _websocketSubscription?.cancel();
     _incomingController.close();
     super.dispose();
