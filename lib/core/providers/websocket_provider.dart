@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+
 import '../services/websocket_service.dart';
 
 class WebSocketProvider extends ChangeNotifier {
   final WebSocketService _webSocketService = WebSocketService();
+  StreamSubscription<WebSocketConnectionStatus>? _statusSubscription;
+  StreamSubscription<WebSocketEvent>? _eventSubscription;
   
   WebSocketConnectionStatus _connectionStatus = WebSocketConnectionStatus.disconnected;
   WebSocketConnectionStatus get connectionStatus => _connectionStatus;
@@ -20,14 +24,14 @@ class WebSocketProvider extends ChangeNotifier {
   }
   
   void _initialize() {
-    // Listen to connection status changes
-    _webSocketService.connectionStatus.listen((status) {
+    _connectionStatus = _webSocketService.currentStatus;
+
+    _statusSubscription = _webSocketService.connectionStatus.listen((status) {
       _connectionStatus = status;
       notifyListeners();
     });
     
-    // Listen to WebSocket events
-    _webSocketService.events.listen((event) {
+    _eventSubscription = _webSocketService.events.listen((event) {
       _handleWebSocketEvent(event);
     });
   }
@@ -43,7 +47,7 @@ class WebSocketProvider extends ChangeNotifier {
   }
   
   void disconnect() {
-    _webSocketService.disconnect();
+    _webSocketService.resetSession();
   }
   
   void _handleWebSocketEvent(WebSocketEvent event) {
@@ -70,7 +74,9 @@ class WebSocketProvider extends ChangeNotifier {
         _handleUserStatusUpdate(event.data);
         break;
       default:
-        debugPrint('Unhandled WebSocket event: ${event.type}');
+        debugPrint(
+          'Unhandled WebSocket event: ${event.serverEvent} -> ${event.type}',
+        );
     }
   }
   
@@ -127,12 +133,13 @@ class WebSocketProvider extends ChangeNotifier {
   }
   
   void sendMessage(String event, Map<String, dynamic> data) {
-    _webSocketService.sendMessage(event, data);
+    _webSocketService.emit(event, data);
   }
   
   @override
   void dispose() {
-    _webSocketService.dispose();
+    _statusSubscription?.cancel();
+    _eventSubscription?.cancel();
     super.dispose();
   }
 }
