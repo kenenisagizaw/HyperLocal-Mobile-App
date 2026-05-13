@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/providers/websocket_provider.dart';
 import '../../../core/widgets/resolved_address_text.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/models/quote_model.dart';
@@ -52,7 +53,6 @@ class _ProviderHomePageState extends State<ProviderHomePage>
       final newNotifications = await context
           .read<NotificationProvider>()
           .loadNotifications();
-      await context.read<NotificationProvider>().startStream();
       if (mounted && newNotifications.isNotEmpty) {
         final count = newNotifications.length;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,7 +84,7 @@ class _ProviderHomePageState extends State<ProviderHomePage>
         );
       }
       if (providerId != null && providerId.isNotEmpty) {
-        context.read<MessageProvider>().startStream();
+        context.read<MessageProvider>().loadConversations();
         context.read<DisputeProvider>().loadDisputes();
       }
     });
@@ -122,16 +122,10 @@ class _ProviderHomePageState extends State<ProviderHomePage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    final provider = context.read<NotificationProvider>();
-    final messageProvider = context.read<MessageProvider>();
     if (state == AppLifecycleState.resumed) {
-      provider.startStream();
-      messageProvider.startStream();
-    } else if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      provider.stopStream();
-      messageProvider.stopStream();
+      context.read<WebSocketProvider>().connect();
+      context.read<NotificationProvider>().loadNotifications();
+      context.read<MessageProvider>().loadConversations();
     }
   }
 
