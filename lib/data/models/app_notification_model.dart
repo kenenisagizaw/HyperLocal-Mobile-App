@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class AppNotification {
   AppNotification({
     required this.id,
@@ -20,17 +22,21 @@ class AppNotification {
   bool get isRead => readAt != null;
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] is Map
-        ? (json['data'] as Map).cast<String, dynamic>()
-        : null;
+    final data = _parseData(json['data'] ?? json['payload'] ?? json['meta']);
     return AppNotification(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       type: json['type']?.toString(),
-      title: (json['title'] ?? '').toString(),
-      body: (json['body'] ?? json['message'] ?? '').toString(),
+      title: (json['title'] ?? json['subject'] ?? json['heading'] ?? '')
+          .toString(),
+      body: (json['body'] ??
+              json['message'] ??
+              json['content'] ??
+              json['text'] ??
+              '')
+          .toString(),
       data: data,
-      readAt: _parseDate(json['readAt']),
-      createdAt: _parseDate(json['createdAt']) ?? DateTime.now(),
+      readAt: parseDate(json['readAt']),
+      createdAt: parseDate(json['createdAt']) ?? DateTime.now(),
     );
   }
 
@@ -46,10 +52,34 @@ class AppNotification {
     );
   }
 
-  static DateTime? _parseDate(dynamic value) {
+  static DateTime? parseDate(dynamic value) {
     if (value == null) {
       return null;
     }
     return DateTime.tryParse(value.toString());
+  }
+
+  static Map<String, dynamic>? _parseData(dynamic raw) {
+    if (raw is Map<String, dynamic>) {
+      return raw;
+    }
+    if (raw is Map) {
+      return raw.cast<String, dynamic>();
+    }
+    if (raw is String) {
+      final trimmed = raw.trim();
+      if (trimmed.isEmpty) {
+        return null;
+      }
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is Map) {
+          return decoded.cast<String, dynamic>();
+        }
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
   }
 }
