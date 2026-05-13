@@ -160,6 +160,8 @@ class AuthRepository {
   Future<Map<String, dynamic>> uploadIdentity({
     required XFile idDocument,
     required XFile selfie,
+    XFile? idDocumentBack,
+    String? idNumber,
   }) async {
     final token = await _storage.getAccessToken();
     if (token == null || token.isEmpty) {
@@ -169,7 +171,9 @@ class AuthRepository {
     return _api.uploadIdentity(
       accessToken: token,
       idDocument: idDocument,
+      idDocumentBack: idDocumentBack,
       selfie: selfie,
+      idNumber: idNumber,
     );
   }
 
