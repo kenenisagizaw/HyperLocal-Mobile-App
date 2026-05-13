@@ -1,257 +1,239 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../utils/api_client.dart';
 
-enum WebSocketConnectionStatus { disconnected, connecting, connected, reconnecting, error }
+import 'package:flutter/material.dart';
+import 'package:socket_io_client/socket_io_client.dart' as io;
+
+import '../../data/datasources/local/local_storage.dart';
+import '../constants/api_constants.dart';
+
+enum WebSocketConnectionStatus {
+  disconnected,
+  connecting,
+  connected,
+  reconnecting,
+  error,
+}
 
 class WebSocketEvent {
-  final String type;
-  final Map<String, dynamic> data;
-  final DateTime timestamp;
-
   WebSocketEvent({
     required this.type,
     required this.data,
+    String? serverEvent,
     DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  })  : serverEvent = serverEvent ?? type,
+        timestamp = timestamp ?? DateTime.now();
 
-  factory WebSocketEvent.fromJson(Map<String, dynamic> json) {
-    return WebSocketEvent(
-      type: json['type'] as String,
-      data: json['data'] as Map<String, dynamic>,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'type': type,
-      'data': data,
-      'timestamp': timestamp.toIso8601String(),
-    };
-  }
+  final String type;
+  final String serverEvent;
+  final Map<String, dynamic> data;
+  final DateTime timestamp;
 }
 
 class WebSocketService {
-  static final WebSocketService _instance = WebSocketService._internal();
   factory WebSocketService() => _instance;
   WebSocketService._internal();
 
-  WebSocketChannel? _channel;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  final StreamController<WebSocketEvent> _eventController = 
-      StreamController<WebSocketEvent>.broadcast();
-  
-  final StreamController<WebSocketConnectionStatus> _connectionController = 
-      StreamController<WebSocketConnectionStatus>.broadcast();
-  
-  Timer? _reconnectTimer;
-  int _reconnectAttempts = 0;
-  static const int _maxReconnectAttempts = 5;
-  static const Duration _reconnectDelay = Duration(seconds: 3);
+  static final WebSocketService _instance = WebSocketService._internal();
 
-  // Streams
+  final LocalStorage _storage = LocalStorage();
+  final StreamController<WebSocketEvent> _eventController =
+      StreamController<WebSocketEvent>.broadcast();
+  final StreamController<WebSocketConnectionStatus> _connectionController =
+      StreamController<WebSocketConnectionStatus>.broadcast();
+
+  io.Socket? _socket;
+  Future<void>? _connectFuture;
+  bool _intentionalDisconnect = false;
+  WebSocketConnectionStatus _currentStatus =
+      WebSocketConnectionStatus.disconnected;
+
+  static const Map<String, String> _serverEvents = {
+    'new_message': 'new_message',
+    'chat.message': 'new_message',
+    'message.created': 'new_message',
+    'message.updated': 'message_updated',
+    'message.read': 'message_read',
+    'new_notification': 'new_notification',
+    'notification.created': 'new_notification',
+    'notification.read': 'notification_read',
+    'notification.read_all': 'notifications_read_all',
+    'booking_update': 'booking_update',
+    'booking.updated': 'booking_update',
+    'quote_update': 'quote_update',
+    'quote.updated': 'quote_update',
+    'dispute_update': 'dispute_update',
+    'dispute.updated': 'dispute_update',
+    'payment_update': 'payment_update',
+    'payment.updated': 'payment_update',
+    'user_status_update': 'user_status_update',
+    'user.status.updated': 'user_status_update',
+    'location.share.started': 'location_share_started',
+    'location.share.stopped': 'location_share_stopped',
+    'location.point.received': 'location_point_received',
+  };
+
   Stream<WebSocketEvent> get events => _eventController.stream;
-  Stream<WebSocketConnectionStatus> get connectionStatus => _connectionController.stream;
-  
-  WebSocketConnectionStatus _currentStatus = WebSocketConnectionStatus.disconnected;
+  Stream<WebSocketConnectionStatus> get connectionStatus =>
+      _connectionController.stream;
   WebSocketConnectionStatus get currentStatus => _currentStatus;
+  bool get isConnected => _socket?.connected ?? false;
+  bool get isConnecting =>
+      _currentStatus == WebSocketConnectionStatus.connecting ||
+      _currentStatus == WebSocketConnectionStatus.reconnecting;
 
   Future<void> connect() async {
-    if (_channel != null) {
+    if (isConnected) return;
+    if (_connectFuture != null) return _connectFuture;
+
+    _connectFuture = _connect();
+    try {
+      await _connectFuture;
+    } finally {
+      _connectFuture = null;
+    }
+  }
+
+  Future<void> _connect() async {
+    final token = await _storage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      _updateConnectionStatus(WebSocketConnectionStatus.disconnected);
+      debugPrint('Socket.IO connect skipped: missing access token');
       return;
     }
 
-    _updateConnectionStatus(WebSocketConnectionStatus.connecting);
-    
-    try {
-      final token = await _storage.read(key: 'auth_token');
-      final dio = await ApiClient.create();
-      final baseUrl = dio.options.baseUrl;
-      
-      // Determine WebSocket endpoint
-      String wsUrl;
-      if (baseUrl.contains('localhost') || baseUrl.contains('127.0.0.1')) {
-        // Local development
-        wsUrl = 'ws://localhost:5000/ws';
-      } else {
-        // Deployed environment
-        wsUrl = baseUrl.replaceFirst('http', 'ws') + '/ws';
-      }
-      
-      // Add JWT token as query parameter
-      final wsUrlWithToken = token != null 
-          ? '$wsUrl?token=$token'
-          : wsUrl;
+    _intentionalDisconnect = false;
+    _updateConnectionStatus(
+      _socket == null
+          ? WebSocketConnectionStatus.connecting
+          : WebSocketConnectionStatus.reconnecting,
+    );
 
-      _channel = WebSocketChannel.connect(Uri.parse(wsUrlWithToken));
-      _setupEventListeners();
-      
-    } catch (e) {
-      _updateConnectionStatus(WebSocketConnectionStatus.error);
-      _handleConnectionError(e.toString());
+    final socket = _socket ?? _createSocket(token);
+    _socket = socket;
+    socket.auth = {'token': token};
+
+    if (!socket.connected) {
+      debugPrint('Socket.IO connecting');
+      socket.connect();
     }
   }
 
-  void _setupEventListeners() {
-    if (_channel == null) return;
+  io.Socket _createSocket(String token) {
+    final socket = io.io(
+      ApiConstants.baseUrl,
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .disableAutoConnect()
+          .enableReconnection()
+          .setReconnectionAttempts(999999)
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
+          .setTimeout(20000)
+          .setAuth({'token': token})
+          .build(),
+    );
 
-    _channel!.stream.listen(
-      (message) {
-        try {
-          final data = jsonDecode(message as String) as Map<String, dynamic>;
-          _handleWebSocketMessage(data);
-          _updateConnectionStatus(WebSocketConnectionStatus.connected);
-          _reconnectAttempts = 0;
-        } catch (e) {
-          debugPrint('Error parsing WebSocket message: $e');
-        }
-      },
-      onDone: () {
-        _updateConnectionStatus(WebSocketConnectionStatus.disconnected);
-        debugPrint('WebSocket disconnected');
-        _scheduleReconnect();
-      },
-      onError: (error) {
-        _updateConnectionStatus(WebSocketConnectionStatus.error);
-        debugPrint('WebSocket error: $error');
-        _handleConnectionError(error.toString());
-      },
+    socket.onConnect((_) {
+      _updateConnectionStatus(WebSocketConnectionStatus.connected);
+      debugPrint('Socket.IO connected: ${socket.id}');
+    });
+
+    socket.onDisconnect((_) {
+      _updateConnectionStatus(
+        _intentionalDisconnect
+            ? WebSocketConnectionStatus.disconnected
+            : WebSocketConnectionStatus.reconnecting,
+      );
+      debugPrint('Socket.IO disconnected');
+    });
+
+    socket.onReconnectAttempt((_) async {
+      final refreshedToken = await _storage.getAccessToken();
+      if (refreshedToken != null && refreshedToken.isNotEmpty) {
+        socket.auth = {'token': refreshedToken};
+      }
+      _updateConnectionStatus(WebSocketConnectionStatus.reconnecting);
+    });
+
+    socket.onReconnect((_) {
+      _updateConnectionStatus(WebSocketConnectionStatus.connected);
+    });
+
+    socket.onConnectError((error) {
+      _updateConnectionStatus(WebSocketConnectionStatus.error);
+      debugPrint('Socket.IO connect error: $error');
+    });
+
+    socket.onError((error) {
+      _updateConnectionStatus(WebSocketConnectionStatus.error);
+      debugPrint('Socket.IO error: $error');
+    });
+
+    for (final eventName in _serverEvents.keys) {
+      socket.on(eventName, (payload) => _handleIncomingEvent(eventName, payload));
+    }
+
+    return socket;
+  }
+
+  void _handleIncomingEvent(String type, dynamic payload) {
+    final data = _normalizePayload(payload);
+    final internalType = _serverEvents[type] ?? type;
+    debugPrint('Socket.IO event received: $type -> $internalType');
+    _eventController.add(
+      WebSocketEvent(type: internalType, serverEvent: type, data: data),
     );
   }
 
-  void _handleWebSocketMessage(Map<String, dynamic> data) {
-    final type = data['type'] as String?;
-    final eventData = data['data'] as Map<String, dynamic>?;
-    
-    if (type != null && eventData != null) {
-      switch (type) {
-        case 'connection.ready':
-          _handleConnectionReady(eventData);
-          break;
-        case 'message.created':
-          _handleIncomingEvent('message.created', eventData);
-          break;
-        case 'message.updated':
-          _handleIncomingEvent('message.updated', eventData);
-          break;
-        case 'message.read':
-          _handleIncomingEvent('message.read', eventData);
-          break;
-        case 'notification.created':
-          _handleIncomingEvent('notification.created', eventData);
-          break;
-        case 'location.share.started':
-          _handleIncomingEvent('location.share.started', eventData);
-          break;
-        case 'location.share.stopped':
-          _handleIncomingEvent('location.share.stopped', eventData);
-          break;
-        case 'location.point.received':
-          _handleIncomingEvent('location.point.received', eventData);
-          break;
-        case 'pong':
-          _handlePongResponse(eventData);
-          break;
+  Map<String, dynamic> _normalizePayload(dynamic payload) {
+    if (payload is Map<String, dynamic>) return payload;
+    if (payload is Map) return payload.cast<String, dynamic>();
+    return {'value': payload};
+  }
+
+  void emit(String event, Map<String, dynamic> data) {
+    final socket = _socket;
+    if (socket == null || !socket.connected) {
+      debugPrint('Cannot emit $event: socket is not connected');
+      return;
+    }
+    socket.emit(event, data);
+  }
+
+  void joinRoom(String roomId) => emit('room.join', {'roomId': roomId});
+  void leaveRoom(String roomId) => emit('room.leave', {'roomId': roomId});
+  void subscribeToUserUpdates(String userId) =>
+      emit('user.subscribe', {'userId': userId});
+  void unsubscribeFromUserUpdates(String userId) =>
+      emit('user.unsubscribe', {'userId': userId});
+
+  void disconnect() {
+    _intentionalDisconnect = true;
+    final socket = _socket;
+    if (socket != null) {
+      for (final eventName in _serverEvents.keys) {
+        socket.off(eventName);
       }
+      socket.dispose();
+      _socket = null;
     }
+    _updateConnectionStatus(WebSocketConnectionStatus.disconnected);
   }
 
-  void _handleIncomingEvent(String type, Map<String, dynamic> data) {
-    final event = WebSocketEvent(type: type, data: data);
-    _eventController.add(event);
-    debugPrint('Received WebSocket event: $type');
+  Future<void> reconnectIfNeeded() async {
+    if (_intentionalDisconnect || isConnected || isConnecting) return;
+    await connect();
   }
 
-  void _handleConnectionReady(Map<String, dynamic> data) {
-    final userId = data['userId'] as String?;
-    if (userId != null) {
-      debugPrint('WebSocket connection ready for user: $userId');
-      _updateConnectionStatus(WebSocketConnectionStatus.connected);
-      _reconnectAttempts = 0;
-      
-      // Emit connection ready event for providers to handle
-      final event = WebSocketEvent(
-        type: 'connection.ready',
-        data: {'userId': userId},
-      );
-      _eventController.add(event);
-    }
-  }
-
-  void _handlePongResponse(Map<String, dynamic> data) {
-    final timestamp = data['timestamp'] as String?;
-    debugPrint('Received pong response at: ${timestamp ?? 'unknown time'}');
+  void resetSession() {
+    disconnect();
   }
 
   void _updateConnectionStatus(WebSocketConnectionStatus status) {
     _currentStatus = status;
-    _connectionController.add(status);
-  }
-
-  void _handleConnectionError(String error) {
-    debugPrint('WebSocket connection error: $error');
-    _scheduleReconnect();
-  }
-
-  void _scheduleReconnect() {
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      debugPrint('Max reconnect attempts reached');
-      return;
+    if (!_connectionController.isClosed) {
+      _connectionController.add(status);
     }
-
-    _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(_reconnectDelay, () {
-      _reconnectAttempts++;
-      _updateConnectionStatus(WebSocketConnectionStatus.reconnecting);
-      debugPrint('Attempting to reconnect... Attempt $_reconnectAttempts');
-      connect();
-    });
-  }
-
-  void sendMessage(String event, Map<String, dynamic> data) {
-    if (_channel != null) {
-      final message = {
-        'type': event,
-        'data': data,
-      };
-      _channel!.sink.add(jsonEncode(message));
-      debugPrint('Sent WebSocket event: $event');
-    } else {
-      debugPrint('Cannot send message - WebSocket not connected');
-    }
-  }
-
-  void ping() {
-    sendMessage('ping', {});
-  }
-
-  void joinRoom(String roomId) {
-    sendMessage('join_room', {'room': roomId});
-  }
-
-  void leaveRoom(String roomId) {
-    sendMessage('leave_room', {'room': roomId});
-  }
-
-  void subscribeToUserUpdates(String userId) {
-    sendMessage('subscribe_user', {'user_id': userId});
-  }
-
-  void unsubscribeFromUserUpdates(String userId) {
-    sendMessage('unsubscribe_user', {'user_id': userId});
-  }
-
-  void disconnect() {
-    _reconnectTimer?.cancel();
-    if (_channel != null) {
-      _channel!.sink.close();
-      _channel = null;
-    }
-    _updateConnectionStatus(WebSocketConnectionStatus.disconnected);
   }
 
   void dispose() {

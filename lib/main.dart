@@ -1,102 +1,54 @@
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
 
-
-
 import 'app.dart';
-
-import 'data/datasources/remote/booking_api.dart';
-
-import 'data/datasources/remote/connects_api.dart';
-
-import 'data/datasources/remote/dispute_api.dart';
-
-import 'data/datasources/remote/message_api.dart';
-
-import 'data/datasources/remote/notification_api.dart';
-
-import 'data/datasources/remote/payment_api.dart';
-
-import 'data/datasources/remote/provider_wallet_api.dart';
-
-import 'data/datasources/remote/quote_api.dart';
-
-import 'data/datasources/remote/request_api.dart';
-
-import 'data/datasources/remote/review_api.dart';
-
-import 'data/datasources/remote/wallet_api.dart';
-
-import 'data/repositories/booking_repository.dart';
-
-import 'data/repositories/connects_repository.dart';
-
-import 'data/repositories/dispute_repository.dart';
-
-import 'data/repositories/customer_repository.dart';
-
-import 'data/repositories/message_repository.dart';
-
-import 'data/repositories/notification_repository.dart';
-
-import 'data/repositories/payment_repository.dart';
-
-import 'data/repositories/provider_repository.dart';
-
-import 'data/repositories/provider_wallet_repository.dart';
-
-import 'data/repositories/quote_repository.dart';
-
-import 'data/repositories/request_repository.dart';
-
-import 'data/repositories/review_repository.dart';
-
-import 'data/repositories/wallet_repository.dart';
-
-import 'features/auth/providers/auth_provider.dart';
-
-import 'features/bookings/providers/booking_provider.dart';
-
-import 'features/wallet/providers/connects_provider.dart';
-
-import 'features/disputes/providers/dispute_provider.dart';
-
-import 'features/customer/providers/customer_directory_provider.dart';
-
-import 'features/customer/providers/provider_directory_provider.dart';
-
-import 'features/customer/providers/quote_provider.dart';
-
-import 'features/customer/providers/request_provider.dart';
-
-import 'features/messages/providers/message_provider.dart';
-
-import 'features/notifications/providers/notification_provider.dart';
-
-import 'features/payments/providers/payment_provider.dart';
-
-import 'features/reviews/providers/review_provider.dart';
-
-import 'features/wallet/providers/provider_wallet_provider.dart';
-
-import 'features/wallet/providers/wallet_provider.dart';
-
 import 'core/providers/websocket_provider.dart';
 import 'core/services/socket_initializer_service.dart';
-
-
+import 'data/datasources/remote/booking_api.dart';
+import 'data/datasources/remote/connects_api.dart';
+import 'data/datasources/remote/dispute_api.dart';
+import 'data/datasources/remote/message_api.dart';
+import 'data/datasources/remote/notification_api.dart';
+import 'data/datasources/remote/payment_api.dart';
+import 'data/datasources/remote/provider_wallet_api.dart';
+import 'data/datasources/remote/quote_api.dart';
+import 'data/datasources/remote/request_api.dart';
+import 'data/datasources/remote/review_api.dart';
+import 'data/datasources/remote/wallet_api.dart';
+import 'data/repositories/booking_repository.dart';
+import 'data/repositories/connects_repository.dart';
+import 'data/repositories/customer_repository.dart';
+import 'data/repositories/dispute_repository.dart';
+import 'data/repositories/message_repository.dart';
+import 'data/repositories/notification_repository.dart';
+import 'data/repositories/payment_repository.dart';
+import 'data/repositories/provider_repository.dart';
+import 'data/repositories/provider_wallet_repository.dart';
+import 'data/repositories/quote_repository.dart';
+import 'data/repositories/request_repository.dart';
+import 'data/repositories/review_repository.dart';
+import 'data/repositories/wallet_repository.dart';
+import 'features/auth/providers/auth_provider.dart';
+import 'features/bookings/providers/booking_provider.dart';
+import 'features/customer/providers/customer_directory_provider.dart';
+import 'features/customer/providers/provider_directory_provider.dart';
+import 'features/customer/providers/quote_provider.dart';
+import 'features/customer/providers/request_provider.dart';
+import 'features/disputes/providers/dispute_provider.dart';
+import 'features/messages/providers/message_provider.dart';
+import 'features/notifications/providers/notification_provider.dart';
+import 'features/payments/providers/payment_provider.dart';
+import 'features/reviews/providers/review_provider.dart';
+import 'features/wallet/providers/connects_provider.dart';
+import 'features/wallet/providers/provider_wallet_provider.dart';
+import 'features/wallet/providers/wallet_provider.dart';
 
 void main() {
-
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
-
     MultiProvider(
-
       providers: [
-
         Provider(create: (_) => RequestApi()),
 
         Provider(create: (_) => BookingApi()),
@@ -124,322 +76,208 @@ void main() {
         Provider(create: (_) => ProviderRepository()),
 
         Provider(
-
           create: (context) => RequestRepository(context.read<RequestApi>()),
-
         ),
 
         Provider(
-
           create: (context) => BookingRepository(context.read<BookingApi>()),
-
         ),
 
         Provider(
-
-          create: (context) =>
-
-              ConnectsRepository(context.read<ConnectsApi>()),
-
+          create: (context) => ConnectsRepository(context.read<ConnectsApi>()),
         ),
 
         Provider(
-
           create: (context) => DisputeRepository(context.read<DisputeApi>()),
-
         ),
 
         Provider(
-
           create: (context) => QuoteRepository(context.read<QuoteApi>()),
-
         ),
 
         Provider(
-
           create: (context) => ReviewRepository(context.read<ReviewApi>()),
-
         ),
 
         Provider(
-
           create: (context) => MessageRepository(context.read<MessageApi>()),
-
         ),
 
         Provider(
-
           create: (context) =>
-
               NotificationRepository(context.read<NotificationApi>()),
-
         ),
 
         Provider(
-
           create: (context) => PaymentRepository(context.read<PaymentApi>()),
-
         ),
 
         Provider(
-
           create: (context) =>
-
               ProviderWalletRepository(context.read<ProviderWalletApi>()),
-
         ),
 
         Provider(
-
           create: (context) => WalletRepository(context.read<WalletApi>()),
-
         ),
 
         ChangeNotifierProvider(create: (_) => AuthProvider()),
 
         ProxyProvider<AuthProvider, SocketInitializerService>(
-
           create: (_) => SocketInitializerService(),
 
           update: (_, authProvider, initializer) {
-
             final service = initializer ?? SocketInitializerService();
 
             service.syncAuthentication(authProvider.currentUser != null);
 
             return service;
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<RequestRepository, RequestProvider>(
-
           create: (context) =>
-
               RequestProvider(repository: context.read<RequestRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? RequestProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<
-
           ProviderRepository,
 
           ProviderDirectoryProvider
-
         >(
-
           create: (context) => ProviderDirectoryProvider(
-
             repository: context.read<ProviderRepository>(),
-
           ),
 
           update: (context, repository, previous) {
-
             return previous ??
-
                 ProviderDirectoryProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<
-
           CustomerRepository,
 
           CustomerDirectoryProvider
-
         >(
-
           create: (context) => CustomerDirectoryProvider(
-
             repository: context.read<CustomerRepository>(),
-
           ),
 
           update: (context, repository, previous) {
-
             return previous ??
-
                 CustomerDirectoryProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<MessageRepository, MessageProvider>(
-
           create: (context) =>
-
               MessageProvider(repository: context.read<MessageRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? MessageProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<
-
           NotificationRepository,
 
           NotificationProvider
-
         >(
-
           create: (context) => NotificationProvider(
-
             repository: context.read<NotificationRepository>(),
-
           ),
 
           update: (context, repository, previous) {
-
             return previous ?? NotificationProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<PaymentRepository, PaymentProvider>(
-
           create: (context) =>
-
               PaymentProvider(repository: context.read<PaymentRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? PaymentProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<ReviewRepository, ReviewProvider>(
-
           create: (context) =>
-
               ReviewProvider(repository: context.read<ReviewRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? ReviewProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<WalletRepository, WalletProvider>(
-
           create: (context) =>
-
               WalletProvider(repository: context.read<WalletRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? WalletProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<
-
           ProviderWalletRepository,
 
           ProviderWalletProvider
-
         >(
-
           create: (context) => ProviderWalletProvider(
-
             repository: context.read<ProviderWalletRepository>(),
-
           ),
 
           update: (context, repository, previous) {
-
             return previous ?? ProviderWalletProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<BookingRepository, BookingProvider>(
-
           create: (context) =>
-
               BookingProvider(repository: context.read<BookingRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? BookingProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<ConnectsRepository, ConnectsProvider>(
-
           create: (context) =>
-
               ConnectsProvider(repository: context.read<ConnectsRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? ConnectsProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<DisputeRepository, DisputeProvider>(
-
           create: (context) =>
-
               DisputeProvider(repository: context.read<DisputeRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? DisputeProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProxyProvider<QuoteRepository, QuoteProvider>(
-
           create: (context) =>
-
               QuoteProvider(repository: context.read<QuoteRepository>()),
 
           update: (context, repository, previous) {
-
             return previous ?? QuoteProvider(repository: repository);
-
           },
-
         ),
 
         ChangeNotifierProvider(create: (_) => WebSocketProvider()),
-
       ],
 
       child: const MyApp(),
-
     ),
-
   );
-
 }
-

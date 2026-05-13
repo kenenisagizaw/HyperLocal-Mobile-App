@@ -1,6 +1,6 @@
 class ApiConstants {
-  static const String baseUrl = 'http://192.168.43.232:5000';
-
+static const String baseUrl =
+    'https://recreative-generalizable-carl.ngrok-free.dev';
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
   static const String login = '$authBase/login';
