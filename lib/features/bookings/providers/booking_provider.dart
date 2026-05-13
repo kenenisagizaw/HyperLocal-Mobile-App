@@ -10,7 +10,9 @@ import '../../../data/models/booking_model.dart';
 import '../../../data/repositories/booking_repository.dart';
 
 class BookingProvider extends ChangeNotifier {
-  BookingProvider({required this.repository});
+  BookingProvider({required this.repository}) {
+    initializeWebSocket();
+  }
 
   final BookingRepository repository;
   final WebSocketService _webSocketService = WebSocketService();
@@ -36,11 +38,11 @@ class BookingProvider extends ChangeNotifier {
   }
 
   void initializeWebSocket() {
-    // Note: Backend API doesn't have booking events yet
-    // This method is kept for future implementation when booking events are added
+    _websocketSubscription?.cancel();
     _websocketSubscription = _webSocketService.events.listen((event) {
-      // Listen for future booking-related events
-      // Currently no booking events are supported by the backend API
+      if (event.type == 'booking_update') {
+        _handleBookingUpdated(event.data);
+      }
     });
   }
 
@@ -204,6 +206,19 @@ class BookingProvider extends ChangeNotifier {
         return 'COMPLETED';
       case BookingStatus.cancelled:
         return 'CANCELLED';
+    }
+  }
+
+  void _handleBookingUpdated(Map<String, dynamic> data) {
+    try {
+      final payload = data['booking'] is Map
+          ? (data['booking'] as Map).cast<String, dynamic>()
+          : data;
+      final booking = Booking.fromJson(payload);
+      _bookings[booking.id] = booking;
+      notifyListeners();
+    } catch (error) {
+      debugPrint('Error handling booking.updated event: $error');
     }
   }
 
