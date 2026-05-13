@@ -1,22 +1,38 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/services/websocket_service.dart';
 import '../../../data/models/quote_model.dart';
 import '../../../data/repositories/quote_repository.dart';
 
 class QuoteProvider extends ChangeNotifier {
-  QuoteProvider({required this.repository});
+  QuoteProvider({required this.repository}) {
+    initializeWebSocket();
+  }
 
   final QuoteRepository repository;
+  final WebSocketService _webSocketService = WebSocketService();
 
   final List<Quote> _quotes = [];
+  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
 
   List<Quote> get quotes => List.unmodifiable(_quotes);
   bool get isLoading => _isLoading;
+
+  void initializeWebSocket() {
+    _websocketSubscription?.cancel();
+    _websocketSubscription = _webSocketService.events.listen((event) {
+      if (event.type == 'quote_update') {
+        _handleQuoteUpdated(event.data);
+      }
+    });
+  }
 
   Future<void> loadMyQuotes({int? take, int? skip}) async {
     _setLoading(true);
@@ -160,6 +176,17 @@ class QuoteProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _handleQuoteUpdated(Map<String, dynamic> data) {
+    try {
+      final payload = data['quote'] is Map
+          ? (data['quote'] as Map).cast<String, dynamic>()
+          : data;
+      _upsertQuote(Quote.fromJson(payload));
+    } catch (error) {
+      debugPrint('Error handling quote_update event: $error');
+    }
+  }
+
   void _updateQuoteStatus(String quoteId, QuoteStatus status) {
     final index = _quotes.indexWhere((q) => q.id == quoteId);
     if (index == -1) {
@@ -214,5 +241,11 @@ class QuoteProvider extends ChangeNotifier {
       }
     }
     return error.message;
+  }
+
+  @override
+  void dispose() {
+    _websocketSubscription?.cancel();
+    super.dispose();
   }
 }
