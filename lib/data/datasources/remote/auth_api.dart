@@ -145,13 +145,22 @@ class AuthApi {
   Future<Map<String, dynamic>> uploadIdentity({
     required String accessToken,
     required XFile idDocument,
+    XFile? idDocumentBack,
     required XFile selfie,
+    String? idNumber,
   }) async {
     final formData = FormData.fromMap({
+      if (idNumber != null && idNumber.trim().isNotEmpty)
+        'idNumber': idNumber.trim(),
       'idDocument': await MultipartFile.fromFile(
         idDocument.path,
         filename: idDocument.name,
       ),
+      if (idDocumentBack != null)
+        'idDocumentBack': await MultipartFile.fromFile(
+          idDocumentBack.path,
+          filename: idDocumentBack.name,
+        ),
       'selfie': await MultipartFile.fromFile(
         selfie.path,
         filename: selfie.name,
