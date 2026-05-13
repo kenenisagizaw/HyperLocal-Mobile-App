@@ -127,6 +127,7 @@ class _ProviderVerificationScreenState
     final success = await authProvider.uploadIdentity(
       idDocument: _nationalIdFile!,
       selfie: _selfieFile!,
+      idNumber: _nationalIdController.text.trim(),
     );
 
     if (!mounted) {
