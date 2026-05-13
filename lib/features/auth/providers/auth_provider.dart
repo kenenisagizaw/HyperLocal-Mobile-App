@@ -167,10 +167,17 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> uploadIdentity({
     required XFile idDocument,
     required XFile selfie,
+    XFile? idDocumentBack,
+    String? idNumber,
   }) async {
     return _runAuthAction(() async {
       await _ensureRepository();
-      await _repository!.uploadIdentity(idDocument: idDocument, selfie: selfie);
+      await _repository!.uploadIdentity(
+        idDocument: idDocument,
+        selfie: selfie,
+        idDocumentBack: idDocumentBack,
+        idNumber: idNumber,
+      );
     });
   }
 
