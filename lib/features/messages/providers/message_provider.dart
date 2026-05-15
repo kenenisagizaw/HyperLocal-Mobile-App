@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/error_utils.dart';
 import '../../../core/services/sse_service.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../data/models/conversation_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../data/repositories/message_repository.dart';
@@ -294,7 +294,7 @@ class MessageProvider extends ChangeNotifier {
     try {
       final conversationId = data['conversationId'] as String?;
       final messageId = data['messageId'] as String?;
-      
+
       if (conversationId != null && messageId != null) {
         _markMessageRead(conversationId, messageId);
       }

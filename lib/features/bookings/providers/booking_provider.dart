@@ -118,9 +118,12 @@ class BookingProvider extends ChangeNotifier {
       _bookings[booking.id] = booking;
       return booking;
     } on DioException catch (error) {
-      print('DEBUG: Failed to load booking: ${error.response?.statusCode} - ${error.message}');
+      print(
+        'DEBUG: Failed to load booking: ${error.response?.statusCode} - ${error.message}',
+      );
       if (error.response?.statusCode == 404) {
-        errorMessage = 'Booking not found. The booking may have been deleted or the ID is incorrect.';
+        errorMessage =
+            'Booking not found. The booking may have been deleted or the ID is incorrect.';
       } else {
         _setError(error);
       }
@@ -224,7 +227,6 @@ class BookingProvider extends ChangeNotifier {
     );
   }
 
-  
   @override
   void dispose() {
     super.dispose();

@@ -54,22 +54,25 @@ class PasswordResetProvider extends ChangeNotifier {
 
   Future<bool> verifyToken({required String token}) async {
     final normalizedToken = token.trim();
-    return _run(() async {
-      isVerifying = true;
-      notifyListeners();
-      final response = await _repository.verifyToken(
-        PasswordResetVerifyRequest(token: normalizedToken),
-      );
-      if (!response.valid) {
-        throw const PasswordResetException(
-          'This reset link is invalid or has expired.',
+    return _run(
+      () async {
+        isVerifying = true;
+        notifyListeners();
+        final response = await _repository.verifyToken(
+          PasswordResetVerifyRequest(token: normalizedToken),
         );
-      }
-      _verifiedToken = normalizedToken;
-      lastSuccessMessage = 'Reset link verified.';
-    }, onFinally: () {
-      isVerifying = false;
-    });
+        if (!response.valid) {
+          throw const PasswordResetException(
+            'This reset link is invalid or has expired.',
+          );
+        }
+        _verifiedToken = normalizedToken;
+        lastSuccessMessage = 'Reset link verified.';
+      },
+      onFinally: () {
+        isVerifying = false;
+      },
+    );
   }
 
   Future<bool> confirmReset({

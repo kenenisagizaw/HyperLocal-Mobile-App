@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/utils/error_utils.dart';
 import '../../../core/services/sse_service.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/repositories/notification_repository.dart';
 

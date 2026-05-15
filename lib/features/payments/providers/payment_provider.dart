@@ -78,8 +78,6 @@ class PaymentProvider extends ChangeNotifier {
     return payment;
   }
 
-
-
   Payment _paymentFromJson(Map<String, dynamic> json) {
     return Payment(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
@@ -89,7 +87,8 @@ class PaymentProvider extends ChangeNotifier {
       payerId: (json['payerId'] ?? json['userId'] ?? '').toString(),
       amount: _parseDouble(json['amount']),
       status: _parsePaymentStatus(json['status'] ?? json['paymentStatus']),
-      createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
+      createdAt:
+          DateTime.tryParse((json['createdAt'] ?? '').toString()) ??
           DateTime.now(),
     );
   }
