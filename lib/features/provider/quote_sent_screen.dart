@@ -21,7 +21,7 @@ class QuoteSentScreen extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            Text('Amount: \$${quote.price.toStringAsFixed(2)}'),
+            Text('Amount: ${quote.price.toStringAsFixed(2)} ETB'),
             const SizedBox(height: 6),
             Text('Message: ${quote.message}'),
             if (quote.estimatedTime != null) ...[

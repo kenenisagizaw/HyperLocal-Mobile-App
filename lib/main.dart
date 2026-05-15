@@ -1,9 +1,12 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'core/constants/api_constants.dart';
 import 'core/providers/websocket_provider.dart';
 import 'core/services/socket_initializer_service.dart';
+import 'data/datasources/remote/auth_api.dart';
 import 'data/datasources/remote/booking_api.dart';
 import 'data/datasources/remote/connects_api.dart';
 import 'data/datasources/remote/dispute_api.dart';
@@ -15,6 +18,7 @@ import 'data/datasources/remote/quote_api.dart';
 import 'data/datasources/remote/request_api.dart';
 import 'data/datasources/remote/review_api.dart';
 import 'data/datasources/remote/wallet_api.dart';
+import 'data/datasources/remote/withdrawal_api.dart';
 import 'data/repositories/booking_repository.dart';
 import 'data/repositories/connects_repository.dart';
 import 'data/repositories/customer_repository.dart';
@@ -28,7 +32,10 @@ import 'data/repositories/quote_repository.dart';
 import 'data/repositories/request_repository.dart';
 import 'data/repositories/review_repository.dart';
 import 'data/repositories/wallet_repository.dart';
+import 'data/repositories/withdrawal_repository.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/providers/password_reset_provider.dart';
+import 'features/auth/repositories/password_reset_repository.dart';
 import 'features/bookings/providers/booking_provider.dart';
 import 'features/customer/providers/customer_directory_provider.dart';
 import 'features/customer/providers/provider_directory_provider.dart';
@@ -42,6 +49,7 @@ import 'features/reviews/providers/review_provider.dart';
 import 'features/wallet/providers/connects_provider.dart';
 import 'features/wallet/providers/provider_wallet_provider.dart';
 import 'features/wallet/providers/wallet_provider.dart';
+import 'features/wallet/providers/withdrawal_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +78,8 @@ void main() {
         Provider(create: (_) => ProviderWalletApi()),
 
         Provider(create: (_) => WalletApi()),
+
+        Provider(create: (_) => WithdrawalApi()),
 
         Provider(create: (_) => CustomerRepository()),
 
@@ -121,7 +131,29 @@ void main() {
           create: (context) => WalletRepository(context.read<WalletApi>()),
         ),
 
+        Provider(
+          create: (context) =>
+              WithdrawalRepository(context.read<WithdrawalApi>()),
+        ),
+
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+
+        ChangeNotifierProvider(
+          create: (_) => PasswordResetProvider(
+            repository: PasswordResetRepository(
+              api: AuthApi(
+                Dio(
+                  BaseOptions(
+                    baseUrl: ApiConstants.baseUrl,
+                    connectTimeout: const Duration(seconds: 15),
+                    receiveTimeout: const Duration(seconds: 15),
+                    headers: const {'Accept': 'application/json'},
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
 
         ProxyProvider<AuthProvider, SocketInitializerService>(
           create: (_) => SocketInitializerService(),
@@ -221,6 +253,16 @@ void main() {
 
           update: (context, repository, previous) {
             return previous ?? WalletProvider(repository: repository);
+          },
+        ),
+
+        ChangeNotifierProxyProvider<WithdrawalRepository, WithdrawalProvider>(
+          create: (context) => WithdrawalProvider(
+            repository: context.read<WithdrawalRepository>(),
+          ),
+
+          update: (context, repository, previous) {
+            return previous ?? WithdrawalProvider(repository: repository);
           },
         ),
 

@@ -510,7 +510,7 @@ class _CreateRequestScreenState extends State<CreateRequestScreen> {
                       labelText: 'Budget (ETB) - optional',
                       labelStyle: TextStyle(color: Colors.blue.shade700),
                       prefixIcon: Icon(
-                        Icons.attach_money,
+                        Icons.payments_rounded,
                         color: Colors.blue.shade400,
                       ),
                       border: OutlineInputBorder(

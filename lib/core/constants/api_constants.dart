@@ -11,8 +11,12 @@ static const String baseUrl =
   static const String sendEmailVerificationCode =
       '$authBase/send-email-verification-code';
   static const String verifyEmailCode = '$authBase/verify-email-code';
-  static const String forgotPassword = '$authBase/forgot-password';
-  static const String resetPassword = '$authBase/reset-password';
+  static const String passwordResetRequest =
+      '$authBase/password/reset/request';
+  static const String passwordResetVerify = '$authBase/password/reset/verify';
+  static const String passwordResetConfirm = '$authBase/password/reset/confirm';
+  static const String forgotPassword = passwordResetRequest;
+  static const String resetPassword = passwordResetConfirm;
   static const String googleLogin = '$authBase/google';
   static const String identityUpload = '$authBase/identity/upload';
   static const String identityStatus = '$authBase/identity/status';
@@ -45,9 +49,11 @@ static const String baseUrl =
 
   static const String messages = '/api/messages';
   static const String messageConversations = '/api/messages/conversations';
+  static const String messageStream = '/api/messages/stream';
 
   static const String notifications = '/api/notifications';
   static const String notificationsReadAll = '/api/notifications/read-all';
+  static const String notificationsStream = '/api/notifications/stream';
 
   static const String disputes = '/api/disputes';
 

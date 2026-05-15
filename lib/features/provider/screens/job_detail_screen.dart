@@ -452,7 +452,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Your Price',
-                        prefixText: '\$ ',
+                        suffixText: ' ETB',
                         labelStyle: TextStyle(color: Colors.grey.shade600),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -638,13 +638,13 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final max = request.budgetMax;
     String label;
     if (min != null && max != null) {
-      label = '\$${min.toStringAsFixed(0)} - \$${max.toStringAsFixed(0)}';
+      label = '${min.toStringAsFixed(0)} - ${max.toStringAsFixed(0)} ETB';
     } else if (min != null) {
-      label = '\$${min.toStringAsFixed(0)}';
+      label = '${min.toStringAsFixed(0)} ETB';
     } else if (max != null) {
-      label = '\$${max.toStringAsFixed(0)}';
+      label = '${max.toStringAsFixed(0)} ETB';
     } else if (request.budget != null) {
-      label = '\$${request.budget!.toStringAsFixed(0)}';
+      label = '${request.budget!.toStringAsFixed(0)} ETB';
     } else {
       label = 'Not set';
     }

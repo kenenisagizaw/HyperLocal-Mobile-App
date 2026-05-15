@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
 import 'features/auth/auth_gate.dart';
-import 'features/auth/forgot_password_screen.dart';
+import 'features/auth/screens/forgot_password_screen.dart';
+import 'features/auth/screens/password_reset_success_screen.dart';
+import 'features/auth/screens/reset_password_screen.dart';
+import 'features/auth/screens/verify_reset_token_screen.dart';
+import 'features/auth/services/password_reset_link_handler.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
-import 'features/auth/reset_password_screen.dart';
 import 'features/auth/splash_screen.dart';
 import 'features/auth/verify_email_screen.dart';
 import 'features/auth/welcome_screen.dart';
@@ -44,9 +47,23 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => const ForgotPasswordScreen(),
             );
-          case '/reset-password':
+          case '/verify-reset-token':
+            final args = settings.arguments as Map<String, dynamic>?;
             return MaterialPageRoute(
-              builder: (_) => const ResetPasswordScreen(),
+              builder: (_) => VerifyResetTokenScreen(
+                initialToken: args?['token']?.toString(),
+              ),
+            );
+          case '/reset-password':
+            final args = settings.arguments as Map<String, dynamic>?;
+            return MaterialPageRoute(
+              builder: (_) => ResetPasswordScreen(
+                token: args?['token']?.toString(),
+              ),
+            );
+          case '/reset-password/success':
+            return MaterialPageRoute(
+              builder: (_) => const PasswordResetSuccessScreen(),
             );
           case '/auth':
             return MaterialPageRoute(builder: (_) => const AuthGate());
@@ -115,7 +132,11 @@ class MyApp extends StatelessWidget {
         }
       },
       builder: (context, child) {
-        return PaymentReturnHandler(child: child ?? const SizedBox.shrink());
+        return PaymentReturnHandler(
+          child: PasswordResetLinkHandler(
+            child: child ?? const SizedBox.shrink(),
+          ),
+        );
       },
     );
   }

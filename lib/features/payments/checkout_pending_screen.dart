@@ -1,11 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:app_links/app_links.dart';
-import '../../data/services/connect_purchase_service.dart';
-import '../../data/repositories/payment_repository.dart';
-import '../../core/utils/logger.dart';
+
 import '../../core/services/service_locator.dart';
+import '../../core/utils/logger.dart';
+import '../../data/services/connect_purchase_service.dart';
 
 class CheckoutPendingScreen extends StatefulWidget {
   const CheckoutPendingScreen({
@@ -49,7 +49,8 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null) {
       _transactionReference = args['transactionReference'] as String?;
       _connectAmount = args['connectAmount'] as int?;
@@ -58,16 +59,18 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
   }
 
   void _setupDeepLinkListener() {
-    _deepLinkSubscription = _connectPurchaseService.listenForPaymentCallback().listen(
-      (Uri? uri) {
-        if (uri != null && uri.scheme == 'myapp') {
-          _handlePaymentCallback(uri);
-        }
-      },
-      onError: (error) {
-        Logger.error('Deep link error: $error');
-      },
-    );
+    _deepLinkSubscription = _connectPurchaseService
+        .listenForPaymentCallback()
+        .listen(
+          (Uri? uri) {
+            if (uri != null && uri.scheme == 'myapp') {
+              _handlePaymentCallback(uri);
+            }
+          },
+          onError: (error) {
+            Logger.error('Deep link error: $error');
+          },
+        );
   }
 
   void _handlePaymentCallback(Uri uri) {
@@ -81,13 +84,20 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
   void _startStatusCheckTimer() {
     // Check payment status every 3 seconds with backoff, stop on 200
     int pollingInterval = 3;
-    _statusCheckTimer = Timer.periodic(Duration(seconds: pollingInterval), (timer) {
-      if (!_paymentCompleted && _transactionReference != null && _pollingAttempts < _maxPollingAttempts) {
+    _statusCheckTimer = Timer.periodic(Duration(seconds: pollingInterval), (
+      timer,
+    ) {
+      if (!_paymentCompleted &&
+          _transactionReference != null &&
+          _pollingAttempts < _maxPollingAttempts) {
         _checkPaymentStatus().then((success) {
           _pollingAttempts++;
           // Implement exponential backoff: increase interval after each attempt
           if (!success && _pollingAttempts % 5 == 0) {
-            pollingInterval = (pollingInterval * 2).clamp(3, 10); // Max 10 seconds
+            pollingInterval = (pollingInterval * 2).clamp(
+              3,
+              10,
+            ); // Max 10 seconds
             timer.cancel();
             _startStatusCheckTimerWithInterval(pollingInterval);
           }
@@ -102,7 +112,9 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
 
   void _startStatusCheckTimerWithInterval(int seconds) {
     _statusCheckTimer = Timer.periodic(Duration(seconds: seconds), (timer) {
-      if (!_paymentCompleted && _transactionReference != null && _pollingAttempts < _maxPollingAttempts) {
+      if (!_paymentCompleted &&
+          _transactionReference != null &&
+          _pollingAttempts < _maxPollingAttempts) {
         _checkPaymentStatus().then((success) {
           _pollingAttempts++;
           if (success) {
@@ -125,8 +137,10 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
         _isVerifying = true;
       });
 
-      final verification = await _connectPurchaseService.verifyPayment(_transactionReference!);
-      
+      final verification = await _connectPurchaseService.verifyPayment(
+        _transactionReference!,
+      );
+
       if (verification.verified) {
         _handlePaymentSuccess(verification);
         return true; // Success - stop polling
@@ -151,7 +165,7 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
 
     try {
       final verification = await _connectPurchaseService.verifyPayment(txRef);
-      
+
       if (verification.verified) {
         _handlePaymentSuccess(verification);
       } else {
@@ -181,7 +195,8 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
           'transactionReference': _transactionReference,
           'connectAmount': _connectAmount,
           'amount': _amount,
-          'error': 'Payment verification timed out. Please check your payment status manually.',
+          'error':
+              'Payment verification timed out. Please check your payment status manually.',
         },
       );
     }
@@ -214,7 +229,8 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
         '/payment-result',
         arguments: {
           'success': false,
-          'transactionReference': verification?.transactionReference ?? _transactionReference,
+          'transactionReference':
+              verification?.transactionReference ?? _transactionReference,
           'connectAmount': _connectAmount,
           'amount': _amount,
           'error': verification?.status ?? 'Payment verification failed',
@@ -233,6 +249,11 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final displayAmount =
+        _amount ??
+        (_connectAmount == null
+            ? null
+            : ConnectPurchaseService.connectPackages[_connectAmount!]);
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -267,14 +288,12 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
                           height: 60,
                           child: CircularProgressIndicator(
                             strokeWidth: 3,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.blue[600]!,
+                            ),
                           ),
                         )
-                      : Icon(
-                          Icons.payment,
-                          size: 60,
-                          color: Colors.blue[600],
-                        ),
+                      : Icon(Icons.payment, size: 60, color: Colors.blue[600]),
                 ),
               ),
               const SizedBox(height: 32),
@@ -292,14 +311,11 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
                 _isVerifying
                     ? 'We are verifying your payment status. This may take a few moments.'
                     : 'Please complete your payment in the browser. We will automatically detect when you return.',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              if (_connectAmount != null && _amount != null) ...[
+              if (_connectAmount != null || displayAmount != null) ...[
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -311,7 +327,7 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '$_connectAmount Connects',
+                        '${_connectAmount ?? '-'} Connects',
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -319,7 +335,9 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
                         ),
                       ),
                       Text(
-                        'ETB ${_amount!.toStringAsFixed(0)}',
+                        displayAmount == null
+                            ? 'ETB -'
+                            : 'ETB ${displayAmount.toStringAsFixed(0)}',
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -334,7 +352,10 @@ class _CheckoutPendingScreenState extends State<CheckoutPendingScreen> {
               OutlinedButton(
                 onPressed: _isVerifying ? null : () => _checkPaymentStatus(),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

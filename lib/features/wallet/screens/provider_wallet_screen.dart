@@ -76,7 +76,7 @@ class _ProviderWalletScreenState extends State<ProviderWalletScreen> {
                 WalletBalanceCard(
                   title: 'Available balance',
                   amount:
-                      '$currency ${wallet?.availableToWithdraw.toStringAsFixed(2) ?? '0.00'}',
+                      '$currency ${wallet?.walletBalance.toStringAsFixed(2) ?? '0.00'}',
                   subtitle:
                       'Wallet balance: $currency ${wallet?.walletBalance.toStringAsFixed(2) ?? '0.00'}',
                   trailing: ElevatedButton(

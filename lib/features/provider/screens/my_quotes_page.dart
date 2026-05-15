@@ -172,7 +172,7 @@ class _MyQuotesPageState extends State<MyQuotesPage> {
                             Row(
                               children: [
                                 Text(
-                                  '\$${q.price.toStringAsFixed(0)}',
+                                  '${q.price.toStringAsFixed(0)} ETB',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w700,
                                     fontSize: 22,
@@ -446,7 +446,7 @@ class QuoteDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '\$${quote.price.toStringAsFixed(0)}',
+                            quote.price.toStringAsFixed(0),
                             style: const TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.w700,
@@ -458,6 +458,14 @@ class QuoteDetailScreen extends StatelessWidget {
                             '.${quote.price.toStringAsFixed(2).split('.').last}',
                             style: TextStyle(
                               fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: _primaryBlue.withValues(alpha: 0.6),
+                            ),
+                          ),
+                          Text(
+                            ' ETB',
+                            style: TextStyle(
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: _primaryBlue.withValues(alpha: 0.6),
                             ),

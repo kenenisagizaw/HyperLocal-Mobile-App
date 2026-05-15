@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../messages/messages_screen.dart';
 import '../profile/profile_screen.dart';
 import 'screens/available_jobs_page.dart';
-import 'screens/my_bookings_page.dart';
 import 'screens/my_quotes_page.dart';
 import 'screens/provider_home_page.dart';
 
@@ -25,7 +24,6 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
         onNavigateToTab: (index) => setState(() => _currentIndex = index),
       ),
       const AvailableJobsPage(),
-      const MyBookingsPage(),
       const MyQuotesPage(),
       const MessagesScreen(),
       const ProviderProfilePage(),
@@ -84,11 +82,7 @@ class _ProviderDashboardState extends State<ProviderDashboard> {
                 label: 'Jobs',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_month),
-                label: 'Bookings',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.attach_money_rounded),
+                icon: Icon(Icons.receipt_long_rounded),
                 label: 'Quotes',
               ),
               BottomNavigationBarItem(

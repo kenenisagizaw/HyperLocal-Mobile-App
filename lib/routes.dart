@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'features/auth/auth_gate.dart';
-import 'features/auth/forgot_password_screen.dart';
+import 'features/auth/screens/forgot_password_screen.dart';
+import 'features/auth/screens/password_reset_success_screen.dart';
+import 'features/auth/screens/reset_password_screen.dart';
+import 'features/auth/screens/verify_reset_token_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
-import 'features/auth/reset_password_screen.dart';
 import 'features/auth/splash_screen.dart';
 import 'features/auth/verify_email_screen.dart';
 import 'features/auth/welcome_screen.dart';
@@ -22,7 +24,9 @@ class Routes {
   static const register = '/register';
   static const verifyEmail = '/verify-email';
   static const forgotPassword = '/forgot-password';
+  static const verifyResetToken = '/verify-reset-token';
   static const resetPassword = '/reset-password';
+  static const resetPasswordSuccess = '/reset-password/success';
   static const connectPackages = '/connect-packages';
   static const checkoutPending = '/checkout-pending';
   static const paymentResult = '/payment-result';
@@ -38,7 +42,9 @@ class Routes {
     register: (_) => const RegisterScreen(),
     verifyEmail: (_) => const VerifyEmailScreen(),
     forgotPassword: (_) => const ForgotPasswordScreen(),
+    verifyResetToken: (_) => const VerifyResetTokenScreen(),
     resetPassword: (_) => const ResetPasswordScreen(),
+    resetPasswordSuccess: (_) => const PasswordResetSuccessScreen(),
     '/auth': (_) => const AuthGate(),
     connectPackages: (_) => const ConnectPackagesScreen(),
     checkoutPending: (_) => const CheckoutPendingScreen(),

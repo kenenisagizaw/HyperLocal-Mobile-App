@@ -14,7 +14,6 @@ import '../messages/providers/message_provider.dart';
 import '../notifications/notification_navigation.dart';
 import '../notifications/providers/notification_provider.dart';
 import '../payments/providers/payment_provider.dart';
-import '../../routes.dart';
 import 'customer_profile_screen.dart';
 import 'my_requests_screen.dart';
 import 'providers/provider_directory_provider.dart';
@@ -528,7 +527,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                                 ),
                               ),
                               subtitle: Text(
-                                '\$${quote.price.toStringAsFixed(0)}',
+                                '${quote.price.toStringAsFixed(0)} ETB',
                                 style: TextStyle(
                                   color: const Color(0xFF3366FF),
                                   fontWeight: FontWeight.w500,
@@ -919,98 +918,104 @@ class PaymentsPage extends StatelessWidget {
 
     return Container(
       color: const Color(0xFFF8FAFF),
-      child: payments.isEmpty 
-        ? const Center(child: Text('No payments yet'))
-        : ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: payments.length,
-        itemBuilder: (context, index) {
-          final payment = payments[index];
-          ServiceRequest? request;
-          Quote? quote;
-          try {
-            request = requestProvider.requests.firstWhere(
-              (r) => r.id == payment.requestId,
-            );
-          } catch (_) {
-            request = null;
-          }
-          try {
-            quote = quoteProvider.quotes.firstWhere(
-              (q) => q.id == payment.quoteId,
-            );
-          } catch (_) {
-            quote = null;
-          }
+      child: payments.isEmpty
+          ? const Center(child: Text('No payments yet'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: payments.length,
+              itemBuilder: (context, index) {
+                final payment = payments[index];
+                ServiceRequest? request;
+                Quote? quote;
+                try {
+                  request = requestProvider.requests.firstWhere(
+                    (r) => r.id == payment.requestId,
+                  );
+                } catch (_) {
+                  request = null;
+                }
+                try {
+                  quote = quoteProvider.quotes.firstWhere(
+                    (q) => q.id == payment.quoteId,
+                  );
+                } catch (_) {
+                  quote = null;
+                }
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF3366FF).withOpacity(0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3366FF).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.payment,
-                  color: const Color(0xFF3366FF),
-                  size: 24,
-                ),
-              ),
-              title: Text(
-                '\$${payment.amount.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Color(0xFF1A1F36),
-                ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-                  Text(
-                    request?.category ?? 'Service request',
-                    style: TextStyle(color: Colors.grey.shade600),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF3366FF).withOpacity(0.08),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Provider: ${quote?.providerName ?? 'Unknown'}',
-                    style: TextStyle(
-                      color: const Color(0xFF00C48C),
-                      fontSize: 12,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3366FF).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.payment,
+                        color: const Color(0xFF3366FF),
+                        size: 24,
+                      ),
+                    ),
+                    title: Text(
+                      '${payment.amount.toStringAsFixed(2)} ETB',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF1A1F36),
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 4),
+                        Text(
+                          request?.category ?? 'Service request',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Provider: ${quote?.providerName ?? 'Unknown'}',
+                          style: TextStyle(
+                            color: const Color(0xFF00C48C),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        payment.createdAt.toLocal().toString().split(' ').first,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  payment.createdAt.toLocal().toString().split(' ').first,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }

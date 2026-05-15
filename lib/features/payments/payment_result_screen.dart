@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../data/services/connect_purchase_service.dart';
+
 class PaymentResultScreen extends StatelessWidget {
   const PaymentResultScreen({
     super.key,
@@ -19,6 +21,11 @@ class PaymentResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayAmount = (amount != null && amount! > 0)
+        ? amount
+        : (connectAmount == null
+              ? null
+              : ConnectPurchaseService.connectPackages[connectAmount!]);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -60,15 +67,14 @@ class PaymentResultScreen extends StatelessWidget {
               Text(
                 success
                     ? 'Your connects have been added to your account successfully.'
-                    : error ?? 'We couldn\'t complete your payment. Please try again.',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                    : error ??
+                          'We couldn\'t complete your payment. Please try again.',
+                style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              if (success && connectAmount != null && amount != null) ...[
+              if (success &&
+                  (connectAmount != null || displayAmount != null)) ...[
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -116,7 +122,9 @@ class PaymentResultScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'ETB ${amount?.toStringAsFixed(0) ?? '0'}',
+                            displayAmount == null
+                                ? 'ETB -'
+                                : 'ETB ${displayAmount.toStringAsFixed(0)}',
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -164,7 +172,9 @@ class PaymentResultScreen extends StatelessWidget {
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: success ? Colors.green[600] : Colors.red[600],
+                    backgroundColor: success
+                        ? Colors.green[600]
+                        : Colors.red[600],
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(

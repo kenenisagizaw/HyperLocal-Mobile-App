@@ -80,14 +80,34 @@ class ProviderWalletProvider extends ChangeNotifier {
         status: _statusFilter,
         type: _typeFilter,
       );
+      final resolvedCurrency = result.currency.isEmpty
+          ? current.currency
+          : result.currency;
+      final resolvedWalletBalance = result.walletBalance == 0
+          ? current.walletBalance
+          : result.walletBalance;
+      final resolvedTotalEarned = result.totalEarned == 0
+          ? current.totalEarned
+          : result.totalEarned;
+      final resolvedTotalWithdrawn = result.totalWithdrawn == 0
+          ? current.totalWithdrawn
+          : result.totalWithdrawn;
+      final resolvedPendingWithdrawals = result.pendingWithdrawals == 0
+          ? current.pendingWithdrawals
+          : result.pendingWithdrawals;
+      final resolvedAvailableToWithdraw = result.availableToWithdraw == 0
+          ? current.availableToWithdraw
+          : result.availableToWithdraw;
+      final resolvedWithdrawalFeePercent =
+          result.withdrawalFeePercent ?? current.withdrawalFeePercent;
       _wallet = ProviderWalletModel(
-        walletBalance: result.walletBalance,
-        totalEarned: result.totalEarned,
-        totalWithdrawn: result.totalWithdrawn,
-        pendingWithdrawals: result.pendingWithdrawals,
-        availableToWithdraw: result.availableToWithdraw,
-        currency: result.currency,
-        withdrawalFeePercent: result.withdrawalFeePercent,
+        walletBalance: resolvedWalletBalance,
+        totalEarned: resolvedTotalEarned,
+        totalWithdrawn: resolvedTotalWithdrawn,
+        pendingWithdrawals: resolvedPendingWithdrawals,
+        availableToWithdraw: resolvedAvailableToWithdraw,
+        currency: resolvedCurrency,
+        withdrawalFeePercent: resolvedWithdrawalFeePercent,
         transactions: [...current.transactions, ...result.transactions],
         pagination: result.pagination,
       );

@@ -116,17 +116,45 @@ class AuthApi {
   }
 
   Future<void> forgotPassword({required String email}) async {
-    await _dio.post(ApiConstants.forgotPassword, data: {'email': email});
+    await requestPasswordReset(email: email);
+  }
+
+  Future<Map<String, dynamic>> requestPasswordReset({
+    required String email,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.passwordResetRequest,
+      data: {'email': email},
+    );
+    return _asMap(response.data);
+  }
+
+  Future<Map<String, dynamic>> verifyPasswordResetToken({
+    required String token,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.passwordResetVerify,
+      data: {'token': token},
+    );
+    return _asMap(response.data);
   }
 
   Future<void> resetPassword({
     required String token,
     required String password,
   }) async {
-    await _dio.post(
-      ApiConstants.resetPassword,
-      data: {'token': token, 'password': password},
+    await confirmPasswordReset(token: token, newPassword: password);
+  }
+
+  Future<Map<String, dynamic>> confirmPasswordReset({
+    required String token,
+    required String newPassword,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.passwordResetConfirm,
+      data: {'token': token, 'newPassword': newPassword},
     );
+    return _asMap(response.data);
   }
 
   Future<Map<String, dynamic>> loginWithGoogle({
@@ -145,22 +173,20 @@ class AuthApi {
   Future<Map<String, dynamic>> uploadIdentity({
     required String accessToken,
     required XFile idDocument,
-    XFile? idDocumentBack,
+    required XFile idDocumentBack,
     required XFile selfie,
-    String? idNumber,
+    required String idNumber,
   }) async {
     final formData = FormData.fromMap({
-      if (idNumber != null && idNumber.trim().isNotEmpty)
-        'idNumber': idNumber.trim(),
+      'idNumber': idNumber.trim(),
       'idDocument': await MultipartFile.fromFile(
         idDocument.path,
         filename: idDocument.name,
       ),
-      if (idDocumentBack != null)
-        'idDocumentBack': await MultipartFile.fromFile(
-          idDocumentBack.path,
-          filename: idDocumentBack.name,
-        ),
+      'idDocumentBack': await MultipartFile.fromFile(
+        idDocumentBack.path,
+        filename: idDocumentBack.name,
+      ),
       'selfie': await MultipartFile.fromFile(
         selfie.path,
         filename: selfie.name,

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../data/services/connect_purchase_service.dart';
-import '../../data/datasources/local/local_storage.dart';
-import '../../core/utils/logger.dart';
+
 import '../../core/services/service_locator.dart';
+import '../../core/utils/logger.dart';
+import '../../data/datasources/local/local_storage.dart';
+import '../../data/services/connect_purchase_service.dart';
 import '../auth/providers/auth_provider.dart';
 
 class ConnectPackagesScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class ConnectPackagesScreen extends StatefulWidget {
 
 class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
   bool _isLoading = false;
+  int? _loadingConnectAmount;
   late final ConnectPurchaseService _connectPurchaseService;
 
   @override
@@ -62,10 +64,7 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
               const SizedBox(height: 8),
               Text(
                 'Select the number of connects you want to purchase',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: GoogleFonts.inter(fontSize: 16, color: Colors.grey[600]),
               ),
               const SizedBox(height: 32),
               Expanded(
@@ -73,9 +72,13 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
                   itemCount: packages.length,
                   itemBuilder: (context, index) {
                     final package = packages[index];
+                    final isSelectedLoading =
+                        _isLoading &&
+                        _loadingConnectAmount == package.connectAmount;
                     return _PackageCard(
                       package: package,
-                      isLoading: _isLoading,
+                      isLoading: isSelectedLoading,
+                      isDisabled: _isLoading,
                       onTap: () => _purchaseConnects(package),
                     );
                   },
@@ -93,33 +96,41 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
 
     setState(() {
       _isLoading = true;
+      _loadingConnectAmount = package.connectAmount;
     });
 
     try {
       // Check if user is authenticated
       final authProvider = context.read<AuthProvider>();
-      Logger.info('Auth Provider - Current user: ${authProvider.currentUser?.id ?? "null"}');
-      Logger.info('Auth Provider - Is authenticated: ${authProvider.currentUser != null}');
-      
+      Logger.info(
+        'Auth Provider - Current user: ${authProvider.currentUser?.id ?? "null"}',
+      );
+      Logger.info(
+        'Auth Provider - Is authenticated: ${authProvider.currentUser != null}',
+      );
+
       if (authProvider.currentUser == null) {
         throw Exception('User not authenticated. Please log in first.');
       }
-      
+
       // Debug token comparison
       final localStorage = LocalStorage();
       final storedToken = await localStorage.getAccessToken();
       Logger.info('Token Debug - Stored token exists: ${storedToken != null}');
       if (storedToken != null) {
         Logger.info('Token Debug - Stored token length: ${storedToken.length}');
-        Logger.info('Token Debug - Stored token preview: ${storedToken.substring(0, storedToken.length > 20 ? 20 : storedToken.length)}...');
+        Logger.info(
+          'Token Debug - Stored token preview: ${storedToken.substring(0, storedToken.length > 20 ? 20 : storedToken.length)}...',
+        );
       }
-      
-      Logger.info('Initializing purchase for ${package.connectAmount} connects');
-      
-      // Initialize payment
-      final paymentInit = await _connectPurchaseService.initializeConnectPurchase(
-        connectAmount: package.connectAmount,
+
+      Logger.info(
+        'Initializing purchase for ${package.connectAmount} connects',
       );
+
+      // Initialize payment
+      final paymentInit = await _connectPurchaseService
+          .initializeConnectPurchase(connectAmount: package.connectAmount);
 
       Logger.info('Payment initialized, launching checkout URL');
 
@@ -142,34 +153,39 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
       if (mounted) {
         String errorMessage = 'Payment initialization failed';
         String errorDetail = '';
-        
+
         // Handle specific errors
-        if (e.toString().contains('401') || e.toString().contains('unauthorized')) {
+        if (e.toString().contains('401') ||
+            e.toString().contains('unauthorized')) {
           errorMessage = 'Authentication required';
           errorDetail = 'Please log in again to continue.';
         } else if (e.toString().contains('User not authenticated')) {
           errorMessage = 'Please log in';
           errorDetail = 'You need to be logged in to purchase connects.';
-        } else if (e.toString().contains('network') || e.toString().contains('connection')) {
+        } else if (e.toString().contains('network') ||
+            e.toString().contains('connection')) {
           errorMessage = 'Network error';
           errorDetail = 'Please check your internet connection and try again.';
         } else if (e.toString().contains('timeout')) {
           errorMessage = 'Request timeout';
-          errorDetail = 'The server is taking too long to respond. Please try again.';
+          errorDetail =
+              'The server is taking too long to respond. Please try again.';
         } else if (e.toString().contains('404')) {
           errorMessage = 'Service unavailable';
           errorDetail = 'The payment service is currently unavailable.';
         } else if (e.toString().contains('400')) {
           errorMessage = 'Invalid request';
-          errorDetail = 'The payment request format is invalid. Please try again.';
+          errorDetail =
+              'The payment request format is invalid. Please try again.';
         } else if (e.toString().contains('500')) {
           errorMessage = 'Server error';
-          errorDetail = 'Something went wrong on our end. Please try again later.';
+          errorDetail =
+              'Something went wrong on our end. Please try again later.';
         } else {
           errorMessage = 'Payment initialization failed';
           errorDetail = 'An unexpected error occurred. Please try again.';
         }
-        
+
         // Show detailed error dialog
         showDialog(
           context: context,
@@ -183,19 +199,19 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Error details: ${e.toString()}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
             actions: [
-              if (e.toString().contains('401') || e.toString().contains('User not authenticated'))
+              if (e.toString().contains('401') ||
+                  e.toString().contains('User not authenticated'))
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/auth', (route) => false);
                   },
                   child: const Text('Login'),
                 ),
@@ -211,6 +227,7 @@ class _ConnectPackagesScreenState extends State<ConnectPackagesScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _loadingConnectAmount = null;
         });
       }
     }
@@ -221,11 +238,13 @@ class _PackageCard extends StatelessWidget {
   const _PackageCard({
     required this.package,
     required this.isLoading,
+    required this.isDisabled,
     required this.onTap,
   });
 
   final ConnectPackage package;
   final bool isLoading;
+  final bool isDisabled;
   final VoidCallback onTap;
 
   @override
@@ -247,7 +266,7 @@ class _PackageCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: isLoading ? null : onTap,
+          onTap: isDisabled ? null : onTap,
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Row(
@@ -266,11 +285,7 @@ class _PackageCard extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.flash_on,
-                        color: Colors.white,
-                        size: 24,
-                      ),
+                      Icon(Icons.flash_on, color: Colors.white, size: 24),
                       Text(
                         '${package.connectAmount}',
                         style: GoogleFonts.inter(

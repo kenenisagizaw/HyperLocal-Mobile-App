@@ -22,6 +22,7 @@ import '../../reviews/provider_reviews_screen.dart';
 import '../../reviews/providers/review_provider.dart';
 import '../utils/distance_utils.dart';
 import '../utils/formatters.dart';
+import 'my_bookings_page.dart';
 
 class ProviderHomePage extends StatefulWidget {
   const ProviderHomePage({super.key, required this.onNavigateToTab});
@@ -388,9 +389,9 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                       onTap: providerId == null ? null : openReviews,
                     ),
                     SummaryCard(
-                      icon: Icons.attach_money_rounded,
+                      icon: Icons.payments_rounded,
                       label: "Today's Earnings",
-                      value: '\$${earningsToday.toStringAsFixed(0)}',
+                      value: '${earningsToday.toStringAsFixed(0)} ETB',
                       gradientColors: const [_gradientEnd, _gradientStart],
                     ),
                     SummaryCard(
@@ -403,6 +404,20 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                           context,
                           MaterialPageRoute(
                             builder: (_) => const DisputesListScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    SummaryCard(
+                      icon: Icons.calendar_month_rounded,
+                      label: 'Bookings',
+                      value: 'View',
+                      gradientColors: const [_gradientEnd, _gradientStart],
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const MyBookingsPage(),
                           ),
                         );
                       },
@@ -586,8 +601,8 @@ class _ProviderHomePageState extends State<ProviderHomePage>
                         WeeklyStat(
                           label: 'Earnings',
                           value:
-                              '\$${(earningsToday + 200).toStringAsFixed(0)}',
-                          icon: Icons.attach_money_rounded,
+                              '${(earningsToday + 200).toStringAsFixed(0)} ETB',
+                          icon: Icons.payments_rounded,
                         ),
                         Container(
                           width: 1,

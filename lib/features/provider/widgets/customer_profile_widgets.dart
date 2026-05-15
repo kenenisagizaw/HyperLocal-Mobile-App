@@ -649,11 +649,11 @@ class _ProviderProfileDetailScreenState
                     value: provider.serviceCategory ?? 'Not shared',
                   ),
                   _InfoRow(
-                    icon: Icons.attach_money_rounded,
+                    icon: Icons.payments_rounded,
                     label: 'Hourly Rate',
                     value: provider.hourlyRate == null
                         ? 'Not set'
-                        : '\$${provider.hourlyRate!.toStringAsFixed(0)}',
+                        : '${provider.hourlyRate!.toStringAsFixed(0)} ETB',
                   ),
                   _InfoRow(
                     icon: Icons.place_rounded,

@@ -47,8 +47,17 @@ class ProviderWalletApi {
       ),
       totalEarned: _extractDouble(
         data?['totalEarned'] ??
+            data?['totalEarnings'] ??
+            data?['total_earned'] ??
             data?['earned'] ??
+            _extractNestedValue(
+              data,
+              const ['summary', 'stats', 'wallet'],
+              ['totalEarned', 'totalEarnings', 'total_earned', 'earned'],
+            ) ??
             map['totalEarned'] ??
+            map['totalEarnings'] ??
+            map['total_earned'] ??
             map['earned'],
       ),
       totalWithdrawn: _extractDouble(
@@ -136,6 +145,36 @@ class ProviderWalletApi {
     if (pagination is Map) {
       return pagination.cast<String, dynamic>();
     }
+    return null;
+  }
+
+  dynamic _extractNestedValue(
+    Map<String, dynamic>? data,
+    List<String> parents,
+    List<String> keys,
+  ) {
+    if (data == null) {
+      return null;
+    }
+
+    for (final parent in parents) {
+      final nested = data[parent];
+      if (nested is Map<String, dynamic>) {
+        for (final key in keys) {
+          if (nested.containsKey(key)) {
+            return nested[key];
+          }
+        }
+      } else if (nested is Map) {
+        final casted = nested.cast<String, dynamic>();
+        for (final key in keys) {
+          if (casted.containsKey(key)) {
+            return casted[key];
+          }
+        }
+      }
+    }
+
     return null;
   }
 
