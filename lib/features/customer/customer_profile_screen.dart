@@ -187,6 +187,17 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             ),
           ),
           TextButton.icon(
+            onPressed: () => Navigator.of(context).pushNamed('/forgot-password'),
+            icon: const Icon(Icons.lock_reset, color: Colors.white),
+            label: const Text(
+              'Reset',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          TextButton.icon(
             onPressed: _isLoggingOut ? null : _confirmLogout,
             icon: const Icon(Icons.logout, color: Colors.white),
             label: Text(

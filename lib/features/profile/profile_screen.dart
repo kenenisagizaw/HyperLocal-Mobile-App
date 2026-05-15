@@ -741,6 +741,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                     ),
                   );
                   break;
+                case 'reset_password':
+                  if (!mounted) return;
+                  Navigator.of(context).pushNamed('/forgot-password');
+                  break;
                 case 'logout':
                   if (_isLoggingOut) return;
                   _confirmLogout();
@@ -753,6 +757,10 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
                 child: Text(_isEditing ? 'Done' : 'Edit'),
               ),
               const PopupMenuItem(value: 'verify', child: Text('Verify')),
+              const PopupMenuItem(
+                value: 'reset_password',
+                child: Text('Reset Password'),
+              ),
               PopupMenuItem(
                 value: 'logout',
                 enabled: !_isLoggingOut,

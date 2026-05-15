@@ -67,7 +67,8 @@ class LocalNotificationService {
   Future<void> _createAndroidChannel() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android == null) return;
 
     const channel = AndroidNotificationChannel(
@@ -85,7 +86,8 @@ class LocalNotificationService {
   Future<void> _requestAndroidPermissions() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android == null) return;
 
     try {
