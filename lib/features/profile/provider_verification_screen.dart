@@ -26,6 +26,17 @@ class _ProviderVerificationScreenState
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _checkVerificationStatus();
+    });
+  }
+
+  @override
   void dispose() {
     _idNumberController.dispose();
     super.dispose();
@@ -89,17 +100,23 @@ class _ProviderVerificationScreenState
   }
 
   bool _isFormValid() {
-    return _idDocument != null && _selfieImage != null;
+    return _idNumberController.text.trim().isNotEmpty &&
+        _idDocument != null &&
+        _idDocumentBack != null &&
+        _selfieImage != null;
   }
 
   Future<void> _submitVerification() async {
-    if (_idNumberController.text.trim().isEmpty) {
+    if (!_isFormValid()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your ID number')),
+        const SnackBar(
+          content: Text(
+            'Please provide National ID FAN number, front and back images, and a selfie.',
+          ),
+        ),
       );
       return;
     }
-    if (!_isFormValid()) return;
 
     setState(() => _isLoading = true);
 
@@ -107,7 +124,7 @@ class _ProviderVerificationScreenState
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.uploadIdentity(
         idDocument: _idDocument!,
-        idDocumentBack: _idDocumentBack,
+        idDocumentBack: _idDocumentBack!,
         selfie: _selfieImage!,
         idNumber: _idNumberController.text.trim(),
       );
@@ -246,215 +263,210 @@ class _ProviderVerificationScreenState
   }
 
   @override
-  void initState() {
-    super.initState();
-    _checkVerificationStatus();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text('Provider Verification'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
         centerTitle: true,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.blue.shade50, Colors.green.shade50],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.shade300,
-                        blurRadius: 8,
-                            leading: IconButton(
-                              icon: const Icon(Icons.arrow_back),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                            title: const Text('Provider Verification'),
-                            centerTitle: true,
-                    children: [
-                          body: SingleChildScrollView(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const SizedBox(height: 20),
-                                const Text(
-                                  'Upload your ID (front and back if available) and a selfie. Your request will be manually reviewed by admin.',
-                                  style: TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 30),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.blue.shade200),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.info_outline,
-                                        color: Colors.blue.shade700,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          'Please upload a clear photo of your ID. Back side is optional but recommended.',
-                                          style: TextStyle(
-                                            color: Colors.blue.shade700,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey.shade300),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        'Verification Status',
-                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor().withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(20),
-                                          border: Border.all(color: _getStatusColor()),
-                                        ),
-                                        child: Text(
-                                          _getStatusText(),
-                                          style: TextStyle(
-                                            color: _getStatusColor(),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                TextField(
-                                  controller: _idNumberController,
-                                  enabled: _isInputEnabled(),
-                                  decoration: const InputDecoration(
-                                    labelText: 'ID Number',
-                                    border: OutlineInputBorder(),
-                                    prefixIcon: Icon(Icons.badge),
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton.icon(
-                                  onPressed: _isInputEnabled() ? _pickIdDocument : null,
-                                  icon: Icon(
-                                    _idDocument != null ? Icons.check_circle : Icons.upload_file,
-                                  ),
-                                  label: Text(
-                                    _idDocument != null ? 'ID Document Uploaded' : 'Upload ID Document (Front)',
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  onPressed: _isInputEnabled() ? _pickIdDocumentBack : null,
-                                  icon: Icon(
-                                    _idDocumentBack != null
-                                        ? Icons.check_circle
-                                        : Icons.upload_file,
-                                  ),
-                                  label: Text(
-                                    _idDocumentBack != null
-                                        ? 'ID Document Back Uploaded'
-                                        : 'Upload ID Document (Back, Optional)',
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                ElevatedButton.icon(
-                                  onPressed: _isInputEnabled() ? _pickSelfieImage : null,
-                                  icon: Icon(
-                                    _selfieImage != null ? Icons.check_circle : Icons.camera_alt,
-                                  ),
-                                  label: Text(
-                                    _selfieImage != null ? 'Selfie Uploaded' : 'Take a Selfie',
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                ElevatedButton(
-                                  onPressed: _isLoading || !_isInputEnabled()
-                                      ? null
-                                      : _submitVerification,
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                  ),
-                                  child: _isLoading
-                                      ? const SizedBox(
-                                          height: 18,
-                                          width: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : const Text('Submit Verification'),
-                                ),
-                              ],
-                            ),
-                          ),
-                      borderRadius: BorderRadius.circular(14),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            const Text(
+              'Upload your National ID (front and back) and a selfie. Your request will be manually reviewed by admin.',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: Colors.blue.shade700,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Please upload clear photos of your National ID (front and back).',
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'Check verification status',
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Verification Status',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _submitVerification,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 52),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor().withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _getStatusColor()),
+                    ),
+                    child: Text(
+                      _getStatusText(),
+                      style: TextStyle(
+                        color: _getStatusColor(),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    'Submit Verification',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(height: 30),
+            const Text(
+              'National ID FAN Number',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _idNumberController,
+              enabled: _isInputEnabled(),
+              decoration: InputDecoration(
+                hintText: 'Enter National ID FAN number',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'National ID (Front)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildImagePicker(
+              label: 'Choose File',
+              fileName: _idDocument?.path.split('/').last ?? 'No file chosen',
+              onTap: _pickIdDocument,
+              isEnabled: _isInputEnabled(),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'National ID (Back)',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildImagePicker(
+              label: 'Choose File',
+              fileName:
+                  _idDocumentBack?.path.split('/').last ?? 'No file chosen',
+              onTap: _pickIdDocumentBack,
+              isEnabled: _isInputEnabled(),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Selfie Photo',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            _buildImagePicker(
+              label: 'Open Camera',
+              fileName: _selfieImage?.path.split('/').last ?? 'No file chosen',
+              onTap: _pickSelfieImage,
+              isEnabled: _isInputEnabled(),
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: (_isInputEnabled() && _isFormValid() && !_isLoading)
+                  ? _submitVerification
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      'SUBMIT REQUEST',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImagePicker({
+    required String label,
+    required String fileName,
+    required VoidCallback onTap,
+    required bool isEnabled,
+  }) {
+    return GestureDetector(
+      onTap: isEnabled ? onTap : null,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: isEnabled ? Colors.grey.shade300 : Colors.grey.shade200,
           ),
+          borderRadius: BorderRadius.circular(8),
+          color: isEnabled ? Colors.white : Colors.grey.shade50,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.image,
+              color: isEnabled ? Colors.grey.shade600 : Colors.grey.shade400,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                fileName,
+                style: TextStyle(
+                  color: fileName == 'No file chosen'
+                      ? Colors.grey.shade500
+                      : Colors.black,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            if (isEnabled)
+              const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          ],
         ),
       ),
     );

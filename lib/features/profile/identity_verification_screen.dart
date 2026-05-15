@@ -84,18 +84,24 @@ class _IdentityVerificationScreenState
 
   // Form validation
   bool _isFormValid() {
-    return _idDocument != null && _selfieImage != null;
+    return _idNumberController.text.trim().isNotEmpty &&
+        _idDocument != null &&
+        _idDocumentBack != null &&
+        _selfieImage != null;
   }
 
   // API submission
   Future<void> _submitVerification() async {
-    if (_idNumberController.text.trim().isEmpty) {
+    if (!_isFormValid()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your ID number')),
+        const SnackBar(
+          content: Text(
+            'Please provide National ID FAN number, front and back images, and a selfie.',
+          ),
+        ),
       );
       return;
     }
-    if (!_isFormValid()) return;
 
     setState(() => _isLoading = true);
 
@@ -104,7 +110,7 @@ class _IdentityVerificationScreenState
       final authProvider = context.read<AuthProvider>();
       final success = await authProvider.uploadIdentity(
         idDocument: _idDocument!,
-        idDocumentBack: _idDocumentBack,
+        idDocumentBack: _idDocumentBack!,
         selfie: _selfieImage!,
         idNumber: _idNumberController.text.trim(),
       );
@@ -276,7 +282,7 @@ class _IdentityVerificationScreenState
           children: [
             const SizedBox(height: 20),
             const Text(
-              'Upload your ID (front and back if available) and a selfie. Your request will be manually reviewed by admin.',
+              'Upload your National ID (front and back) and a selfie. Your request will be manually reviewed by admin.',
               style: TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -300,7 +306,7 @@ class _IdentityVerificationScreenState
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Please upload a clear photo of your ID. Back side is optional but recommended.',
+                      'Please upload clear photos of your National ID (front and back).',
                       style: TextStyle(
                         color: Colors.blue.shade700,
                         fontSize: 12,
@@ -341,7 +347,7 @@ class _IdentityVerificationScreenState
 
             // ID Number
             const Text(
-              'ID Number (optional)',
+              'National ID FAN Number',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -349,7 +355,7 @@ class _IdentityVerificationScreenState
               controller: _idNumberController,
               enabled: _isInputEnabled(),
               decoration: InputDecoration(
-                hintText: 'Enter government ID number',
+                hintText: 'Enter National ID FAN number',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -359,7 +365,7 @@ class _IdentityVerificationScreenState
 
             // ID Document (Front)
             const Text(
-              'ID Document (Front)',
+              'National ID (Front)',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -373,7 +379,7 @@ class _IdentityVerificationScreenState
 
             // ID Document (Back)
             const Text(
-              'ID Document (Back)',
+              'National ID (Back)',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
