@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/utils/api_client.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../data/datasources/local/local_storage.dart';
 import '../../../data/datasources/remote/auth_api.dart';
 import '../../../data/datasources/remote/provider_api.dart';
@@ -372,57 +373,14 @@ class AuthProvider extends ChangeNotifier {
   void _setError(Object error) {
     if (error is DioException) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _friendlyErrorMessage(error);
+      errorMessage = ErrorUtils.friendlyMessage(
+        error,
+        fallbackMessage: 'Something went wrong. Please try again.',
+      );
       return;
     }
 
     errorMessage = error.toString();
-  }
-
-  String? _friendlyErrorMessage(DioException error) {
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.connectionError) {
-      return 'Network error. Check your connection and try again.';
-    }
-
-    final statusCode = error.response?.statusCode ?? 0;
-    final rawMessage = _extractErrorMessage(error) ?? error.message;
-    if (statusCode >= 500) {
-      return 'Server error. Please try again shortly.';
-    }
-
-    if (rawMessage == null || rawMessage.trim().isEmpty) {
-      return null;
-    }
-
-    final normalized = rawMessage.toLowerCase();
-    if (normalized.contains('error 5000') ||
-        normalized.contains('lbraty') ||
-        normalized.contains('library') ||
-        normalized.contains('internal')) {
-      return 'Server error. Please try again shortly.';
-    }
-
-    return rawMessage;
-  }
-
-  String? _extractErrorMessage(DioException error) {
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message;
-      }
-    }
-    if (data is Map) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message.toString();
-      }
-    }
-    return null;
   }
 
   Future<String?> uploadPortfolio(XFile file) async {

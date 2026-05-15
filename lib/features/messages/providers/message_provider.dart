@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/error_utils.dart';
 import '../../../core/services/sse_service.dart';
 import '../../../data/models/conversation_model.dart';
 import '../../../data/models/message_model.dart';
@@ -320,23 +321,9 @@ class MessageProvider extends ChangeNotifier {
 
   void _setError(DioException error) {
     lastStatusCode = error.response?.statusCode;
-    errorMessage = _extractErrorMessage(error);
-  }
-
-  String? _extractErrorMessage(DioException error) {
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message;
-      }
-    }
-    if (data is Map) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message.toString();
-      }
-    }
-    return error.message;
+    errorMessage = ErrorUtils.friendlyMessage(
+      error,
+      fallbackMessage: 'Something went wrong. Please try again.',
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/enums.dart';
+import '../../../core/utils/error_utils.dart';
 import '../../../data/models/service_request_model.dart';
 import '../../../data/repositories/request_repository.dart';
 
@@ -40,7 +41,10 @@ class RequestProvider extends ChangeNotifier {
       );
     } on DioException catch (error) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _extractErrorMessage(error);
+      errorMessage = ErrorUtils.friendlyMessage(
+        error,
+        fallbackMessage: 'Something went wrong. Please try again.',
+      );
       _requests = [];
     } finally {
       _isLoading = false;
@@ -57,7 +61,10 @@ class RequestProvider extends ChangeNotifier {
       _requests = await repository.fetchMyRequests();
     } on DioException catch (error) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _extractErrorMessage(error);
+      errorMessage = ErrorUtils.friendlyMessage(
+        error,
+        fallbackMessage: 'Something went wrong. Please try again.',
+      );
       _requests = [];
     } finally {
       _isLoading = false;
@@ -99,7 +106,10 @@ class RequestProvider extends ChangeNotifier {
       return resolved;
     } on DioException catch (error) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _extractErrorMessage(error);
+      errorMessage = ErrorUtils.friendlyMessage(
+        error,
+        fallbackMessage: 'Something went wrong. Please try again.',
+      );
       return null;
     } finally {
       _isLoading = false;
@@ -124,29 +134,15 @@ class RequestProvider extends ChangeNotifier {
       return request;
     } on DioException catch (error) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _extractErrorMessage(error);
+      errorMessage = ErrorUtils.friendlyMessage(
+        error,
+        fallbackMessage: 'Something went wrong. Please try again.',
+      );
       return null;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  String? _extractErrorMessage(DioException error) {
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message;
-      }
-    }
-    if (data is Map) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message.toString();
-      }
-    }
-    return error.message;
   }
 
   List<ServiceRequest> getCustomerRequests(String customerId) {

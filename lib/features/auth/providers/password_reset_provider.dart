@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/utils/error_utils.dart';
 import '../models/password_reset_models.dart';
 import '../repositories/password_reset_repository.dart';
 
@@ -143,42 +144,18 @@ class PasswordResetProvider extends ChangeNotifier {
     }
     if (error is DioException) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _extractErrorMessage(error) ?? _networkMessage(error);
+      errorMessage = ErrorUtils.friendlyMessage(
+        error,
+        statusMessages: const {
+          400: 'This reset link is invalid or has expired.',
+          401: 'This reset link is invalid or has expired.',
+          404: 'This reset link is invalid or has expired.',
+        },
+        fallbackMessage: 'Something went wrong. Please try again.',
+      );
       return;
     }
     errorMessage = error.toString();
-  }
-
-  String _networkMessage(DioException error) {
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.receiveTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.connectionError) {
-      return 'Network error. Check your connection and try again.';
-    }
-    return 'Something went wrong. Please try again.';
-  }
-
-  String? _extractErrorMessage(DioException error) {
-    final statusCode = error.response?.statusCode;
-    if (statusCode == 400 || statusCode == 401 || statusCode == 404) {
-      return 'This reset link is invalid or has expired.';
-    }
-
-    final data = error.response?.data;
-    if (data is Map<String, dynamic>) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message;
-      }
-    }
-    if (data is Map) {
-      final message = data['message'] ?? data['error'] ?? data['detail'];
-      if (message is String && message.isNotEmpty) {
-        return message.toString();
-      }
-    }
-    return null;
   }
 
   @override
