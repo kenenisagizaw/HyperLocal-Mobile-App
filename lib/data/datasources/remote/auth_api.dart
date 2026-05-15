@@ -132,27 +132,23 @@ class AuthApi {
   Future<Map<String, dynamic>> verifyPasswordResetToken({
     required String token,
   }) async {
-    final response = await _dio.post(
-      ApiConstants.passwordResetVerify,
-      data: {'token': token},
-    );
-    return _asMap(response.data);
+    return _asMap({'valid': token.trim().isNotEmpty});
   }
 
   Future<void> resetPassword({
     required String token,
     required String password,
   }) async {
-    await confirmPasswordReset(token: token, newPassword: password);
+    await confirmPasswordReset(token: token, password: password);
   }
 
   Future<Map<String, dynamic>> confirmPasswordReset({
     required String token,
-    required String newPassword,
+    required String password,
   }) async {
     final response = await _dio.post(
       ApiConstants.passwordResetConfirm,
-      data: {'token': token, 'newPassword': newPassword},
+      data: {'token': token, 'password': password},
     );
     return _asMap(response.data);
   }

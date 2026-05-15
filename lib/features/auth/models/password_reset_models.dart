@@ -27,15 +27,15 @@ class PasswordResetVerifyResponse {
 class PasswordResetConfirmRequest {
   const PasswordResetConfirmRequest({
     required this.token,
-    required this.newPassword,
+    required this.password,
   });
 
   final String token;
-  final String newPassword;
+  final String password;
 
   Map<String, dynamic> toJson() => {
     'token': token,
-    'newPassword': newPassword,
+    'password': password,
   };
 }
 

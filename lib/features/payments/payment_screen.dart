@@ -267,7 +267,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             _SummaryRow(label: 'Provider', value: widget.quote.providerName),
             _SummaryRow(
               label: 'Total',
-              value: '\$${widget.quote.price.toStringAsFixed(2)}',
+              value: '${widget.quote.price.toStringAsFixed(2)} ETB',
             ),
             const SizedBox(height: 20),
             if (_initialization != null) ...[
@@ -469,7 +469,7 @@ class PaymentSuccessScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Request: ${request.category}'),
             const SizedBox(height: 6),
-            Text('Amount: \$${payment.amount.toStringAsFixed(2)}'),
+            Text('Amount: ${payment.amount.toStringAsFixed(2)} ETB'),
             const SizedBox(height: 6),
             Text('Status: ${payment.status.name}'),
             if (bookingId != null) ...[

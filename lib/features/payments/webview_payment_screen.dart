@@ -144,7 +144,7 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
             const SizedBox(height: 8),
             Text('Transaction Reference: ${_txRef}'),
             const SizedBox(height: 8),
-            Text('Amount: \$${widget.quote.price.toStringAsFixed(2)}'),
+            Text('Amount: ${widget.quote.price.toStringAsFixed(2)} ETB'),
             const SizedBox(height: 8),
             const Text('Your booking has been confirmed and you can view the details.'),
           ],

@@ -77,14 +77,14 @@ class PasswordResetProvider extends ChangeNotifier {
 
   Future<bool> confirmReset({
     required String token,
-    required String newPassword,
+    required String password,
   }) async {
     final normalizedToken = token.trim();
     return _run(() async {
       final response = await _repository.confirmReset(
         PasswordResetConfirmRequest(
           token: normalizedToken,
-          newPassword: newPassword,
+          password: password,
         ),
       );
       lastSuccessMessage = response.message;

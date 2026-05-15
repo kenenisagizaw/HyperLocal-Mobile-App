@@ -22,7 +22,7 @@ class PasswordResetRepository {
   ) async {
     final response = await _api.confirmPasswordReset(
       token: request.token,
-      newPassword: request.newPassword,
+      password: request.password,
     );
     return PasswordResetConfirmResponse.fromJson(response);
   }

@@ -180,7 +180,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     final addressFallback = booking.address ?? request?.location ?? 'Not set';
     final priceLabel = quote == null
         ? 'Not set'
-        : '\$${quote.price.toStringAsFixed(2)}';
+        : '${quote.price.toStringAsFixed(2)} ETB';
     final providerDistance = formatDistanceKm(
       fromLat: request?.locationLat,
       fromLng: request?.locationLng,

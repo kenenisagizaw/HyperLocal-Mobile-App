@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../shared/widgets/custom_textfield.dart';
-import '../../routes.dart';
 import '../auth/providers/auth_provider.dart';
 import '../disputes/disputes_list_screen.dart';
 import '../profile/identity_verification_screen.dart';
@@ -187,7 +186,8 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
             ),
           ),
           TextButton.icon(
-            onPressed: () => Navigator.of(context).pushNamed('/forgot-password'),
+            onPressed: () =>
+                Navigator.of(context).pushNamed('/forgot-password'),
             icon: const Icon(Icons.lock_reset, color: Colors.white),
             label: const Text(
               'Reset',
@@ -356,7 +356,10 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                           ),
                         );
                       },
-                      leading: const Icon(Icons.verified_user, color: Colors.white),
+                      leading: const Icon(
+                        Icons.verified_user,
+                        color: Colors.white,
+                      ),
                       title: const Text(
                         'Identity Verification',
                         style: TextStyle(
@@ -377,10 +380,15 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                          ),
                         ),
                         child: ListTile(
-                          leading: const Icon(Icons.account_balance_wallet, color: Colors.white),
+                          leading: const Icon(
+                            Icons.account_balance_wallet,
+                            color: Colors.white,
+                          ),
                           title: const Text(
                             'Wallet',
                             style: TextStyle(
@@ -397,44 +405,51 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                                   ),
                                 )
                               : walletProvider.hasWallet
-                                  ? Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${walletProvider.connectBalance} connects',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                        Text(
-                                          'ETB ${walletProvider.walletBalance.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    )
-                                  : Text(
-                                      walletProvider.errorMessage ?? 'No wallet data',
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${walletProvider.connectBalance} connects',
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
                                       ),
                                     ),
+                                    Text(
+                                      'ETB ${walletProvider.walletBalance.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  walletProvider.errorMessage ??
+                                      'No wallet data',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
                           trailing: walletProvider.isLoading
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
                               : IconButton(
-                                  icon: const Icon(Icons.refresh, color: Colors.white),
-                                  onPressed: () => walletProvider.refreshWallet(),
+                                  icon: const Icon(
+                                    Icons.refresh,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () =>
+                                      walletProvider.refreshWallet(),
                                   tooltip: 'Refresh Wallet',
                                 ),
                         ),
@@ -462,10 +477,7 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
                       ),
                       subtitle: const Text(
                         'Get more connects to hire service providers',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       trailing: const Icon(
                         Icons.chevron_right,

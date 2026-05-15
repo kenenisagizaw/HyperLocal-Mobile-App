@@ -381,7 +381,7 @@ class _AvailableJobsPageState extends State<AvailableJobsPage> {
                                           Text(
                                             req.budget == null
                                                 ? 'Not set'
-                                                : '\$${req.budget!.toStringAsFixed(0)}',
+                                                : '${req.budget!.toStringAsFixed(0)} ETB',
                                             style: TextStyle(
                                               color: Colors.grey.shade600,
                                               fontSize: 13,

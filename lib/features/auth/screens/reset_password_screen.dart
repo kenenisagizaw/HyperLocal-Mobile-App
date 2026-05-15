@@ -46,7 +46,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     final success = await provider.confirmReset(
       token: token,
-      newPassword: _passwordController.text,
+      password: _passwordController.text,
     );
 
     if (!mounted) {

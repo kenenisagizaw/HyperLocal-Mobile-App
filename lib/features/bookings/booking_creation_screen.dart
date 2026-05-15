@@ -183,7 +183,7 @@ class _BookingCreationScreenState extends State<BookingCreationScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '\$${quote.price.toStringAsFixed(2)}',
+                      '${quote.price.toStringAsFixed(2)} ETB',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         color: Colors.green,

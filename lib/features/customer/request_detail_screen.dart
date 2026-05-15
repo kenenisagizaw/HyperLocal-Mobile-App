@@ -253,7 +253,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             label: 'Budget',
             value: request.budget == null
                 ? 'Not set'
-                : '\$${request.budget!.toStringAsFixed(2)}',
+                : '${request.budget!.toStringAsFixed(2)} ETB',
             icon: Icons.attach_money,
           ),
           const SizedBox(height: 10),
@@ -353,7 +353,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '\$${quote.price.toStringAsFixed(2)}',
+                    '${quote.price.toStringAsFixed(2)} ETB',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.green.shade700,

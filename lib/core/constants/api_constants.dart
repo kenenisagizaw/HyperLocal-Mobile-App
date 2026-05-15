@@ -11,9 +11,9 @@ class ApiConstants {
   static const String sendEmailVerificationCode =
       '$authBase/send-email-verification-code';
   static const String verifyEmailCode = '$authBase/verify-email-code';
-  static const String passwordResetRequest = '$authBase/password/reset/request';
-  static const String passwordResetVerify = '$authBase/password/reset/verify';
-  static const String passwordResetConfirm = '$authBase/password/reset/confirm';
+    static const String passwordResetRequest = '$authBase/forgot-password';
+    static const String passwordResetVerify = '$authBase/forgot-password';
+    static const String passwordResetConfirm = '$authBase/reset-password';
   static const String forgotPassword = passwordResetRequest;
   static const String resetPassword = passwordResetConfirm;
   static const String googleLogin = '$authBase/google';
