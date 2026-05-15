@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/api_constants.dart';
 import '../../data/models/user_model.dart';
 import '../customer/customer_dashboard.dart';
 import '../provider/provider_dashboard.dart';
@@ -19,6 +20,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: ApiConstants.googleWebClientId,
+  );
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -69,11 +73,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleGoogleSignIn() async {
     try {
-      final googleUser = await GoogleSignIn().signIn();
-      final auth = await googleUser?.authentication;
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw StateError('Google sign-in cancelled');
+      }
+      final auth = await googleUser.authentication;
       final idToken = auth?.idToken;
       if (idToken == null) {
-        throw StateError('Google sign-in cancelled');
+        throw StateError('Google sign-in returned no id token');
       }
 
       final authProvider = context.read<AuthProvider>();
@@ -101,13 +108,13 @@ class _LoginScreenState extends State<LoginScreen> {
               : const ProviderDashboard(),
         ),
       );
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Google sign-in cancelled')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $error')),
+      );
     }
   }
 

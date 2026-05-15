@@ -119,6 +119,9 @@ class _WithdrawalRequestScreenState extends State<WithdrawalRequestScreen> {
                         if (value == null || value.trim().isEmpty) {
                           return 'Account name is required';
                         }
+                        if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) {
+                          return 'Account name must contain only letters and spaces';
+                        }
                         return null;
                       },
                     ),
@@ -160,6 +163,9 @@ class _WithdrawalRequestScreenState extends State<WithdrawalRequestScreen> {
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Phone number is required';
+                        }
+                        if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                          return 'Phone number must be exactly 10 digits';
                         }
                         return null;
                       },

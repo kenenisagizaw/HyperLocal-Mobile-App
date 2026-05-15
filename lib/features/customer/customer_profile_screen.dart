@@ -62,19 +62,31 @@ class _CustomerProfileScreenState extends State<CustomerProfileScreen> {
     final user = authProvider.currentUser;
     if (user == null) return;
 
-    if (_nameController.text.trim().isEmpty ||
-        _phoneController.text.trim().isEmpty ||
-        _addressController.text.trim().isEmpty) {
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+    final address = _addressController.text.trim();
+
+    if (name.isEmpty || phone.isEmpty || address.isEmpty) {
       _showSnackBar('Please fill all fields.', isError: true);
+      return;
+    }
+
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(name)) {
+      _showSnackBar('Name must contain only letters and spaces.', isError: true);
+      return;
+    }
+
+    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
+      _showSnackBar('Phone number must be exactly 10 digits.', isError: true);
       return;
     }
 
     setState(() => _isSaving = true);
 
     final success = await authProvider.updateUserProfile(
-      name: _nameController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
-      address: _addressController.text.trim(),
+      name: name,
+      phoneNumber: phone,
+      address: address,
       avatarFile: _selectedImage,
     );
 

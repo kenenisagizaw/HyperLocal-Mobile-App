@@ -218,6 +218,30 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
 
   // ---------------- Stepper navigation ----------------
   Future<bool> _updateProfile() async {
+    final name = _nameController.text.trim();
+    final phone = _phoneController.text.trim();
+
+    if (name.isEmpty || phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name and phone number are required')),
+      );
+      return false;
+    }
+
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(name)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name must contain only letters and spaces')),
+      );
+      return false;
+    }
+
+    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number must be exactly 10 digits')),
+      );
+      return false;
+    }
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final providerDirectory = Provider.of<ProviderDirectoryProvider>(
       context,
@@ -225,8 +249,8 @@ class _ProviderProfilePageState extends State<ProviderProfilePage> {
     );
 
     final userSuccess = await authProvider.updateUserProfile(
-      name: _nameController.text,
-      phoneNumber: _phoneController.text,
+      name: name,
+      phoneNumber: phone,
       bio: _bioController.text,
       avatarFile: _profileImage,
     );

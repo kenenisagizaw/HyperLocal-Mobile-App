@@ -1,6 +1,8 @@
 class ApiConstants {
   static const String baseUrl =
       'https://recreative-generalizable-carl.ngrok-free.dev';
+    static const String googleWebClientId =
+            '654359329392-gr803bkqkdfmuscft251ivi5u158ual9.apps.googleusercontent.com';
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
   static const String login = '$authBase/login';
