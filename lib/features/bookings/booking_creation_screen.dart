@@ -17,13 +17,11 @@ class BookingCreationScreen extends StatefulWidget {
   final Quote quote;
 
   @override
-  State<BookingCreationScreen> createState() =>
-      _BookingCreationScreenState();
+  State<BookingCreationScreen> createState() => _BookingCreationScreenState();
 }
 
 class _BookingCreationScreenState extends State<BookingCreationScreen> {
-  final TextEditingController _addressController =
-      TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
 
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -94,13 +92,12 @@ class _BookingCreationScreenState extends State<BookingCreationScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final booking =
-        await context.read<BookingProvider>().createBooking(
-              serviceRequestId: widget.request.id,
-              quoteId: widget.quote.id,
-              scheduledAt: _buildScheduledAt(),
-              address: _addressController.text.trim(),
-            );
+    final booking = await context.read<BookingProvider>().createBooking(
+      serviceRequestId: widget.request.id,
+      quoteId: widget.quote.id,
+      scheduledAt: _buildScheduledAt(),
+      address: _addressController.text.trim(),
+    );
 
     setState(() => _isSubmitting = false);
 
@@ -124,18 +121,14 @@ class _BookingCreationScreenState extends State<BookingCreationScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            BookingDetailScreen(bookingId: booking.id),
+        builder: (_) => BookingDetailScreen(bookingId: booking.id),
       ),
     );
   }
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -264,8 +257,7 @@ class _BookingCreationScreenState extends State<BookingCreationScreen> {
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed:
-                    _isSubmitting ? null : _confirmBooking,
+                onPressed: _isSubmitting ? null : _confirmBooking,
                 style: ElevatedButton.styleFrom(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -283,9 +275,7 @@ class _BookingCreationScreenState extends State<BookingCreationScreen> {
                       )
                     : const Text(
                         'Confirm Booking',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.w700),
                       ),
               ),
             ),
@@ -336,10 +326,7 @@ class _Title extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-      ),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
     );
   }
 }
@@ -357,17 +344,12 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.grey.shade600),
-            ),
+            child: Text(label, style: TextStyle(color: Colors.grey.shade600)),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -395,9 +377,7 @@ class _SelectButton extends StatelessWidget {
       label: Text(label),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
