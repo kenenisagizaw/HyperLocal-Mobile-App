@@ -812,7 +812,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   Widget _buildLiveLocationSection(dynamic booking, UserModel? providerUser) {
     final user = context.read<AuthProvider>().currentUser;
     final isProvider = user?.role == UserRole.provider;
-    
+
     final locationProvider = context.watch<LocationShareProvider>();
     final isSharing = locationProvider.isSharing(booking.id);
     final latestPoint = locationProvider.getLatestPoint(booking.id);
@@ -820,8 +820,12 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
     LatLng? displayPosition;
     if (latestPoint != null) {
       displayPosition = latestPoint.position;
-    } else if (providerUser?.latitude != null && providerUser?.longitude != null) {
-      displayPosition = LatLng(providerUser!.latitude!, providerUser!.longitude!);
+    } else if (providerUser?.latitude != null &&
+        providerUser?.longitude != null) {
+      displayPosition = LatLng(
+        providerUser!.latitude!,
+        providerUser!.longitude!,
+      );
     }
 
     return _DetailCard(
@@ -847,15 +851,18 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                 }
               },
             ),
-          if ((isProvider && _isSharingLocation && displayPosition != null) || (!isProvider && isSharing && displayPosition != null))
+          if ((isProvider && _isSharingLocation && displayPosition != null) ||
+              (!isProvider && isSharing && displayPosition != null))
             SizedBox(
               height: 200,
               child: StreamBuilder<LocationPoint>(
-                stream: locationProvider.locationPoints.where((p) => p.bookingId == booking.id),
+                stream: locationProvider.locationPoints.where(
+                  (p) => p.bookingId == booking.id,
+                ),
                 builder: (context, snapshot) {
                   final point = snapshot.data?.position ?? displayPosition;
                   if (point == null) return const SizedBox.shrink();
-                  
+
                   return FlutterMap(
                     options: MapOptions(
                       initialCenter: point,
@@ -866,7 +873,8 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
                     ),
                     children: [
                       TileLayer(
-                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                         userAgentPackageName: 'com.example.my_first_app',
                       ),
                       MarkerLayer(
