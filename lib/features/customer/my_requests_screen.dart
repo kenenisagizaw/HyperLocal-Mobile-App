@@ -244,29 +244,6 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const CreateRequestScreen(),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create New Request'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade600,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               )

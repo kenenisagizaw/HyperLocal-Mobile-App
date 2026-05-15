@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../auth/providers/auth_provider.dart';
-import '../customer/providers/provider_directory_provider.dart';
+
+enum VerificationStatus { notSubmitted, pendingReview, rejected, verified }
 
 class ProviderVerificationScreen extends StatefulWidget {
   const ProviderVerificationScreen({super.key});
@@ -17,255 +16,239 @@ class ProviderVerificationScreen extends StatefulWidget {
 
 class _ProviderVerificationScreenState
     extends State<ProviderVerificationScreen> {
-  final _nationalIdController = TextEditingController();
-  final _businessLicenseController = TextEditingController();
-  final _educationController = TextEditingController();
-
-  XFile? _nationalIdFile;
-  XFile? _businessLicenseFile;
-  XFile? _educationFile;
-  XFile? _selfieFile;
-
   final ImagePicker _picker = ImagePicker();
-  LatLng? _providerLocation;
+  final TextEditingController _idNumberController = TextEditingController();
+
+  XFile? _idDocument;
+  XFile? _idDocumentBack;
+  XFile? _selfieImage;
+  VerificationStatus _status = VerificationStatus.notSubmitted;
+  bool _isLoading = false;
 
   @override
   void dispose() {
-    _nationalIdController.dispose();
-    _businessLicenseController.dispose();
-    _educationController.dispose();
+    _idNumberController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickFile(String type) async {
-    final file = await _picker.pickImage(source: ImageSource.gallery);
-    if (file == null) return;
-    setState(() {
-      switch (type) {
-        case 'nid':
-          _nationalIdFile = file;
-          break;
-        case 'business':
-          _businessLicenseFile = file;
-          break;
-        case 'education':
-          _educationFile = file;
-          break;
-        case 'selfie':
-          _selfieFile = file;
-          break;
+  Future<void> _pickIdDocument() async {
+    if (_status != VerificationStatus.notSubmitted &&
+        _status != VerificationStatus.rejected) {
+      return;
+    }
+
+    try {
+      final file = await _picker.pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        setState(() => _idDocument = file);
       }
-    });
+    } catch (e) {
+      _showPermissionDialog(
+        'Gallery Access Required',
+        'Unable to access gallery. Please allow gallery/photos access in your device settings.',
+      );
+    }
   }
 
-  Future<void> _getCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enable location services')),
-      );
-      await Geolocator.openLocationSettings();
+  Future<void> _pickIdDocumentBack() async {
+    if (_status != VerificationStatus.notSubmitted &&
+        _status != VerificationStatus.rejected) {
       return;
     }
 
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location permission denied')),
-        );
-        return;
+    try {
+      final file = await _picker.pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        setState(() => _idDocumentBack = file);
       }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permissions are permanently denied'),
-        ),
+    } catch (e) {
+      _showPermissionDialog(
+        'Gallery Access Required',
+        'Unable to access gallery. Please allow gallery/photos access in your device settings.',
       );
-      await Geolocator.openAppSettings();
+    }
+  }
+
+  Future<void> _pickSelfieImage() async {
+    if (_status != VerificationStatus.notSubmitted &&
+        _status != VerificationStatus.rejected) {
       return;
     }
 
-    final position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
+    try {
+      final file = await _picker.pickImage(source: ImageSource.camera);
+      if (file != null) {
+        setState(() => _selfieImage = file);
+      }
+    } catch (e) {
+      _showPermissionDialog(
+        'Camera Access Required',
+        'Unable to access camera. Please allow camera access in your device settings.',
+      );
+    }
+  }
 
-    if (!mounted) return;
-    setState(() {
-      _providerLocation = LatLng(position.latitude, position.longitude);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location fetched successfully')),
-    );
+  bool _isFormValid() {
+    return _idDocument != null && _selfieImage != null;
   }
 
   Future<void> _submitVerification() async {
-    if (_nationalIdController.text.trim().isEmpty) {
+    if (_idNumberController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter your ID number')),
       );
       return;
     }
-    if (_nationalIdFile == null || _selfieFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload ID and selfie to continue')),
-      );
-      return;
-    }
+    if (!_isFormValid()) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.uploadIdentity(
-      idDocument: _nationalIdFile!,
-      selfie: _selfieFile!,
-      idNumber: _nationalIdController.text.trim(),
-      idDocumentBack: null,
-    );
+    setState(() => _isLoading = true);
 
-    if (!mounted) {
-      return;
-    }
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Identity upload failed'),
-        ),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Verification submitted. We will review your documents.'),
-      ),
-    );
-
-    if (_providerLocation != null) {
-      final providerDirectory = Provider.of<ProviderDirectoryProvider>(
-        context,
-        listen: false,
-      );
-      authProvider.updateProviderVerification(
-        nationalId: _nationalIdController.text.trim(),
-        businessLicense: _businessLicenseController.text.trim(),
-        educationDoc: _educationController.text.trim(),
-        location:
-            '${_providerLocation!.latitude},${_providerLocation!.longitude}',
-        latitude: _providerLocation!.latitude,
-        longitude: _providerLocation!.longitude,
-        isVerified: false,
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final success = await authProvider.uploadIdentity(
+        idDocument: _idDocument!,
+        idDocumentBack: _idDocumentBack,
+        selfie: _selfieImage!,
+        idNumber: _idNumberController.text.trim(),
       );
 
-      final updatedProvider = authProvider.currentUser;
-      if (updatedProvider != null) {
-        providerDirectory.upsertProvider(updatedProvider);
+      if (!mounted) return;
+
+      if (success) {
+        setState(() => _status = VerificationStatus.pendingReview);
+        _showSuccessDialog();
+        await _checkVerificationStatus();
+      } else {
+        _showErrorDialog(
+          'Submission Failed',
+          authProvider.errorMessage ?? 'Please try again later.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
+  }
 
-    if (mounted) {
-      Navigator.pop(context);
+  Future<void> _checkVerificationStatus() async {
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final response = await authProvider.getIdentityStatus();
+      if (!mounted || response == null) return;
+
+      final data = response['data'] is Map<String, dynamic>
+          ? response['data'] as Map<String, dynamic>
+          : response;
+      final statusString = data['identityStatus'] ?? data['status'];
+      if (statusString is! String) return;
+
+      setState(() {
+        switch (statusString.toUpperCase()) {
+          case 'NOT_SUBMITTED':
+            _status = VerificationStatus.notSubmitted;
+            break;
+          case 'PENDING_REVIEW':
+            _status = VerificationStatus.pendingReview;
+            break;
+          case 'REJECTED':
+            _status = VerificationStatus.rejected;
+            break;
+          case 'VERIFIED':
+            _status = VerificationStatus.verified;
+            break;
+        }
+      });
+    } catch (e) {
+      // Silent fail for status check
     }
   }
 
-  Future<void> _checkStatus() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final response = await authProvider.getIdentityStatus();
-
-    if (!mounted) {
-      return;
-    }
-
-    if (response == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Unable to check status'),
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Success'),
+        content: const Text(
+          'Your verification has been submitted for review. You will be notified once it\'s processed.',
         ),
-      );
-      return;
-    }
-
-    final data = response['data'] is Map<String, dynamic>
-        ? response['data'] as Map<String, dynamic>
-        : response;
-    final status = data['status']?.toString() ?? 'pending';
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Verification status: $status')));
-  }
-
-  Widget _buildFileButton(String label, XFile? file, String type) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: ElevatedButton.icon(
-        onPressed: () => _pickFile(type),
-        icon: Icon(
-          file == null ? Icons.upload_file : Icons.check_circle,
-          color: Colors.white,
-          size: 20,
-        ),
-        label: Text(
-          file == null ? label : 'Uploaded',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: file == null ? Colors.blue : Colors.green,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
-          elevation: 2,
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: Colors.blue),
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.grey),
-          filled: true,
-          fillColor: Colors.grey.shade50,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.blue, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-        ),
+        ],
       ),
     );
+  }
+
+  void _showPermissionDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor() {
+    switch (_status) {
+      case VerificationStatus.notSubmitted:
+        return Colors.orange;
+      case VerificationStatus.pendingReview:
+        return Colors.blue;
+      case VerificationStatus.verified:
+        return Colors.green;
+      case VerificationStatus.rejected:
+        return Colors.red;
+    }
+  }
+
+  String _getStatusText() {
+    switch (_status) {
+      case VerificationStatus.notSubmitted:
+        return 'NOT_SUBMITTED';
+      case VerificationStatus.pendingReview:
+        return 'PENDING_REVIEW';
+      case VerificationStatus.verified:
+        return 'VERIFIED';
+      case VerificationStatus.rejected:
+        return 'REJECTED';
+    }
+  }
+
+  bool _isInputEnabled() {
+    return _status == VerificationStatus.notSubmitted ||
+        _status == VerificationStatus.rejected;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkVerificationStatus();
   }
 
   @override
@@ -301,119 +284,150 @@ class _ProviderVerificationScreenState
                       BoxShadow(
                         color: Colors.grey.shade300,
                         blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildTextField(
-                        _nationalIdController,
-                        'National ID Number',
-                        Icons.badge,
-                      ),
-                      _buildFileButton(
-                        'Upload National ID',
-                        _nationalIdFile,
-                        'nid',
-                      ),
-                      _buildFileButton('Upload Selfie', _selfieFile, 'selfie'),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        _businessLicenseController,
-                        'Business License Number',
-                        Icons.business,
-                      ),
-                      _buildFileButton(
-                        'Upload License',
-                        _businessLicenseFile,
-                        'business',
-                      ),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        _educationController,
-                        'Educational Qualification',
-                        Icons.school,
-                      ),
-                      _buildFileButton(
-                        'Upload Education Document',
-                        _educationFile,
-                        'education',
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _getCurrentLocation,
-                        icon: Icon(
-                          _providerLocation == null
-                              ? Icons.location_on
-                              : Icons.check,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        label: Text(
-                          _providerLocation == null
-                              ? 'Use Current Location'
-                              : 'Location Selected',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _providerLocation == null
-                              ? Colors.blue
-                              : Colors.green,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (_providerLocation != null)
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.blue.shade200,
-                              width: 2,
+                            leading: IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: () => Navigator.pop(context),
                             ),
-                            color: Colors.blue.shade50,
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.location_on,
-                                color: Colors.red,
-                                size: 28,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  '${_providerLocation!.latitude.toStringAsFixed(5)}, '
-                                  '${_providerLocation!.longitude.toStringAsFixed(5)}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
+                            title: const Text('Provider Verification'),
+                            centerTitle: true,
+                    children: [
+                          body: SingleChildScrollView(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'Upload your ID (front and back if available) and a selfie. Your request will be manually reviewed by admin.',
+                                  style: TextStyle(fontSize: 16),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 30),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.blue.shade200),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: Colors.blue.shade700,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Please upload a clear photo of your ID. Back side is optional but recommended.',
+                                          style: TextStyle(
+                                            color: Colors.blue.shade700,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 20),
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: Colors.grey.shade300),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      const Text(
+                                        'Verification Status',
+                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _getStatusColor().withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(20),
+                                          border: Border.all(color: _getStatusColor()),
+                                        ),
+                                        child: Text(
+                                          _getStatusText(),
+                                          style: TextStyle(
+                                            color: _getStatusColor(),
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                TextField(
+                                  controller: _idNumberController,
+                                  enabled: _isInputEnabled(),
+                                  decoration: const InputDecoration(
+                                    labelText: 'ID Number',
+                                    border: OutlineInputBorder(),
+                                    prefixIcon: Icon(Icons.badge),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton.icon(
+                                  onPressed: _isInputEnabled() ? _pickIdDocument : null,
+                                  icon: Icon(
+                                    _idDocument != null ? Icons.check_circle : Icons.upload_file,
+                                  ),
+                                  label: Text(
+                                    _idDocument != null ? 'ID Document Uploaded' : 'Upload ID Document (Front)',
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: _isInputEnabled() ? _pickIdDocumentBack : null,
+                                  icon: Icon(
+                                    _idDocumentBack != null
+                                        ? Icons.check_circle
+                                        : Icons.upload_file,
+                                  ),
+                                  label: Text(
+                                    _idDocumentBack != null
+                                        ? 'ID Document Back Uploaded'
+                                        : 'Upload ID Document (Back, Optional)',
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: _isInputEnabled() ? _pickSelfieImage : null,
+                                  icon: Icon(
+                                    _selfieImage != null ? Icons.check_circle : Icons.camera_alt,
+                                  ),
+                                  label: Text(
+                                    _selfieImage != null ? 'Selfie Uploaded' : 'Take a Selfie',
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton(
+                                  onPressed: _isLoading || !_isInputEnabled()
+                                      ? null
+                                      : _submitVerification,
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : const Text('Submit Verification'),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                OutlinedButton(
-                  onPressed: _checkStatus,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.blue,
-                    minimumSize: const Size(double.infinity, 48),
-                    side: const BorderSide(color: Colors.blue),
-                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),

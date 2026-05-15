@@ -89,6 +89,12 @@ class _IdentityVerificationScreenState
 
   // API submission
   Future<void> _submitVerification() async {
+    if (_idNumberController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your ID number')),
+      );
+      return;
+    }
     if (!_isFormValid()) return;
 
     setState(() => _isLoading = true);
@@ -96,11 +102,9 @@ class _IdentityVerificationScreenState
     // ...existing code...
     try {
       final authProvider = context.read<AuthProvider>();
-      if (_idDocumentBack == null) return;
-
       final success = await authProvider.uploadIdentity(
         idDocument: _idDocument!,
-        idDocumentBack: _idDocumentBack!,
+        idDocumentBack: _idDocumentBack,
         selfie: _selfieImage!,
         idNumber: _idNumberController.text.trim(),
       );

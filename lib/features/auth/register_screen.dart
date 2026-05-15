@@ -3,10 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/user_model.dart';
-import '../customer/customer_dashboard.dart';
-import '../provider/provider_dashboard.dart';
 import 'providers/auth_provider.dart';
 import 'widgets/auth_scaffold.dart';
+import 'verify_email_reminder_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   final UserRole? initialRole;
@@ -86,11 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => user.role == UserRole.customer
-            ? const CustomerDashboard()
-            : const ProviderDashboard(),
-      ),
+      MaterialPageRoute(builder: (_) => const VerifyEmailReminderScreen()),
     );
   }
 
