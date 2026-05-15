@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'app.dart';
 import 'core/constants/api_constants.dart';
 import 'core/providers/sse_provider.dart';
+import 'core/services/local_notification_service.dart';
 import 'core/services/sse_initializer_service.dart';
 import 'data/datasources/remote/auth_api.dart';
 import 'data/datasources/remote/booking_api.dart';
@@ -52,11 +53,13 @@ import 'features/wallet/providers/provider_wallet_provider.dart';
 import 'features/wallet/providers/wallet_provider.dart';
 import 'features/wallet/providers/withdrawal_provider.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Create a single SseProvider that owns all SSE streams.
   final sseProvider = SseProvider();
+  final localNotifications = LocalNotificationService();
+  await localNotifications.initialize();
 
   runApp(
     MultiProvider(
@@ -228,21 +231,28 @@ void main() {
           },
         ),
 
-        ChangeNotifierProxyProvider<
-          NotificationRepository,
+        Provider<LocalNotificationService>.value(value: localNotifications),
 
+        ChangeNotifierProxyProvider2<
+          NotificationRepository,
+          LocalNotificationService,
           NotificationProvider
         >(
           create: (context) {
             final provider = NotificationProvider(
               repository: context.read<NotificationRepository>(),
+              localNotifications: context.read<LocalNotificationService>(),
             );
             provider.attachSse(sseProvider.notificationSse);
             return provider;
           },
 
-          update: (context, repository, previous) {
-            return previous ?? NotificationProvider(repository: repository);
+          update: (context, repository, localService, previous) {
+            return previous ??
+                NotificationProvider(
+                  repository: repository,
+                  localNotifications: localService,
+                );
           },
         ),
 

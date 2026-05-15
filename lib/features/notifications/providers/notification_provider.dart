@@ -3,15 +3,20 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/services/local_notification_service.dart';
 import '../../../core/services/sse_service.dart';
 import '../../../core/utils/error_utils.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/repositories/notification_repository.dart';
 
 class NotificationProvider extends ChangeNotifier {
-  NotificationProvider({required this.repository});
+  NotificationProvider({
+    required this.repository,
+    required LocalNotificationService localNotifications,
+  }) : _localNotifications = localNotifications;
 
   final NotificationRepository repository;
+  final LocalNotificationService _localNotifications;
 
   SseService? _sseService;
   final List<AppNotification> _notifications = [];
@@ -39,6 +44,9 @@ class NotificationProvider extends ChangeNotifier {
 
     _sseSub = sseService.events.listen((event) {
       switch (event.event) {
+        case 'notification':
+          _handleIncomingNotification(event.data);
+          break;
         case 'notification.created':
           _handleNotificationCreated(event.data);
           break;
@@ -175,11 +183,41 @@ class NotificationProvider extends ChangeNotifier {
           ? (data['notification'] as Map).cast<String, dynamic>()
           : data;
       final notification = AppNotification.fromJson(payload);
-      _upsertNotification(notification, fromStream: true);
-      _incomingController.add(notification);
+      _emitIncomingNotification(notification);
     } catch (e) {
       debugPrint('Error handling notification.created event: $e');
     }
+  }
+
+  void _handleIncomingNotification(Map<String, dynamic> data) {
+    try {
+      final notification = AppNotification.fromJson(data);
+      _emitIncomingNotification(notification);
+    } catch (e) {
+      debugPrint('Error handling notification event: $e');
+    }
+  }
+
+  void _emitIncomingNotification(AppNotification notification) {
+    _upsertNotification(notification, fromStream: true);
+    _incomingController.add(notification);
+    _showLocalNotification(notification);
+  }
+
+  void _showLocalNotification(AppNotification notification) {
+    final title = notification.title.trim().isEmpty
+        ? 'New notification'
+        : notification.title;
+    final body = notification.body.trim().isEmpty
+        ? 'You have a new update'
+        : notification.body;
+
+    _localNotifications.showNotification(
+      title: title,
+      body: body,
+      type: notification.type,
+      payload: notification.data,
+    );
   }
 
   void _handleNotificationRead(Map<String, dynamic> data) {
