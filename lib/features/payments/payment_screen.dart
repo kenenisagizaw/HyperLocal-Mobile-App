@@ -1,9 +1,8 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:app_links/app_links.dart';
 
-import '../../core/constants/api_constants.dart';
 import '../../core/constants/enums.dart';
 import '../../data/models/payment_model.dart';
 import '../../data/models/quote_model.dart';
@@ -12,7 +11,6 @@ import '../bookings/booking_detail_screen.dart';
 import '../bookings/providers/booking_provider.dart';
 import '../reviews/review_screen.dart';
 import 'providers/payment_provider.dart';
-import 'webview_payment_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({
@@ -34,7 +32,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   PaymentInitialization? _initialization;
   bool _autoStarted = false;
   bool _paymentCompleted = false;
-  
+
   // Payment states
   bool _isInitializing = false;
   bool _isVerifying = false;
@@ -50,11 +48,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _autoStarted = true;
       _checkPaymentStatus();
     });
-    
+
     // Listen to booking provider changes to update payment status
     final bookingProvider = context.read<BookingProvider>();
     bookingProvider.addListener(_onBookingChanged);
-    
+
     // Initialize deep link listener for payment return
     _initDeepLinkListener();
   }
@@ -71,7 +69,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _initDeepLinkListener() {
     _appLinks = AppLinks();
-    
+
     // Listen for deep links
     _appLinks!.uriLinkStream.listen((uri) {
       if (uri != null && mounted) {
@@ -89,7 +87,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           _txRef = txRef;
           _checkoutOpened = true;
         });
-        
+
         // Auto-verify payment when deep link is received
         _verifyPayment();
       }
@@ -98,12 +96,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _onBookingChanged() {
     if (widget.bookingId != null) {
-      final booking = context.read<BookingProvider>().getBooking(widget.bookingId!);
+      final booking = context.read<BookingProvider>().getBooking(
+        widget.bookingId!,
+      );
       if (booking != null) {
         final wasCompleted = _paymentCompleted;
-        final isCompleted = booking.status == BookingStatus.inProgress || 
-                           booking.status == BookingStatus.completed;
-        
+        final isCompleted =
+            booking.status == BookingStatus.inProgress ||
+            booking.status == BookingStatus.completed;
+
         if (wasCompleted != isCompleted) {
           setState(() {
             _paymentCompleted = isCompleted;
@@ -115,17 +116,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Future<void> _checkPaymentStatus() async {
     if (widget.bookingId == null || widget.bookingId!.isEmpty) return;
-    
+
     final bookingProvider = context.read<BookingProvider>();
     await bookingProvider.loadBooking(widget.bookingId!);
-    
+
     if (!mounted) return;
-    
+
     final booking = bookingProvider.getBooking(widget.bookingId!);
     if (booking != null) {
       // Check if booking is in a state that indicates payment is completed
       // For example, if booking is inProgress or completed, payment is likely done
-      if (booking.status == BookingStatus.inProgress || 
+      if (booking.status == BookingStatus.inProgress ||
           booking.status == BookingStatus.completed) {
         setState(() {
           _paymentCompleted = true;
@@ -139,28 +140,29 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _showSnack('Booking ID is missing.');
       return;
     }
-    
+
     setState(() {
       _isInitializing = true;
       _errorMessage = null;
     });
-    
+
     final paymentProvider = context.read<PaymentProvider>();
-    
+
     final initialization = await paymentProvider.initializeBookingPayment(
       bookingId: widget.bookingId!,
       amount: widget.quote.price,
       serviceRequestId: widget.request.id,
     );
     if (!mounted) return;
-    
+
     setState(() {
       _isInitializing = false;
     });
-    
+
     if (initialization == null) {
       setState(() {
-        _errorMessage = paymentProvider.errorMessage ?? 'Failed to start payment.';
+        _errorMessage =
+            paymentProvider.errorMessage ?? 'Failed to start payment.';
       });
       return;
     }
@@ -182,7 +184,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!mounted) return;
-    
+
     if (!launched) {
       setState(() {
         _errorMessage = 'Unable to open checkout.';
@@ -202,25 +204,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
       });
       return;
     }
-    
+
     setState(() {
       _isVerifying = true;
       _errorMessage = null;
     });
-    
+
     final paymentProvider = context.read<PaymentProvider>();
     final bookingProvider = context.read<BookingProvider>();
-    
+
     final result = await paymentProvider.verifyPayment(_txRef!);
     if (!mounted) return;
-    
+
     setState(() {
       _isVerifying = false;
     });
-    
+
     if (result == null || !result.verified) {
       setState(() {
-        _errorMessage = paymentProvider.errorMessage ?? 'Payment verification failed.';
+        _errorMessage =
+            paymentProvider.errorMessage ?? 'Payment verification failed.';
       });
       return;
     }
@@ -231,12 +234,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     if (!mounted) return;
-    
+
     setState(() {
       _paymentCompleted = true;
       _checkoutOpened = false;
     });
-    
+
     _showSnack('Payment verified successfully!');
   }
 
@@ -289,7 +292,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green.shade700, size: 48),
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green.shade700,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Payment Completed',
@@ -339,9 +346,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: _isVerifying ? null : () => _verifyPayment(isRetry: true),
+                        onPressed: _isVerifying
+                            ? null
+                            : () => _verifyPayment(isRetry: true),
                         icon: const Icon(Icons.refresh),
-                        label: Text(_isVerifying ? 'Retrying...' : 'Retry Verification'),
+                        label: Text(
+                          _isVerifying ? 'Retrying...' : 'Retry Verification',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
@@ -362,7 +373,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.open_in_browser, color: Colors.blue.shade700, size: 48),
+                    Icon(
+                      Icons.open_in_browser,
+                      color: Colors.blue.shade700,
+                      size: 48,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Complete Payment in Browser',
@@ -384,7 +399,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _isVerifying ? null : _verifyPayment,
                         icon: const Icon(Icons.verified),
-                        label: Text(_isVerifying ? 'Verifying...' : 'I Have Paid'),
+                        label: Text(
+                          _isVerifying ? 'Verifying...' : 'I Have Paid',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,
@@ -399,14 +416,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: (_isInitializing || paymentProvider.isLoading) ? null : _startPayment,
-                  icon: _isInitializing 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.payment),
+                  onPressed: (_isInitializing || paymentProvider.isLoading)
+                      ? null
+                      : _startPayment,
+                  icon: _isInitializing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.payment),
                   label: Text(_isInitializing ? 'Initializing...' : 'Pay Now'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/constants/api_constants.dart';
-import '../../data/models/payment_model.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
 import '../bookings/providers/booking_provider.dart';
@@ -46,7 +45,7 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
         NavigationDelegate(
           onNavigationRequest: (NavigationRequest request) {
             // Check if navigation is to our payment return URL
-            if (request.url.contains(ApiConstants.paymentReturnUrl) || 
+            if (request.url.contains(ApiConstants.paymentReturnUrl) ||
                 request.url.contains('/payment/return')) {
               _handlePaymentReturn(request.url);
               return NavigationDecision.prevent;
@@ -62,7 +61,7 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
     // Extract txRef from return URL
     final uri = Uri.parse(returnUrl);
     _txRef = uri.queryParameters['txRef'];
-    
+
     setState(() {
       _paymentCompleted = true;
       _isLoading = false;
@@ -75,14 +74,14 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
 
   Future<void> _verifyPayment() async {
     if (_txRef == null) return;
-    
+
     final paymentProvider = context.read<PaymentProvider>();
     final bookingProvider = context.read<BookingProvider>();
-    
+
     final result = await paymentProvider.verifyPayment(_txRef!);
-    
+
     if (!mounted) return;
-    
+
     if (result == null || !result.verified) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -96,9 +95,9 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
 
     // Refresh booking data
     await bookingProvider.loadBooking(widget.bookingId);
-    
+
     if (!mounted) return;
-    
+
     // Show comprehensive payment success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -118,12 +117,14 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
           textColor: Colors.white,
           onPressed: () {
             // Navigate to booking details
-            Navigator.of(context).pushReplacementNamed('/bookings/${widget.bookingId}');
+            Navigator.of(
+              context,
+            ).pushReplacementNamed('/bookings/${widget.bookingId}');
           },
         ),
       ),
     );
-    
+
     // Also show a dialog for better visibility
     showDialog(
       context: context,
@@ -146,14 +147,18 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
             const SizedBox(height: 8),
             Text('Amount: ${widget.quote.price.toStringAsFixed(2)} ETB'),
             const SizedBox(height: 8),
-            const Text('Your booking has been confirmed and you can view the details.'),
+            const Text(
+              'Your booking has been confirmed and you can view the details.',
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pushReplacementNamed('/bookings/${widget.bookingId}');
+              Navigator.of(
+                context,
+              ).pushReplacementNamed('/bookings/${widget.bookingId}');
             },
             child: const Text('View Booking'),
           ),
@@ -177,10 +182,7 @@ class _WebViewPaymentScreenState extends State<WebViewPaymentScreen> {
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
-          if (_isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
         ],
       ),
     );
