@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/constants/api_constants.dart';
-import 'core/providers/websocket_provider.dart';
-import 'core/services/socket_initializer_service.dart';
+import 'core/providers/sse_provider.dart';
+import 'core/services/sse_initializer_service.dart';
 import 'data/datasources/remote/auth_api.dart';
 import 'data/datasources/remote/booking_api.dart';
 import 'data/datasources/remote/connects_api.dart';
@@ -37,6 +37,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/auth/providers/password_reset_provider.dart';
 import 'features/auth/repositories/password_reset_repository.dart';
 import 'features/bookings/providers/booking_provider.dart';
+import 'features/bookings/providers/location_share_provider.dart';
 import 'features/customer/providers/customer_directory_provider.dart';
 import 'features/customer/providers/provider_directory_provider.dart';
 import 'features/customer/providers/quote_provider.dart';
@@ -53,6 +54,9 @@ import 'features/wallet/providers/withdrawal_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Create a single SseProvider that owns all SSE streams.
+  final sseProvider = SseProvider();
 
   runApp(
     MultiProvider(
@@ -155,11 +159,15 @@ void main() {
           ),
         ),
 
-        ProxyProvider<AuthProvider, SocketInitializerService>(
-          create: (_) => SocketInitializerService(),
+        // SSE provider — owns all SSE stream connections.
+        ChangeNotifierProvider<SseProvider>.value(value: sseProvider),
+
+        // SSE initializer — syncs SSE connections with auth state.
+        ProxyProvider<AuthProvider, SseInitializerService>(
+          create: (_) => sseProvider.initializer,
 
           update: (_, authProvider, initializer) {
-            final service = initializer ?? SocketInitializerService();
+            final service = initializer ?? sseProvider.initializer;
 
             service.syncAuthentication(authProvider.currentUser != null);
 
@@ -207,8 +215,13 @@ void main() {
         ),
 
         ChangeNotifierProxyProvider<MessageRepository, MessageProvider>(
-          create: (context) =>
-              MessageProvider(repository: context.read<MessageRepository>()),
+          create: (context) {
+            final provider = MessageProvider(
+              repository: context.read<MessageRepository>(),
+            );
+            provider.attachSse(sseProvider.messageSse);
+            return provider;
+          },
 
           update: (context, repository, previous) {
             return previous ?? MessageProvider(repository: repository);
@@ -220,9 +233,13 @@ void main() {
 
           NotificationProvider
         >(
-          create: (context) => NotificationProvider(
-            repository: context.read<NotificationRepository>(),
-          ),
+          create: (context) {
+            final provider = NotificationProvider(
+              repository: context.read<NotificationRepository>(),
+            );
+            provider.attachSse(sseProvider.notificationSse);
+            return provider;
+          },
 
           update: (context, repository, previous) {
             return previous ?? NotificationProvider(repository: repository);
@@ -316,7 +333,14 @@ void main() {
           },
         ),
 
-        ChangeNotifierProvider(create: (_) => WebSocketProvider()),
+        // Location sharing provider — wired to the location SSE stream.
+        ChangeNotifierProvider<LocationShareProvider>(
+          create: (_) {
+            final provider = LocationShareProvider();
+            provider.attachSse(sseProvider.locationShareSse);
+            return provider;
+          },
+        ),
       ],
 
       child: const MyApp(),

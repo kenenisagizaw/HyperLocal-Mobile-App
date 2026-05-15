@@ -93,14 +93,17 @@ class _IdentityVerificationScreenState
 
     setState(() => _isLoading = true);
 
-    try {
-      final authProvider = context.read<AuthProvider>();
-      final success = await authProvider.uploadIdentity(
-        idDocument: _idDocument!,
-        idDocumentBack: _idDocumentBack,
-        selfie: _selfieImage!,
-        idNumber: _idNumberController.text.trim(),
-      );
+    // ...existing code...
+try {
+  final authProvider = context.read<AuthProvider>();
+  if (_idDocumentBack == null) return;
+
+  final success = await authProvider.uploadIdentity(
+    idDocument: _idDocument!,
+    idDocumentBack: _idDocumentBack!,
+    selfie: _selfieImage!,
+    idNumber: _idNumberController.text.trim(),
+  );
 
       if (!mounted) return;
 

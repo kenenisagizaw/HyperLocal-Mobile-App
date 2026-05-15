@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
-import '../../core/providers/websocket_provider.dart';
+import '../../core/providers/sse_provider.dart';
 import '../../data/models/app_notification_model.dart';
 import '../../data/models/quote_model.dart';
 import '../../data/models/service_request_model.dart';
@@ -182,7 +182,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      context.read<WebSocketProvider>().connect();
+      context.read<SseProvider>().connect();
       context.read<NotificationProvider>().loadNotifications();
       context.read<MessageProvider>().loadConversations();
     }

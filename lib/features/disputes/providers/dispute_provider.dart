@@ -1,24 +1,17 @@
-import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/services/websocket_service.dart';
 import '../../../data/models/dispute_model.dart';
 import '../../../data/repositories/dispute_repository.dart';
 
 class DisputeProvider extends ChangeNotifier {
-  DisputeProvider({required this.repository}) {
-    initializeWebSocket();
-  }
+  DisputeProvider({required this.repository});
 
   final DisputeRepository repository;
-  final WebSocketService _webSocketService = WebSocketService();
 
   List<Dispute> _disputes = [];
   final Map<String, Dispute> _disputeById = {};
-  StreamSubscription<WebSocketEvent>? _websocketSubscription;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -27,15 +20,6 @@ class DisputeProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Dispute? getDispute(String id) => _disputeById[id];
-
-  void initializeWebSocket() {
-    _websocketSubscription?.cancel();
-    _websocketSubscription = _webSocketService.events.listen((event) {
-      if (event.type == 'dispute_update') {
-        _handleDisputeUpdated(event.data);
-      }
-    });
-  }
 
   Future<void> loadDisputes() async {
     _setLoading(true);
@@ -180,7 +164,6 @@ class DisputeProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _websocketSubscription?.cancel();
     super.dispose();
   }
 }

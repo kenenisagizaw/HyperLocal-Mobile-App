@@ -160,7 +160,7 @@ class AuthRepository {
   Future<Map<String, dynamic>> uploadIdentity({
     required XFile idDocument,
     required XFile selfie,
-    required XFile idDocumentBack,
+    XFile? idDocumentBack,
     required String idNumber,
   }) async {
     final token = await _storage.getAccessToken();

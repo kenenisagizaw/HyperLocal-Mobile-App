@@ -167,7 +167,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> uploadIdentity({
     required XFile idDocument,
     required XFile selfie,
-    required XFile idDocumentBack,
+    XFile? idDocumentBack,
     required String idNumber,
   }) async {
     return _runAuthAction(() async {
@@ -372,11 +372,40 @@ class AuthProvider extends ChangeNotifier {
   void _setError(Object error) {
     if (error is DioException) {
       lastStatusCode = error.response?.statusCode;
-      errorMessage = _extractErrorMessage(error) ?? error.message;
+      errorMessage = _friendlyErrorMessage(error);
       return;
     }
 
     errorMessage = error.toString();
+  }
+
+  String? _friendlyErrorMessage(DioException error) {
+    if (error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.connectionError) {
+      return 'Network error. Check your connection and try again.';
+    }
+
+    final statusCode = error.response?.statusCode ?? 0;
+    final rawMessage = _extractErrorMessage(error) ?? error.message;
+    if (statusCode >= 500) {
+      return 'Server error. Please try again shortly.';
+    }
+
+    if (rawMessage == null || rawMessage.trim().isEmpty) {
+      return null;
+    }
+
+    final normalized = rawMessage.toLowerCase();
+    if (normalized.contains('error 5000') ||
+        normalized.contains('lbraty') ||
+        normalized.contains('library') ||
+        normalized.contains('internal')) {
+      return 'Server error. Please try again shortly.';
+    }
+
+    return rawMessage;
   }
 
   String? _extractErrorMessage(DioException error) {

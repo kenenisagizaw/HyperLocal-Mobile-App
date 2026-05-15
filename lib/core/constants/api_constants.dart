@@ -1,6 +1,6 @@
 class ApiConstants {
-static const String baseUrl =
-    'https://recreative-generalizable-carl.ngrok-free.dev';
+  static const String baseUrl =
+      'https://recreative-generalizable-carl.ngrok-free.dev';
   static const String authBase = '/api/auth';
   static const String register = '$authBase/register';
   static const String login = '$authBase/login';
@@ -11,8 +11,7 @@ static const String baseUrl =
   static const String sendEmailVerificationCode =
       '$authBase/send-email-verification-code';
   static const String verifyEmailCode = '$authBase/verify-email-code';
-  static const String passwordResetRequest =
-      '$authBase/password/reset/request';
+  static const String passwordResetRequest = '$authBase/password/reset/request';
   static const String passwordResetVerify = '$authBase/password/reset/verify';
   static const String passwordResetConfirm = '$authBase/password/reset/confirm';
   static const String forgotPassword = passwordResetRequest;
@@ -54,6 +53,8 @@ static const String baseUrl =
   static const String notifications = '/api/notifications';
   static const String notificationsReadAll = '/api/notifications/read-all';
   static const String notificationsStream = '/api/notifications/stream';
+  static const String locationShareStream =
+      '/api/bookings/location-share/stream';
 
   static const String disputes = '/api/disputes';
 

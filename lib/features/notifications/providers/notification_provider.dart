@@ -3,23 +3,21 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/services/websocket_service.dart';
+import '../../../core/services/sse_service.dart';
 import '../../../data/models/app_notification_model.dart';
 import '../../../data/repositories/notification_repository.dart';
 
 class NotificationProvider extends ChangeNotifier {
-  NotificationProvider({required this.repository}) {
-    initializeWebSocket();
-  }
+  NotificationProvider({required this.repository});
 
   final NotificationRepository repository;
-  final WebSocketService _webSocketService = WebSocketService();
 
+  SseService? _sseService;
   final List<AppNotification> _notifications = [];
   final Set<String> _knownIds = {};
   final StreamController<AppNotification> _incomingController =
       StreamController<AppNotification>.broadcast();
-  StreamSubscription<WebSocketEvent>? _websocketSubscription;
+  StreamSubscription<SseEvent>? _sseSub;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -32,17 +30,21 @@ class NotificationProvider extends ChangeNotifier {
 
   int get unreadCount => _notifications.where((n) => n.readAt == null).length;
 
-  void initializeWebSocket() {
-    _websocketSubscription?.cancel();
-    _websocketSubscription = _webSocketService.events.listen((event) {
-      switch (event.type) {
-        case 'new_notification':
+  /// Attach the notification SSE stream.
+  void attachSse(SseService sseService) {
+    if (_sseService == sseService) return;
+    _sseSub?.cancel();
+    _sseService = sseService;
+
+    _sseSub = sseService.events.listen((event) {
+      switch (event.event) {
+        case 'notification.created':
           _handleNotificationCreated(event.data);
           break;
-        case 'notification_read':
+        case 'notification.read':
           _handleNotificationRead(event.data);
           break;
-        case 'notifications_read_all':
+        case 'notification.read_all':
           _handleAllNotificationsRead();
           break;
       }
@@ -199,7 +201,7 @@ class NotificationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _websocketSubscription?.cancel();
+    _sseSub?.cancel();
     _incomingController.close();
     super.dispose();
   }

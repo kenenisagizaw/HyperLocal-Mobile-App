@@ -28,6 +28,7 @@ import '../provider/widgets/user_avatar.dart';
 import '../reviews/review_screen.dart';
 // Deep Green: Booking provider
 import 'providers/booking_provider.dart';
+import 'providers/location_share_provider.dart';
 
 // Deep Blue: Main booking detail screen
 class BookingDetailScreen extends StatefulWidget {
@@ -324,7 +325,7 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
             ),
             const SizedBox(height: 16),
             if (booking.status == BookingStatus.inProgress)
-              _buildLiveLocationSection(providerUser),
+              _buildLiveLocationSection(booking, providerUser),
             const SizedBox(height: 16),
             if (user?.role == UserRole.customer)
               _buildCustomerActions(
@@ -808,62 +809,94 @@ class _BookingDetailScreenState extends State<BookingDetailScreen> {
   }
 
   // Deep Green: Build live location sharing section with map
-  Widget _buildLiveLocationSection(UserModel? providerUser) {
-    final hasLocation =
-        providerUser?.latitude != null && providerUser?.longitude != null;
+  Widget _buildLiveLocationSection(dynamic booking, UserModel? providerUser) {
+    final user = context.read<AuthProvider>().currentUser;
+    final isProvider = user?.role == UserRole.provider;
+    
+    final locationProvider = context.watch<LocationShareProvider>();
+    final isSharing = locationProvider.isSharing(booking.id);
+    final latestPoint = locationProvider.getLatestPoint(booking.id);
+
+    LatLng? displayPosition;
+    if (latestPoint != null) {
+      displayPosition = latestPoint.position;
+    } else if (providerUser?.latitude != null && providerUser?.longitude != null) {
+      displayPosition = LatLng(providerUser!.latitude!, providerUser!.longitude!);
+    }
 
     return _DetailCard(
       title: 'Live Location',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Share live location'),
-            value: _isSharingLocation,
-            onChanged: (value) => setState(() => _isSharingLocation = value),
-          ),
-          if (_isSharingLocation && hasLocation)
+          if (isProvider)
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Share live location'),
+              value: _isSharingLocation,
+              onChanged: (value) {
+                setState(() => _isSharingLocation = value);
+                if (value) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Started sharing location')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Stopped sharing location')),
+                  );
+                }
+              },
+            ),
+          if ((isProvider && _isSharingLocation && displayPosition != null) || (!isProvider && isSharing && displayPosition != null))
             SizedBox(
               height: 200,
-              child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: LatLng(
-                    providerUser!.latitude!,
-                    providerUser.longitude!,
-                  ),
-                  initialZoom: 14,
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.my_first_app',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: LatLng(
-                          providerUser.latitude!,
-                          providerUser.longitude!,
-                        ),
-                        width: 40,
-                        height: 40,
-                        child: const Icon(
-                          Icons.location_on,
-                          color: Colors.red,
-                          size: 40,
-                        ),
+              child: StreamBuilder<LocationPoint>(
+                stream: locationProvider.locationPoints.where((p) => p.bookingId == booking.id),
+                builder: (context, snapshot) {
+                  final point = snapshot.data?.position ?? displayPosition;
+                  if (point == null) return const SizedBox.shrink();
+                  
+                  return FlutterMap(
+                    options: MapOptions(
+                      initialCenter: point,
+                      initialZoom: 15,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
+                      ),
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'com.example.my_first_app',
+                      ),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: point,
+                            width: 40,
+                            height: 40,
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             )
-          else if (_isSharingLocation)
+          else if (!isProvider && !isSharing)
             const Padding(
               padding: EdgeInsets.only(top: 8),
-              child: Text('Provider location is not available yet.'),
+              child: Text('Provider is not currently sharing their location.'),
+            )
+          else if (isProvider && _isSharingLocation)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('Waiting for location data...'),
             ),
         ],
       ),

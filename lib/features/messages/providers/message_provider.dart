@@ -3,23 +3,21 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/services/websocket_service.dart';
+import '../../../core/services/sse_service.dart';
 import '../../../data/models/conversation_model.dart';
 import '../../../data/models/message_model.dart';
 import '../../../data/repositories/message_repository.dart';
 
 class MessageProvider extends ChangeNotifier {
-  MessageProvider({required this.repository}) {
-    initializeWebSocket();
-  }
+  MessageProvider({required this.repository});
 
   final MessageRepository repository;
-  final WebSocketService _webSocketService = WebSocketService();
 
+  SseService? _sseService;
   final List<Conversation> _conversations = [];
   final Map<String, List<Message>> _messagesByConversation = {};
   final Map<String, String?> _nextCursorByConversation = {};
-  StreamSubscription<WebSocketEvent>? _websocketSubscription;
+  StreamSubscription<SseEvent>? _sseSub;
   bool _isLoading = false;
   String? errorMessage;
   int? lastStatusCode;
@@ -35,17 +33,24 @@ class MessageProvider extends ChangeNotifier {
     return _nextCursorByConversation[conversationId];
   }
 
-  void initializeWebSocket() {
-    _websocketSubscription?.cancel();
-    _websocketSubscription = _webSocketService.events.listen((event) {
-      switch (event.type) {
-        case 'new_message':
+  /// Attach the messages SSE stream.
+  void attachSse(SseService sseService) {
+    if (_sseService == sseService) return;
+    _sseSub?.cancel();
+    _sseService = sseService;
+
+    _sseSub = sseService.events.listen((event) {
+      switch (event.event) {
+        case 'message.created':
+        case 'created':
           _handleMessageCreated(event.data);
           break;
-        case 'message_updated':
+        case 'message.updated':
+        case 'updated':
           _handleMessageUpdated(event.data);
           break;
-        case 'message_read':
+        case 'message.read':
+        case 'read':
           _handleMessageRead(event.data);
           break;
       }
@@ -299,7 +304,7 @@ class MessageProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _websocketSubscription?.cancel();
+    _sseSub?.cancel();
     super.dispose();
   }
 
