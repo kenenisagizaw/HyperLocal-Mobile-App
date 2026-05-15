@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../data/models/user_model.dart';
 import 'providers/auth_provider.dart';
-import 'widgets/auth_scaffold.dart';
 import 'verify_email_reminder_screen.dart';
+import 'widgets/auth_scaffold.dart';
 
 class RegisterScreen extends StatefulWidget {
   final UserRole? initialRole;
